@@ -5,6 +5,7 @@ description = "Modelo de medidas, validação, regras e geometria (Python puro).
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.14.3",
+    "shapely>=2.2.0",
 ]
 
 [build-system]
