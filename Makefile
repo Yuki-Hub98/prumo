@@ -5,10 +5,10 @@
 help: ## Lista os comandos
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
 
-setup: ## uv sync + pre-commit + .relatorios/ em .git/info/exclude
+setup: ## uv sync + pre-commit + .relatorios/ e .mrs/ em .git/info/exclude
 	uv sync --all-packages
 	uv run pre-commit install --hook-type pre-commit --hook-type commit-msg
-	@grep -qxF '.relatorios/' .git/info/exclude || echo '.relatorios/' >> .git/info/exclude
+	@for d in .relatorios/ .mrs/; do grep -qxF "$$d" .git/info/exclude || echo "$$d" >> .git/info/exclude; done
 	@test -f .env || cp .env.example .env
 
 sync: ## Instala/atualiza dependências do workspace
