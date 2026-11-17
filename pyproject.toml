@@ -1,0 +1,79 @@
+[project]
+name = "interiores"
+version = "0.1.0"
+description = "Projeto de interiores a partir de medidas reais: plantas, renders e checagens gerados por código."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "interiores-core",
+    "interiores-cad",
+    "interiores-render",
+    "interiores-relatorios",
+    "interiores-cli",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+interiores-core = { workspace = true }
+interiores-cad = { workspace = true }
+interiores-render = { workspace = true }
+interiores-relatorios = { workspace = true }
+interiores-cli = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "commitizen>=4.19.3",
+    "mypy>=2.4.1",
+    "pre-commit>=4.7.0",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.5",
+]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["packages/*/src", "tests"]
+extend-exclude = ["out", ".relatorios"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "PTH", "T20"]
+# T20 (print) liberado só na CLI e nos testes — ver CLAUDE.md §9
+[tool.ruff.lint.per-file-ignores]
+"packages/cli/**" = ["T20"]
+"tests/**" = ["T20"]
+"packages/*/tests/**" = ["T20"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+strict = true
+files = ["packages/core/src"]
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests", "packages"]
+addopts = "-ra --strict-markers --import-mode=importlib"
+
+[tool.coverage.run]
+source = ["interiores_core"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+
+# ---------------------------------------------------------------- commitizen
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "uv"
+tag_format = "v$version"
+update_changelog_on_bump = true
+major_version_zero = true
