@@ -1,0 +1,19 @@
+[project]
+name = "interiores-relatorios"
+version = "0.1.0"
+description = "Comparações, cálculo de tinta e lista de materiais."
+requires-python = ">=3.12"
+dependencies = [
+    "interiores-core",
+    "openpyxl>=3.1.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/interiores_relatorios"]
+
+[tool.uv.sources]
+interiores-core = { workspace = true }
