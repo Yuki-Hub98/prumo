@@ -1,0 +1,806 @@
+{
+  "$defs": {
+    "Comodo": {
+      "additionalProperties": false,
+      "description": "Cômodo: polígono derivado das paredes que o delimitam (não digitado à parte).",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "nome": {
+          "title": "Nome",
+          "type": "string"
+        },
+        "tipo": {
+          "$ref": "#/$defs/TipoComodo"
+        },
+        "paredes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "title": "Paredes",
+          "type": "array"
+        },
+        "piso": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Acabamento do piso.",
+          "title": "Piso"
+        },
+        "teto": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Acabamento do teto.",
+          "title": "Teto"
+        },
+        "pe_direito": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Se omitido, vale o do pavimento."
+        }
+      },
+      "required": [
+        "id",
+        "nome",
+        "tipo",
+        "paredes"
+      ],
+      "title": "Comodo",
+      "type": "object"
+    },
+    "Imovel": {
+      "additionalProperties": false,
+      "properties": {
+        "tipo": {
+          "enum": [
+            "casa",
+            "apartamento"
+          ],
+          "title": "Tipo",
+          "type": "string"
+        },
+        "endereco_apelido": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Endereco Apelido"
+        }
+      },
+      "required": [
+        "tipo"
+      ],
+      "title": "Imovel",
+      "type": "object"
+    },
+    "Janela": {
+      "additionalProperties": false,
+      "description": "Janela com peitoril (altura do piso até o vão).",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "parede": {
+          "title": "Parede",
+          "type": "string"
+        },
+        "distancia_inicio": {
+          "$ref": "#/$defs/Medida",
+          "description": "Do início da parede até o vão."
+        },
+        "largura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "altura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "tipo": {
+          "const": "janela",
+          "title": "Tipo",
+          "type": "string"
+        },
+        "peitoril": {
+          "$ref": "#/$defs/Medida"
+        }
+      },
+      "required": [
+        "id",
+        "parede",
+        "distancia_inicio",
+        "largura",
+        "altura",
+        "tipo",
+        "peitoril"
+      ],
+      "title": "Janela",
+      "type": "object"
+    },
+    "Medida": {
+      "additionalProperties": false,
+      "description": "Medida em milímetros inteiros, sempre com origem.\n\nExemplo: ``{\"valor\": 3150, \"origem\": \"trena\", \"obs\": \"rodapé a rodapé\"}``.\nValores com casa decimal são recusados (unidade interna é mm inteiro).",
+      "properties": {
+        "valor": {
+          "description": "Valor inteiro em milímetros.",
+          "minimum": 0,
+          "title": "Valor",
+          "type": "integer"
+        },
+        "origem": {
+          "$ref": "#/$defs/Origem"
+        },
+        "obs": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Obs"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data"
+        }
+      },
+      "required": [
+        "valor",
+        "origem"
+      ],
+      "title": "Medida",
+      "type": "object"
+    },
+    "Origem": {
+      "description": "De onde veio a medida.",
+      "enum": [
+        "trena",
+        "estimada",
+        "projeto"
+      ],
+      "title": "Origem",
+      "type": "string"
+    },
+    "Parede": {
+      "additionalProperties": false,
+      "description": "Parede como entidade própria, compartilhada entre cômodos.\n\n``lado_a`` é o cômodo à **esquerda** de quem anda de ``inicio`` para ``fim``;\n``lado_b``, o da direita. Use ``\"externo\"`` quando não houver cômodo modelado.",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "inicio": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Inicio",
+          "type": "array"
+        },
+        "fim": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Fim",
+          "type": "array"
+        },
+        "espessura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "lado_a": {
+          "title": "Lado A",
+          "type": "string"
+        },
+        "lado_b": {
+          "title": "Lado B",
+          "type": "string"
+        },
+        "altura": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Se omitida, vale o pé-direito."
+        }
+      },
+      "required": [
+        "id",
+        "inicio",
+        "fim",
+        "espessura",
+        "lado_a",
+        "lado_b"
+      ],
+      "title": "Parede",
+      "type": "object"
+    },
+    "Pavimento": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nome"
+        },
+        "cota_piso": {
+          "$ref": "#/$defs/Medida"
+        },
+        "pe_direito": {
+          "$ref": "#/$defs/Medida"
+        },
+        "rodape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Altura do rodapé."
+        },
+        "paredes": {
+          "items": {
+            "$ref": "#/$defs/Parede"
+          },
+          "title": "Paredes",
+          "type": "array"
+        },
+        "aberturas": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "janela": "#/$defs/Janela",
+                "porta": "#/$defs/Porta"
+              },
+              "propertyName": "tipo"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Porta"
+              },
+              {
+                "$ref": "#/$defs/Janela"
+              }
+            ]
+          },
+          "title": "Aberturas",
+          "type": "array"
+        },
+        "estrutura": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "pilar": "#/$defs/Pilar",
+                "viga": "#/$defs/Viga"
+              },
+              "propertyName": "tipo"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Pilar"
+              },
+              {
+                "$ref": "#/$defs/Viga"
+              }
+            ]
+          },
+          "title": "Estrutura",
+          "type": "array"
+        },
+        "instalacoes": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "ponto": "#/$defs/PontoInstalacao",
+                "trecho": "#/$defs/TrechoInstalacao"
+              },
+              "propertyName": "forma"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PontoInstalacao"
+              },
+              {
+                "$ref": "#/$defs/TrechoInstalacao"
+              }
+            ]
+          },
+          "title": "Instalacoes",
+          "type": "array"
+        },
+        "comodos": {
+          "items": {
+            "$ref": "#/$defs/Comodo"
+          },
+          "title": "Comodos",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "cota_piso",
+        "pe_direito"
+      ],
+      "title": "Pavimento",
+      "type": "object"
+    },
+    "Pilar": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "tipo": {
+          "const": "pilar",
+          "title": "Tipo",
+          "type": "string"
+        },
+        "centro": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Centro",
+          "type": "array"
+        },
+        "largura": {
+          "$ref": "#/$defs/Medida",
+          "description": "Dimensão em x."
+        },
+        "profundidade": {
+          "$ref": "#/$defs/Medida",
+          "description": "Dimensão em y."
+        }
+      },
+      "required": [
+        "id",
+        "tipo",
+        "centro",
+        "largura",
+        "profundidade"
+      ],
+      "title": "Pilar",
+      "type": "object"
+    },
+    "PontoInstalacao": {
+      "additionalProperties": false,
+      "description": "Ponto (tomada, interruptor, saída de água...) com altura do piso.",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "forma": {
+          "const": "ponto",
+          "title": "Forma",
+          "type": "string"
+        },
+        "tipo": {
+          "$ref": "#/$defs/TipoInstalacao"
+        },
+        "posicao": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Posicao",
+          "type": "array"
+        },
+        "altura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "parede": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parede"
+        },
+        "obs": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Obs"
+        }
+      },
+      "required": [
+        "id",
+        "forma",
+        "tipo",
+        "posicao",
+        "altura"
+      ],
+      "title": "PontoInstalacao",
+      "type": "object"
+    },
+    "Porta": {
+      "additionalProperties": false,
+      "description": "Porta: liga dois cômodos e tem sentido de abertura.",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "parede": {
+          "title": "Parede",
+          "type": "string"
+        },
+        "distancia_inicio": {
+          "$ref": "#/$defs/Medida",
+          "description": "Do início da parede até o vão."
+        },
+        "largura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "altura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "tipo": {
+          "const": "porta",
+          "title": "Tipo",
+          "type": "string"
+        },
+        "de": {
+          "title": "De",
+          "type": "string"
+        },
+        "para": {
+          "title": "Para",
+          "type": "string"
+        },
+        "folha": {
+          "default": "giro",
+          "enum": [
+            "giro",
+            "correr"
+          ],
+          "title": "Folha",
+          "type": "string"
+        },
+        "abre_para": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Cômodo (de/para) para onde a folha gira. Obrigatório se giro.",
+          "title": "Abre Para"
+        },
+        "dobradica": {
+          "anyOf": [
+            {
+              "enum": [
+                "inicio",
+                "fim"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Lado do vão com a dobradiça, no sentido da parede.",
+          "title": "Dobradica"
+        }
+      },
+      "required": [
+        "id",
+        "parede",
+        "distancia_inicio",
+        "largura",
+        "altura",
+        "tipo",
+        "de",
+        "para"
+      ],
+      "title": "Porta",
+      "type": "object"
+    },
+    "TipoComodo": {
+      "enum": [
+        "quarto",
+        "sala",
+        "cozinha",
+        "banheiro",
+        "lavabo",
+        "area_servico",
+        "escritorio",
+        "corredor",
+        "varanda",
+        "garagem",
+        "outro"
+      ],
+      "title": "TipoComodo",
+      "type": "string"
+    },
+    "TipoInstalacao": {
+      "enum": [
+        "tomada",
+        "interruptor",
+        "ponto_luz",
+        "agua_fria",
+        "agua_quente",
+        "esgoto",
+        "ralo",
+        "gas"
+      ],
+      "title": "TipoInstalacao",
+      "type": "string"
+    },
+    "TrechoInstalacao": {
+      "additionalProperties": false,
+      "description": "Trecho de tubulação/eletroduto. Se embutido, gera faixa de \"não furar\".",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "forma": {
+          "const": "trecho",
+          "title": "Forma",
+          "type": "string"
+        },
+        "tipo": {
+          "$ref": "#/$defs/TipoInstalacao"
+        },
+        "caminho": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 2,
+          "title": "Caminho",
+          "type": "array"
+        },
+        "altura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "embutido": {
+          "default": true,
+          "title": "Embutido",
+          "type": "boolean"
+        },
+        "obs": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Obs"
+        }
+      },
+      "required": [
+        "id",
+        "forma",
+        "tipo",
+        "caminho",
+        "altura"
+      ],
+      "title": "TrechoInstalacao",
+      "type": "object"
+    },
+    "Viga": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "tipo": {
+          "const": "viga",
+          "title": "Tipo",
+          "type": "string"
+        },
+        "inicio": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Inicio",
+          "type": "array"
+        },
+        "fim": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Fim",
+          "type": "array"
+        },
+        "largura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "altura": {
+          "$ref": "#/$defs/Medida",
+          "description": "Quanto a viga desce abaixo da laje."
+        }
+      },
+      "required": [
+        "id",
+        "tipo",
+        "inicio",
+        "fim",
+        "largura",
+        "altura"
+      ],
+      "title": "Viga",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Raiz do ``projeto.json``.",
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "projeto": {
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "title": "Projeto",
+      "type": "string"
+    },
+    "imovel": {
+      "$ref": "#/$defs/Imovel"
+    },
+    "pavimentos": {
+      "items": {
+        "$ref": "#/$defs/Pavimento"
+      },
+      "minItems": 1,
+      "title": "Pavimentos",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "projeto",
+    "imovel",
+    "pavimentos"
+  ],
+  "title": "Projeto",
+  "type": "object"
+}
