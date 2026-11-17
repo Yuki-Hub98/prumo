@@ -1,0 +1,36 @@
+# Instruções locais do Claude Code (não versionar)
+CLAUDE.md
+
+# Saídas geradas — sempre regeneradas (CLAUDE.md §3)
+out/
+
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Blender
+*.blend1
+*.blend@
+
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Frontend
+node_modules/
+
+# IDE / SO
+.idea/
+.vscode/
+.DS_Store
