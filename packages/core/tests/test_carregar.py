@@ -60,6 +60,16 @@ def test_estimadas_por_escopo(copia: Path) -> None:
         c.estimadas("cozinha")
 
 
+def test_estimadas_do_pavimento(copia: Path) -> None:
+    c = carregar(copia)
+    terreo = {caminho for caminho, _ in c.estimadas_pavimento("terreo")}
+    assert len(terreo) == len(c.estimadas())  # um pavimento só: mesmo conjunto
+    assert "comodos/quarto.moveis[cama].largura" in terreo
+    assert any("basculante" in x for x in terreo)
+    with pytest.raises(KeyError):
+        c.estimadas_pavimento("superior")
+
+
 def test_sem_pasta_comodos(copia: Path) -> None:
     shutil.rmtree(copia / "comodos")
     assert carregar(copia).dados_comodos == {}

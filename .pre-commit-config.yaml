@@ -28,11 +28,11 @@ repos:
         language: system
         types_or: [python, pyi]
       - id: mypy
-        name: mypy (core)
+        name: mypy (core, cad)
         entry: uv run mypy
         language: system
         pass_filenames: false
-        files: ^packages/core/
+        files: ^packages/(core|cad)/
       - id: commitizen
         name: commitizen
         entry: uv run cz check --commit-msg-file

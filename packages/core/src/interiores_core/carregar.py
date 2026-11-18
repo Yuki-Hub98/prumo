@@ -47,6 +47,20 @@ class ProjetoCarregado:
             achadas += medidas_estimadas(self.dados_comodos[comodo], f"comodos/{comodo}")
         return achadas
 
+    def estimadas_pavimento(self, pavimento: str) -> list[tuple[str, Medida]]:
+        """Medidas estimadas do pavimento e do mobiliário dos cômodos dele.
+
+        É o escopo da planta geral: basta uma estimada aqui para ela sair PRELIMINAR.
+        """
+        pav = next((p for p in self.projeto.pavimentos if p.id == pavimento), None)
+        if pav is None:
+            raise KeyError(f"pavimento '{pavimento}' não existe no projeto")
+        achadas = medidas_estimadas(pav, f"pavimentos[{pav.id}]")
+        for c in pav.comodos:
+            if c.id in self.dados_comodos:
+                achadas += medidas_estimadas(self.dados_comodos[c.id], f"comodos/{c.id}")
+        return achadas
+
 
 def _ler_json(caminho: Path) -> object:
     with caminho.open(encoding="utf-8") as f:

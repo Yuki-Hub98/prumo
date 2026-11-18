@@ -44,3 +44,46 @@ def test_schema(tmp_path: Path) -> None:
     r = runner.invoke(app, ["schema", "--saida", str(tmp_path)])
     assert r.exit_code == 0
     assert (tmp_path / "projeto.schema.json").exists()
+
+
+def test_cad_comodo_e_cache(tmp_path: Path) -> None:
+    args = ["cad", "casa", "--projetos", str(RAIZ / "projetos"), "--saida", str(tmp_path)]
+    r = runner.invoke(app, [*args, "--comodo", "quarto"])
+    assert r.exit_code == 0, r.output
+    assert "terreo/quarto" in r.output and "gerado" in r.output and "1:25 A3" in r.output
+    assert (tmp_path / "casa/terreo/quarto/base/planta.dxf").exists()
+    assert (tmp_path / "casa/terreo/quarto/base/planta.pdf").exists()
+    assert "PRELIMINAR — NÃO USAR PARA OBRA" in r.output
+    assert "INFO" in r.output  # problemas listados depois da geração
+
+    r = runner.invoke(app, [*args, "--comodo", "quarto"])
+    assert "inalterado" in r.output
+
+
+def test_cad_tudo_e_pavimento(tmp_path: Path) -> None:
+    args = ["cad", "casa", "--projetos", str(RAIZ / "projetos"), "--saida", str(tmp_path)]
+    r = runner.invoke(app, args)
+    assert r.exit_code == 0, r.output
+    for pasta in ("_geral", "quarto/base", "banheiro/base"):
+        assert (tmp_path / "casa/terreo" / pasta / "planta.pdf").exists()
+    r = runner.invoke(app, [*args, "--pavimento", "terreo", "--forcar"])
+    assert r.exit_code == 0 and "terreo/_geral" in r.output and "gerado" in r.output
+
+
+def test_cad_escopo_inexistente_e_comodo_aberto(tmp_path: Path) -> None:
+    args = ["cad", "casa", "--projetos", str(RAIZ / "projetos"), "--saida", str(tmp_path)]
+    assert runner.invoke(app, [*args, "--comodo", "cozinha"]).exit_code == 2
+    assert runner.invoke(app, [*args, "--pavimento", "superior"]).exit_code == 2
+    r = runner.invoke(app, [*args, "--comodo", "quarto", "--pavimento", "superior"])
+    assert r.exit_code == 2
+
+    shutil.copytree(RAIZ / "projetos" / "casa", tmp_path / "p" / "casa")
+    arq = tmp_path / "p" / "casa" / "projeto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    d["pavimentos"][0]["comodos"][1]["paredes"].remove("p4")
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    r = runner.invoke(
+        app, ["cad", "casa", "--projetos", str(tmp_path / "p"), "--saida", str(tmp_path / "o")]
+    )
+    assert r.exit_code == 1
+    assert "banheiro" in r.output and "FALHOU" in r.output

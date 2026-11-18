@@ -1,0 +1,604 @@
+"""Planta baixa em DXF (1 unidade = 1 mm), por escopo: cômodo ou pavimento.
+
+Só desenha: medidas, posições e consistência vêm prontas do ``core``.
+"""
+
+from __future__ import annotations
+
+import itertools
+import math
+from dataclasses import dataclass, field
+from datetime import date
+
+from ezdxf.document import Drawing
+from ezdxf.enums import TextEntityAlignment
+from ezdxf.layouts.layout import Modelspace
+from shapely import LineString, MultiPolygon, Point, Polygon
+from shapely.geometry.base import BaseGeometry
+from shapely.geometry.polygon import orient
+from shapely.ops import polylabel, unary_union
+
+from interiores_cad import __version__
+from interiores_cad.estilo import (
+    COR_PREENCHIMENTO_PAREDE,
+    ESTILO_COTA,
+    ESTILO_TEXTO,
+    Texto,
+    novo_documento,
+)
+from interiores_cad.folha import DadosCarimbo, Folha, desenhar_folha, escolher_folha
+from interiores_core import geometria
+from interiores_core.carregar import ProjetoCarregado
+from interiores_core.medidas import Medida
+from interiores_core.modelo import (
+    EXTERNO,
+    Comodo,
+    Janela,
+    Movel,
+    Parede,
+    Pavimento,
+    PontoInstalacao,
+    Porta,
+    TipoInstalacao,
+)
+
+VERSAO_GERADOR = f"interiores-cad {__version__} · planta v3"
+"""Entra na chave de cache das saídas: mudou o desenho, suba o ``planta vN``."""
+
+ELETRICOS = {TipoInstalacao.TOMADA, TipoInstalacao.INTERRUPTOR, TipoInstalacao.PONTO_LUZ}
+HIDRAULICOS = {
+    TipoInstalacao.AGUA_FRIA,
+    TipoInstalacao.AGUA_QUENTE,
+    TipoInstalacao.ESGOTO,
+    TipoInstalacao.RALO,
+}
+SIGLAS = {
+    TipoInstalacao.TOMADA: "T",
+    TipoInstalacao.INTERRUPTOR: "S",
+    TipoInstalacao.PONTO_LUZ: "luz",
+    TipoInstalacao.AGUA_FRIA: "AF",
+    TipoInstalacao.AGUA_QUENTE: "AQ",
+    TipoInstalacao.ESGOTO: "ES",
+    TipoInstalacao.RALO: "ralo",
+    TipoInstalacao.GAS: "gás",
+}
+LEGENDA = (
+    "T tomada · S interruptor · luz ponto de luz",
+    "AF água fria · AQ água quente · ES esgoto · ralo",
+    "h = altura do piso (mm)",
+)
+
+
+def _camada_instalacao(tipo: TipoInstalacao) -> str | None:
+    if tipo in ELETRICOS:
+        return "ELETRICA"
+    if tipo in HIDRAULICOS:
+        return "HIDRAULICA"
+    return None  # gás não é desenhado
+
+
+Vetor = tuple[float, float]
+
+
+@dataclass
+class Desenho:
+    """DXF pronto e o que o PDF e o carimbo precisam saber dele."""
+
+    doc: Drawing
+    folha: Folha
+    titulo: str
+    estimadas: list[tuple[str, Medida]] = field(default_factory=list)
+
+    @property
+    def preliminar(self) -> bool:
+        return bool(self.estimadas)
+
+
+# ---------------------------------------------------------------- vetores
+
+
+def _som(a: Vetor, b: Vetor, k: float = 1.0) -> Vetor:
+    return (a[0] + b[0] * k, a[1] + b[1] * k)
+
+
+def _direcao(parede: Parede) -> tuple[Vetor, Vetor]:
+    """Unitário ao longo da parede e normal à esquerda (lado ``a``)."""
+    (x0, y0), (x1, y1) = parede.inicio, parede.fim
+    tam = geometria.comprimento(parede)
+    u = ((x1 - x0) / tam, (y1 - y0) / tam)
+    return u, (-u[1], u[0])
+
+
+def _angulo(v: Vetor) -> float:
+    return math.degrees(math.atan2(v[1], v[0])) % 360
+
+
+def _angulo_legivel(v: Vetor) -> float:
+    """Ângulo de texto ao longo de ``v`` sem ficar de cabeça para baixo."""
+    a = _angulo(v)
+    return a - 180 if 90 < a <= 270 else a
+
+
+# ---------------------------------------------------------------- planta
+
+
+class _Planta:
+    def __init__(
+        self,
+        carregado: ProjetoCarregado,
+        pavimento: Pavimento,
+        comodos: list[Comodo],
+        recorte: Pavimento,
+        por_comodo: bool,
+    ) -> None:
+        self.carregado = carregado
+        self.pavimento = pavimento
+        self.comodos = comodos
+        self.recorte = recorte
+        self.por_comodo = por_comodo
+        self.moveis: list[Movel] = [
+            m
+            for c in comodos
+            if c.id in carregado.dados_comodos
+            for m in carregado.dados_comodos[c.id].moveis
+        ]
+        self.ids_comodos = {c.id for c in comodos}
+        self.giros: list[Polygon] = []
+        """Área varrida pelas folhas de porta (rótulos não podem cair nela)."""
+        self.corpos = unary_union(
+            [geometria.corpo(p) for p in recorte.paredes if geometria.comprimento(p) > 0]
+        )
+        self.folha = escolher_folha(self.corpos.bounds)
+        self.doc = novo_documento(self.folha.escala)
+        self.msp: Modelspace = self.doc.modelspace()
+
+    # -- utilitários
+
+    def mm(self, papel: float) -> float:
+        return self.folha.mm(papel)
+
+    def texto(
+        self,
+        texto: str,
+        ponto: Vetor,
+        altura: float,
+        camada: str,
+        rotacao: float = 0.0,
+        alinhamento: TextEntityAlignment = TextEntityAlignment.MIDDLE_CENTER,
+    ) -> None:
+        self.msp.add_text(
+            texto,
+            height=self.mm(altura),
+            rotation=rotacao,
+            dxfattribs={"layer": camada, "style": ESTILO_TEXTO},
+        ).set_placement(ponto, align=alinhamento)
+
+    def lado_do_comodo(self, parede: Parede) -> int:
+        """+1 se o cômodo desenhado fica à esquerda da parede (lado ``a``), senão -1."""
+        if parede.lado_a in self.ids_comodos:
+            return 1
+        if parede.lado_b in self.ids_comodos:
+            return -1
+        return 1 if parede.lado_a != EXTERNO else -1
+
+    # -- paredes
+
+    def vao(self, parede: Parede, inicio: float, largura: float) -> Polygon:
+        u, n = _direcao(parede)
+        meia = parede.espessura.valor / 2 + 1
+        a0 = _som(parede.inicio, u, inicio)
+        a1 = _som(a0, u, largura)
+        return Polygon(
+            [_som(a0, n, meia), _som(a1, n, meia), _som(a1, n, -meia), _som(a0, n, -meia)]
+        )
+
+    def paredes(self) -> None:
+        vaos = [
+            self.vao(p, a.distancia_inicio.valor, a.largura.valor)
+            for a in self.recorte.aberturas
+            if (p := self.recorte.parede(a.parede)) is not None
+        ]
+        cheio = self.corpos.difference(unary_union(vaos)) if vaos else self.corpos
+        poligonos = list(cheio.geoms) if isinstance(cheio, MultiPolygon) else [cheio]
+        for pol in poligonos:
+            if not isinstance(pol, Polygon) or pol.is_empty:
+                continue
+            pol = orient(pol)
+            hachura = self.msp.add_hatch(dxfattribs={"layer": "PAREDE"})
+            hachura.rgb = COR_PREENCHIMENTO_PAREDE
+            hachura.paths.add_polyline_path(list(pol.exterior.coords)[:-1], is_closed=True)
+            for furo in pol.interiors:
+                hachura.paths.add_polyline_path(list(furo.coords)[:-1], is_closed=True)
+            for anel in (pol.exterior, *pol.interiors):
+                self.msp.add_lwpolyline(
+                    list(anel.coords)[:-1], close=True, dxfattribs={"layer": "PAREDE"}
+                )
+
+    # -- aberturas
+
+    def aberturas(self) -> None:
+        for ab in self.recorte.aberturas:
+            parede = self.recorte.parede(ab.parede)
+            if parede is None:
+                continue
+            u, n = _direcao(parede)
+            meia = parede.espessura.valor / 2
+            a0 = _som(parede.inicio, u, ab.distancia_inicio.valor)
+            a1 = _som(a0, u, ab.largura.valor)
+            larg = ab.largura.valor
+            if isinstance(ab, Janela):
+                for off in (-meia, -20.0, 20.0, meia):
+                    self.msp.add_line(
+                        _som(a0, n, off), _som(a1, n, off), dxfattribs={"layer": "ABERTURA"}
+                    )
+                lado_etiqueta = -self.lado_do_comodo(parede)
+                etiqueta = f"{ab.id} {larg}×{ab.altura.valor} peit. {ab.peitoril.valor}"
+            else:
+                lado_etiqueta = self.porta(ab, parede, a0, a1, u, n, meia)
+                etiqueta = f"{ab.id} {larg}×{ab.altura.valor}"
+            meio = _som(_som(a0, u, larg / 2), n, lado_etiqueta * (meia + self.mm(3.5)))
+            self.texto(etiqueta, meio, Texto.ABERTURA, "ABERTURA", _angulo_legivel(u))
+
+    def porta(
+        self, porta: Porta, parede: Parede, a0: Vetor, a1: Vetor, u: Vetor, n: Vetor, meia: float
+    ) -> int:
+        """Desenha folha e arco; devolve o lado (±1) livre para a etiqueta."""
+        larg = porta.largura.valor
+        if porta.folha == "correr":
+            for off, (ini, fim) in ((-meia / 3, (0.0, 0.55)), (meia / 3, (0.45, 1.0))):
+                self.msp.add_line(
+                    _som(_som(a0, u, larg * ini), n, off),
+                    _som(_som(a0, u, larg * fim), n, off),
+                    dxfattribs={"layer": "ABERTURA"},
+                )
+            return -self.lado_do_comodo(parede)
+        s = 1 if porta.abre_para == parede.lado_a else -1
+        dobradica, outro = (a0, a1) if porta.dobradica != "fim" else (a1, a0)
+        centro = _som(dobradica, n, s * meia)
+        ponta = _som(centro, n, s * larg)
+        self.msp.add_line(centro, ponta, dxfattribs={"layer": "ABERTURA"})
+        ang_folha = _angulo((n[0] * s, n[1] * s))
+        ang_fecha = _angulo((outro[0] - dobradica[0], outro[1] - dobradica[1]))
+        ini, fim = (ang_fecha, ang_folha)
+        if round((ang_folha - ang_fecha) % 360) != 90:
+            ini, fim = fim, ini
+        self.msp.add_arc(centro, larg, ini, fim, dxfattribs={"layer": "ABERTURA"})
+        passos = [math.radians(ini + 90 * k / 12) for k in range(13)]
+        arco = [(centro[0] + larg * math.cos(a), centro[1] + larg * math.sin(a)) for a in passos]
+        self.giros.append(Polygon([centro, *arco]))
+        # soleira: linha do vão na face oposta ao giro
+        self.msp.add_line(
+            _som(a0, n, -s * meia), _som(a1, n, -s * meia), dxfattribs={"layer": "ABERTURA"}
+        )
+        return -s
+
+    # -- móveis
+
+    def moveis_(self) -> None:
+        """Contorno, nome, dimensões e a indicação de frente (convenção em ``Movel``)."""
+        for m in self.moveis:
+            cam = {"layer": "MOVEL"}
+            self.msp.add_lwpolyline(geometria.cantos_movel(m), close=True, dxfattribs=cam)
+            for ini, fim in self.detalhes_movel(m):
+                self.msp.add_line(
+                    geometria.girar_movel(m, *ini), geometria.girar_movel(m, *fim), dxfattribs=cam
+                )
+            nome = m.nome or m.tipo
+            dim = f"{m.largura.valor} × {m.profundidade.valor}"
+            passo = self.mm(Texto.MOVEL * 0.8)
+            self.texto(nome, (m.centro[0], m.centro[1] + passo), Texto.MOVEL, "MOVEL")
+            self.texto(dim, (m.centro[0], m.centro[1] - passo), Texto.MOVEL * 0.85, "MOVEL")
+
+    def detalhes_movel(self, m: Movel) -> list[tuple[Vetor, Vetor]]:
+        """Linhas no referencial do móvel (costas em -y, frente em +y, rotação 0).
+
+        - cama: cabeceira e travesseiros junto às costas;
+        - guarda-roupa: linha das portas junto à frente e cabideiro no meio;
+        - demais: seta no meio da frente apontando para fora.
+        """
+        w, d = m.largura.valor / 2, m.profundidade.valor / 2
+        linhas: list[tuple[Vetor, Vetor]] = []
+
+        def ret(x0: float, y0: float, x1: float, y1: float) -> None:
+            linhas.extend(
+                [
+                    ((x0, y0), (x1, y0)),
+                    ((x1, y0), (x1, y1)),
+                    ((x1, y1), (x0, y1)),
+                    ((x0, y1), (x0, y0)),
+                ]
+            )
+
+        if m.tipo == "cama":
+            linhas.append(((-w, -d + 60), (w, -d + 60)))  # cabeceira
+            n = 2 if m.largura.valor >= 1200 else 1
+            folga = 80.0
+            larg = (2 * w - folga * (n + 1)) / n
+            for i in range(n):
+                x0 = -w + folga + i * (larg + folga)
+                ret(x0, -d + 120, x0 + larg, -d + 120 + min(320.0, d))
+        elif m.tipo == "guarda_roupa":
+            linhas.append(((-w, d - 40), (w, d - 40)))  # portas
+            linhas.append(((-w + 60, 0), (w - 60, 0)))  # cabideiro
+        else:
+            s = min(self.mm(1.5), w / 2, d / 2)
+            linhas += [((-s, d - 2 * s), (0, d - s)), ((0, d - s), (s, d - 2 * s))]
+        return linhas
+
+    # -- instalações elétricas
+
+    def instalacoes(self) -> None:
+        """Pontos e trechos de elétrica (ELETRICA) e de água/esgoto (HIDRAULICA). Gás não."""
+        for inst in self.recorte.instalacoes:
+            camada = _camada_instalacao(inst.tipo)
+            if camada is None:
+                continue
+            if isinstance(inst, PontoInstalacao):
+                self.ponto_instalacao(inst, camada)
+            else:
+                pts = [(float(x), float(y)) for x, y in inst.caminho]
+                self.msp.add_lwpolyline(pts, dxfattribs={"layer": camada})
+                meio = LineString(pts).interpolate(0.5, normalized=True)
+                rotulo = f"{SIGLAS[inst.tipo]} h{inst.altura.valor}"
+                if inst.embutido:
+                    rotulo += " (embutido)"
+                self.texto(rotulo, (meio.x, meio.y + self.mm(1.5)), Texto.INSTALACAO, camada)
+
+    def ponto_instalacao(self, inst: PontoInstalacao, camada: str) -> None:
+        r = self.mm(1.6)
+        cam = {"layer": camada}
+        pos: Vetor = (float(inst.posicao[0]), float(inst.posicao[1]))
+        parede = self.recorte.parede(inst.parede) if inst.parede else None
+        rot = 0.0
+        dentro: Vetor | None = None
+        if parede is not None:
+            _, n = _direcao(parede)
+            if inst.comodo is not None:
+                lado = 1 if parede.lado_a == inst.comodo else -1
+            else:
+                lado = self.lado_do_comodo(parede)
+            pos = _som(pos, n, lado * (parede.espessura.valor / 2 + r * 1.3))
+            dentro = (n[0] * lado, n[1] * lado)
+            rot = _angulo(dentro) - 90
+        tipo = inst.tipo
+        if tipo is TipoInstalacao.PONTO_LUZ:
+            self.msp.add_circle(pos, r, dxfattribs=cam)
+            k = r * math.sqrt(0.5)
+            self.msp.add_line(_som(pos, (-k, -k)), _som(pos, (k, k)), dxfattribs=cam)
+            self.msp.add_line(_som(pos, (-k, k)), _som(pos, (k, -k)), dxfattribs=cam)
+        elif tipo is TipoInstalacao.TOMADA:
+            ang = math.radians(rot)
+            pts = [
+                _som(pos, (math.cos(ang + a) * r, math.sin(ang + a) * r))
+                for a in (math.pi / 2, math.pi / 2 + 2.094, math.pi / 2 + 4.189)
+            ]
+            self.msp.add_lwpolyline(pts, close=True, dxfattribs=cam)
+        elif tipo is TipoInstalacao.INTERRUPTOR:
+            self.msp.add_circle(pos, r, dxfattribs=cam)
+            self.texto("S", pos, Texto.INSTALACAO, camada)
+        elif tipo is TipoInstalacao.RALO:
+            x, y = pos
+            self.msp.add_lwpolyline(
+                [(x - r, y - r), (x + r, y - r), (x + r, y + r), (x - r, y + r)],
+                close=True,
+                dxfattribs=cam,
+            )
+            self.msp.add_circle(pos, r * 0.6, dxfattribs=cam)
+        elif tipo is TipoInstalacao.ESGOTO:
+            self.msp.add_circle(pos, r, dxfattribs=cam)
+            self.msp.add_circle(pos, r * 0.5, dxfattribs=cam)
+        else:  # água fria / quente
+            self.msp.add_circle(pos, r, dxfattribs=cam)
+            if tipo is TipoInstalacao.AGUA_QUENTE:
+                self.msp.add_line(_som(pos, (-r, 0)), _som(pos, (r, 0)), dxfattribs=cam)
+        sigla = "" if tipo is TipoInstalacao.INTERRUPTOR else SIGLAS[tipo]
+        legenda = f"{sigla} h{inst.altura.valor}".strip()
+        if dentro is None:  # no piso ou no teto: legenda embaixo do símbolo
+            ponto, alinhamento = _som(pos, (0, -r - self.mm(0.6))), TextEntityAlignment.TOP_CENTER
+        else:  # na parede: legenda para dentro do cômodo, sem encostar na parede
+            ponto, alinhamento = _som(pos, dentro, r + self.mm(0.8)), _alinhamento_para(dentro)
+        self.texto(legenda, ponto, Texto.INSTALACAO, camada, alinhamento=alinhamento)
+
+    # -- rótulos dos cômodos
+
+    def rotulos(self) -> None:
+        obstaculos = (
+            [geometria.poligono_movel(m).buffer(50) for m in self.moveis]
+            + self.giros
+            + [
+                Point(i.posicao).buffer(self.mm(5))
+                for i in self.recorte.instalacoes
+                if isinstance(i, PontoInstalacao) and _camada_instalacao(i.tipo) is not None
+            ]
+        )
+        livres = unary_union(obstaculos)
+        for c in self.comodos:
+            util = geometria.poligono_util(self.pavimento, c)
+            if util is None or util.is_empty:
+                continue
+            area = geometria.area_util_m2(self.pavimento, c)
+            pe = (c.pe_direito or self.pavimento.pe_direito).valor
+            # afasta das paredes para o texto não encostar nelas
+            miolo = util.buffer(-self.mm(4)) if not util.buffer(-self.mm(4)).is_empty else util
+            vazio: BaseGeometry = miolo.difference(livres) if obstaculos else miolo
+            alvo = _maior_poligono(vazio) or _maior_poligono(util)
+            if alvo is None:
+                continue
+            p = polylabel(alvo, tolerance=10)
+            h = self.mm(Texto.TITULO_COMODO)
+            self.texto(c.nome, (p.x, p.y + h * 0.7), Texto.TITULO_COMODO, "TEXTO")
+            info = f"{area:.2f} m²".replace(".", ",") + f" · pé-direito {pe}"
+            self.texto(info, (p.x, p.y - h * 0.7), Texto.INFO_COMODO, "TEXTO")
+
+    # -- cotas
+
+    def cota(self, p1: Vetor, p2: Vetor, normal: Vetor, distancia: float) -> None:
+        """Cota linear de ``p1`` a ``p2``, a ``distancia`` na direção ``normal``.
+
+        Os pontos são ordenados para o texto ler da esquerda para a direita ou de
+        baixo para cima (nunca de cabeça para baixo).
+        """
+        dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+        if dx < -1e-6 or (abs(dx) <= 1e-6 and dy < 0):
+            p1, p2 = p2, p1
+        base = _som(p1, normal, distancia)
+        dim = self.msp.add_linear_dim(
+            base=base,
+            p1=p1,
+            p2=p2,
+            angle=_angulo((p2[0] - p1[0], p2[1] - p1[1])),
+            dimstyle=ESTILO_COTA,
+            dxfattribs={"layer": "COTA"},
+        )
+        dim.render()
+
+    def cotas_comodo(self, c: Comodo) -> None:
+        """Cota cada face interna do cômodo; com aberturas, cota em cadeia antes do total."""
+        util = _maior_poligono(geometria.poligono_util(self.pavimento, c))
+        if util is None:
+            return
+        pts = [(float(x), float(y)) for x, y in orient(util, sign=1.0).exterior.coords]
+        for p, q in itertools.pairwise(pts):
+            dx, dy = q[0] - p[0], q[1] - p[1]
+            tam = math.hypot(dx, dy)
+            if tam < 1:
+                continue
+            u = (dx / tam, dy / tam)
+            fora = (u[1], -u[0])  # anel anti-horário: exterior à direita
+            paredes = self.paredes_da_face(p, q, u)
+            esp = max((pa.espessura.valor for pa in paredes), default=0)
+            cortes = sorted({0.0, tam, *self.cortes_aberturas(paredes, p, u, tam)})
+            fileira = esp + self.mm(9)
+            if len(cortes) > 2:
+                for t0, t1 in itertools.pairwise(cortes):
+                    if t1 - t0 >= 1:
+                        self.cota(_som(p, u, t0), _som(p, u, t1), fora, fileira)
+                fileira += self.mm(7)
+            self.cota(p, q, fora, fileira)
+
+    def paredes_da_face(self, p: Vetor, q: Vetor, u: Vetor) -> list[Parede]:
+        meio = LineString([p, q]).interpolate(0.5, normalized=True)
+        achadas = []
+        for parede in self.recorte.paredes:
+            pu, _ = _direcao(parede)
+            paralela = abs(pu[0] * u[1] - pu[1] * u[0]) < 1e-6
+            if (
+                paralela
+                and abs(geometria.eixo(parede).distance(meio) - parede.espessura.valor / 2) < 2
+            ):
+                achadas.append(parede)
+        return achadas
+
+    def cortes_aberturas(
+        self, paredes: list[Parede], p: Vetor, u: Vetor, tam: float
+    ) -> list[float]:
+        ids = {pa.id for pa in paredes}
+        cortes: list[float] = []
+        for ab in self.recorte.aberturas:
+            parede = self.recorte.parede(ab.parede)
+            if parede is None or parede.id not in ids:
+                continue
+            pu, _ = _direcao(parede)
+            for d in (ab.distancia_inicio.valor, ab.distancia_inicio.valor + ab.largura.valor):
+                x, y = _som(parede.inicio, pu, d)
+                t = (x - p[0]) * u[0] + (y - p[1]) * u[1]
+                if 0 < t < tam:
+                    cortes.append(round(t, 3))
+        return cortes
+
+    def cotas_gerais(self) -> None:
+        """Pavimento: cotas de eixo em cadeia e total externo, embaixo e à esquerda.
+
+        Eixos verticais (x) são cotados embaixo; horizontais (y), à esquerda.
+        """
+        xmin, ymin, xmax, ymax = self.corpos.bounds
+        xs = sorted({float(p.inicio[0]) for p in self.recorte.paredes if p.inicio[0] == p.fim[0]})
+        ys = sorted({float(p.inicio[1]) for p in self.recorte.paredes if p.inicio[1] == p.fim[1]})
+        fileira, total = self.mm(11), self.mm(18)
+        for a, b in itertools.pairwise(xs):
+            self.cota((a, ymin), (b, ymin), (0, -1), fileira)
+        for a, b in itertools.pairwise(ys):
+            self.cota((xmin, a), (xmin, b), (-1, 0), fileira)
+        self.cota((xmin, ymin), (xmax, ymin), (0, -1), total)
+        self.cota((xmin, ymin), (xmin, ymax), (-1, 0), total)
+
+    # -- montagem
+
+    def desenhar(self, titulo: str, escopo: str, data: str) -> Desenho:
+        self.paredes()
+        self.aberturas()
+        self.moveis_()
+        self.instalacoes()
+        self.rotulos()
+        if self.por_comodo:
+            self.cotas_comodo(self.comodos[0])
+        else:
+            self.cotas_gerais()
+        estimadas = (
+            self.carregado.estimadas(self.comodos[0].id)
+            if self.por_comodo
+            else self.carregado.estimadas_pavimento(self.pavimento.id)
+        )
+        proj = self.carregado.projeto
+        desenhar_folha(
+            self.msp,
+            self.folha,
+            DadosCarimbo(
+                projeto=proj.projeto,
+                apelido=proj.imovel.endereco_apelido,
+                desenho=titulo,
+                pavimento=self.pavimento.nome or self.pavimento.id,
+                escopo=escopo,
+                data=data,
+                hash_curto=self.carregado.hash_curto,
+                gerador=VERSAO_GERADOR,
+                estimadas=estimadas,
+                legenda=LEGENDA,
+            ),
+        )
+        return Desenho(self.doc, self.folha, titulo, estimadas)
+
+
+def _alinhamento_para(v: Vetor) -> TextEntityAlignment:
+    """Alinhamento de texto que faz ele crescer na direção ``v``."""
+    if abs(v[0]) >= abs(v[1]):
+        return TextEntityAlignment.MIDDLE_LEFT if v[0] > 0 else TextEntityAlignment.MIDDLE_RIGHT
+    return TextEntityAlignment.BOTTOM_CENTER if v[1] > 0 else TextEntityAlignment.TOP_CENTER
+
+
+def _maior_poligono(geom: BaseGeometry | None) -> Polygon | None:
+    if geom is None or geom.is_empty:
+        return None
+    if isinstance(geom, Polygon):
+        return geom
+    poligonos = [g for g in getattr(geom, "geoms", []) if isinstance(g, Polygon)]
+    return max(poligonos, key=lambda g: g.area, default=None)
+
+
+def desenhar_planta(
+    carregado: ProjetoCarregado,
+    pavimento: str,
+    comodo: str | None = None,
+    data: date | None = None,
+) -> Desenho:
+    """Planta do cômodo (se informado) ou do pavimento inteiro.
+
+    Levanta ``KeyError`` se o pavimento/cômodo não existir e ``ValueError`` se o
+    cômodo não fechar (rode ``interiores validar`` para ver o motivo).
+    """
+    pav = next((p for p in carregado.projeto.pavimentos if p.id == pavimento), None)
+    if pav is None:
+        raise KeyError(f"pavimento '{pavimento}' não existe no projeto")
+    data_txt = (data or date.today()).isoformat()
+    if comodo is not None:
+        c = pav.comodo(comodo)
+        if c is None:
+            raise KeyError(f"cômodo '{comodo}' não está no pavimento '{pavimento}'")
+        if geometria.poligono_eixo(pav, c) is None:
+            raise ValueError(f"cômodo '{comodo}' não fecha; rode `interiores validar`")
+        recorte = geometria.recorte_do_comodo(pav, comodo)
+        planta = _Planta(carregado, pav, [c], recorte, por_comodo=True)
+        return planta.desenhar(f"Planta baixa — {c.nome}", f"cômodo {c.id}", data_txt)
+    fechados = [c for c in pav.comodos if geometria.poligono_eixo(pav, c) is not None]
+    planta = _Planta(carregado, pav, fechados, pav, por_comodo=False)
+    return planta.desenhar(f"Planta baixa — {pav.nome or pav.id}", f"pavimento {pav.id}", data_txt)

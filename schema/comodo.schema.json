@@ -48,7 +48,7 @@
     },
     "Movel": {
       "additionalProperties": false,
-      "description": "Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).",
+      "description": "Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).\n\nConvenção de orientação: com ``rotacao: 0`` o móvel tem as **costas para -y**\n(para baixo na planta) e a **frente para +y**. A largura corre em x e a\nprofundidade em y. A rotação gira o móvel em torno do centro, então a frente\naponta para: 0 → +y, 90 → -x, 180 → -y, 270 → +x.\n\n\"Costas\" é o lado que encosta na parede: cabeceira da cama, fundo do\nguarda-roupa. \"Frente\" é o lado de uso: pés da cama, portas do guarda-roupa.",
       "properties": {
         "id": {
           "maxLength": 64,
@@ -89,6 +89,7 @@
         },
         "rotacao": {
           "default": 0,
+          "description": "Graus, anti-horário. Em 0 as costas ficam para -y e a frente para +y; a frente aponta para 0: +y, 90: -x, 180: -y, 270: +x.",
           "enum": [
             0,
             90,
@@ -103,7 +104,8 @@
           "description": "Dimensão ao longo do eixo x antes da rotação."
         },
         "profundidade": {
-          "$ref": "#/$defs/Medida"
+          "$ref": "#/$defs/Medida",
+          "description": "Dimensão de costas a frente (eixo y antes da rotação)."
         },
         "altura": {
           "$ref": "#/$defs/Medida"

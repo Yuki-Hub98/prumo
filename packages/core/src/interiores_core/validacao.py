@@ -364,6 +364,7 @@ class _Validador:
                         f"instalação em parede inexistente '{inst.parede}'",
                         **onde,
                     )
+                self.lado_da_instalacao(pav, inst, onde)
             limite = self.pe_direito_em(pav, inst)
             if inst.altura.valor > limite:
                 self.add(
@@ -372,6 +373,36 @@ class _Validador:
                     f"altura {inst.altura.valor} mm acima do pé-direito ({limite} mm)",
                     **onde,
                 )
+
+    def lado_da_instalacao(
+        self, pav: Pavimento, inst: PontoInstalacao, onde: dict[str, Any]
+    ) -> None:
+        """``comodo`` do ponto existe, é um dos lados da parede e não falta em parede interna."""
+        parede = pav.parede(inst.parede) if inst.parede else None
+        lados = {parede.lado_a, parede.lado_b} - {EXTERNO} if parede else set()
+        if inst.comodo is not None:
+            if inst.comodo not in self.ids_comodos:
+                self.add(
+                    Severidade.ERRO,
+                    "instalacao_comodo_invalido",
+                    f"cômodo '{inst.comodo}' não existe",
+                    **onde,
+                )
+            elif parede is not None and inst.comodo not in lados:
+                self.add(
+                    Severidade.ERRO,
+                    "instalacao_comodo_invalido",
+                    f"cômodo '{inst.comodo}' não é um dos lados da parede '{parede.id}'",
+                    **onde,
+                )
+        elif len(lados) == 2:
+            self.add(
+                Severidade.AVISO,
+                "instalacao_lado_indefinido",
+                f"ponto na parede '{parede.id if parede else ''}' entre "
+                f"{' e '.join(sorted(lados))}: informe `comodo` para saber de que lado fica",
+                **onde,
+            )
 
     @staticmethod
     def pe_direito_em(pav: Pavimento, inst: Instalacao) -> int:

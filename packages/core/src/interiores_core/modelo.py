@@ -127,6 +127,13 @@ class PontoInstalacao(_Modelo):
     posicao: Ponto
     altura: Medida
     parede: str | None = None
+    comodo: str | None = Field(
+        None,
+        description=(
+            "Cômodo atendido pelo ponto. Obrigatório em parede entre dois cômodos: "
+            "diz de que lado da parede ele fica."
+        ),
+    )
     obs: str | None = None
 
 
@@ -217,15 +224,32 @@ class Projeto(_Modelo):
 
 
 class Movel(_Modelo):
-    """Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário)."""
+    """Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).
+
+    Convenção de orientação: com ``rotacao: 0`` o móvel tem as **costas para -y**
+    (para baixo na planta) e a **frente para +y**. A largura corre em x e a
+    profundidade em y. A rotação gira o móvel em torno do centro, então a frente
+    aponta para: 0 → +y, 90 → -x, 180 → -y, 270 → +x.
+
+    "Costas" é o lado que encosta na parede: cabeceira da cama, fundo do
+    guarda-roupa. "Frente" é o lado de uso: pés da cama, portas do guarda-roupa.
+    """
 
     id: Id
     tipo: str = Field(description="cama, guarda_roupa, criado_mudo, ...")
     nome: str | None = None
     centro: Ponto
-    rotacao: Literal[0, 90, 180, 270] = 0
+    rotacao: Literal[0, 90, 180, 270] = Field(
+        0,
+        description=(
+            "Graus, anti-horário. Em 0 as costas ficam para -y e a frente para +y; "
+            "a frente aponta para 0: +y, 90: -x, 180: -y, 270: +x."
+        ),
+    )
     largura: Medida = Field(description="Dimensão ao longo do eixo x antes da rotação.")
-    profundidade: Medida
+    profundidade: Medida = Field(
+        description="Dimensão de costas a frente (eixo y antes da rotação)."
+    )
     altura: Medida
 
 
