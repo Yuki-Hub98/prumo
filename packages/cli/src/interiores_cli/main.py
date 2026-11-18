@@ -8,12 +8,13 @@ from typing import Annotated
 import typer
 from pydantic import ValidationError
 
-from interiores_cad.gerar import Resultado, Situacao, gerar_planta
-from interiores_core import __version__, catalogo, editar, geometria, schema
+from interiores_cad.gerar import Resultado, Situacao, gerar_movel, gerar_planta
+from interiores_core import __version__, catalogo, editar, geometria, planejado, schema
 from interiores_core.carregar import ProjetoCarregado, carregar
 from interiores_core.medidas import medidas_em
 from interiores_core.regras import checar
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, Severidade, validar
+from interiores_relatorios.lista_corte import gerar_lista
 
 app = typer.Typer(help="Projeto de interiores a partir de medidas reais.", no_args_is_help=True)
 
@@ -361,3 +362,103 @@ def _checagens_do_comodo(pasta: Path, comodo: str) -> None:
     problemas = checar(carregado.projeto, carregado.dados_comodos, carregado.regras, comodo)
     print()
     _listar_problemas(problemas)
+
+
+# ---------------------------------------------------------------- móveis planejados
+
+planejado_app = typer.Typer(help="Móveis planejados: construção interna, desenho e lista de corte.")
+app.add_typer(planejado_app, name="planejado")
+
+
+@planejado_app.command("criar")
+def cmd_planejado_criar(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    id_: Annotated[str, typer.Argument(metavar="MOVEL", help="Id do móvel.")],
+    substituir: Annotated[
+        bool, typer.Option("--substituir", help="Troca a construção que já existir.")
+    ] = False,
+    projetos: PastaProjetos = Path("projetos"),
+) -> None:
+    """Dá ao móvel a construção padrão do tipo dele (vãos, gavetas, prateleiras...).
+
+    As medidas sugeridas entram como estimadas; ajuste no JSON (ou no frontend).
+    """
+    pasta = projetos / projeto
+    carregado = _carregar(pasta)
+    dados = carregado.dados_comodos.get(comodo)
+    movel = next((m for m in dados.moveis if m.id == id_), None) if dados else None
+    if movel is None:
+        print(f"erro: móvel '{id_}' não existe no cômodo '{comodo}'")
+        raise typer.Exit(2)
+    try:
+        construcao = planejado.construcao_sugerida(movel)
+        editar.definir_construcao(pasta, comodo, id_, construcao, substituir)
+    except (KeyError, ValueError) as e:
+        print(f"erro: {e.args[0] if isinstance(e, KeyError) else e}")
+        raise typer.Exit(2) from e
+    vaos = construcao["vaos"]
+    assert isinstance(vaos, list)
+    print(f"construção padrão de '{movel.tipo}' gravada em '{id_}': {len(vaos)} vão(s)")
+    _resumo_planejado(pasta, comodo, id_)
+
+
+@planejado_app.command("gerar")
+def cmd_planejado_gerar(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    id_: Annotated[
+        str | None, typer.Argument(metavar="[MOVEL]", help="Id do móvel (todos, se omitido).")
+    ] = None,
+    projetos: PastaProjetos = Path("projetos"),
+    saida: Annotated[Path, typer.Option(help="Pasta das saídas geradas.")] = Path("out"),
+    forcar: Annotated[
+        bool, typer.Option("--forcar", help="Regera mesmo se a entrada não mudou.")
+    ] = False,
+) -> None:
+    """Desenho técnico (DXF/PDF) e lista de corte (.xlsx) dos móveis planejados."""
+    carregado = _carregar(projetos / projeto)
+    dados = carregado.dados_comodos.get(comodo)
+    planejados = [m.id for m in (dados.moveis if dados else []) if m.construcao is not None]
+    alvos = [id_] if id_ else planejados
+    if not alvos:
+        print(f"nenhum móvel planejado em '{comodo}' (use `interiores planejado criar`)")
+        raise typer.Exit(2)
+    falhou = False
+    for alvo in alvos:
+        try:
+            r = gerar_movel(carregado, saida, comodo, alvo, forcar=forcar)
+            xlsx, gerou = gerar_lista(carregado, r.arquivos[0].parent, comodo, alvo, forcar)
+        except (KeyError, ValueError) as e:
+            print(f"  {alvo:<20} FALHOU: {e.args[0] if isinstance(e, KeyError) else e}")
+            falhou = True
+            continue
+        _mostrar_resultado(alvo, r)
+        if gerou:
+            print(f"      {xlsx}")
+    _listar_problemas(
+        [
+            p
+            for p in checar(carregado.projeto, carregado.dados_comodos, carregado.regras, comodo)
+            if p.elemento in alvos
+        ]
+    )
+    if falhou:
+        raise typer.Exit(1)
+
+
+def _resumo_planejado(pasta: Path, comodo: str, id_: str) -> None:
+    carregado = _carregar(pasta)
+    movel = next(m for m in carregado.dados_comodos[comodo].moveis if m.id == id_)
+    try:
+        calc = planejado.calcular(movel)
+    except planejado.ConstrucaoInvalidaError as e:
+        print(f"erro: {e}")
+        raise typer.Exit(1) from e
+    pecas = sum(p.quantidade for p in calc.pecas)
+    chapas = ", ".join(f"{c.chapas} × {c.material} {c.espessura} mm" for c in calc.chapas)
+    print(f"  {pecas} peças · chapas: {chapas}")
+    print(
+        f"  gere o desenho e a lista de corte: interiores planejado gerar {pasta.name} {comodo} "
+        f"{id_}"
+    )

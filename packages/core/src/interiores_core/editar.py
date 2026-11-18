@@ -121,3 +121,26 @@ def remover_movel(pasta: Path | str, comodo: str, id_: str) -> DadosComodo:
     dados = _ler(pasta, comodo)
     del dados["moveis"][_indice(dados, id_)]
     return _gravar(pasta, comodo, dados)
+
+
+def definir_construcao(
+    pasta: Path | str,
+    comodo: str,
+    id_: str,
+    construcao: dict[str, Any] | None,
+    substituir: bool = False,
+) -> DadosComodo:
+    """Grava (ou remove, com ``None``) a construção de um móvel planejado.
+
+    Não sobrescreve uma construção existente sem ``substituir=True``.
+    """
+    pasta = Path(pasta)
+    dados = _ler(pasta, comodo)
+    movel = dados["moveis"][_indice(dados, id_)]
+    if construcao is None:
+        movel.pop("construcao", None)
+    else:
+        if "construcao" in movel and not substituir:
+            raise ValueError(f"'{id_}' já tem construção (use substituir para trocar)")
+        movel["construcao"] = construcao
+    return _gravar(pasta, comodo, dados)

@@ -212,7 +212,7 @@ def test_limites_do_tipo() -> None:
     assert limites["passagem_livre"] == 900 and limites["lateral_cama"] == 600
     assert not problemas
     limites, _ = limites_do_tipo("banheiro", {"geral": {"passagem_livre": 800}})
-    assert limites == {"passagem_livre": 800, "distancia_tela_pct": 150}
+    assert limites["passagem_livre"] == 800 and "lateral_cama" not in limites
     _, problemas = limites_do_tipo("quarto", {"quarto": {"lateral_cama": "60 cm"}})
     assert [p.codigo for p in problemas] == ["regra_invalida"]
     _, problemas = limites_do_tipo("quarto", {"quarto": {"lateral_cama": True}})

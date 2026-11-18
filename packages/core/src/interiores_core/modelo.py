@@ -223,6 +223,52 @@ class Projeto(_Modelo):
 # ---------------------------------------------------------------- comodos/<id>.json
 
 
+class Chapa(_Modelo):
+    """Material de chapa (MDF, MDP, HDF...) e sua espessura."""
+
+    material: str = Field(description='Ex.: "MDF branco", "MDP carvalho", "HDF branco".')
+    espessura: Medida
+
+
+class Espaco(_Modelo):
+    """Espaço dentro de um vão, de baixo para cima.
+
+    Entre dois espaços seguidos entra uma prateleira, exceto entre duas gavetas
+    (que ficam empilhadas). ``altura`` é a altura livre do espaço (na gaveta, a
+    altura da frente); se faltar, divide igualmente o que sobra no vão.
+    """
+
+    tipo: Literal["gaveta", "nicho", "cabideiro"]
+    altura: Medida | None = None
+
+
+class Vao(_Modelo):
+    """Coluna do móvel entre duas divisórias (ou entre a lateral e uma divisória)."""
+
+    largura: Medida | None = Field(
+        None, description="Largura livre; se faltar, divide igualmente o que sobra."
+    )
+    espacos: list[Espaco] = Field(min_length=1, description="De baixo para cima.")
+    porta: bool = Field(
+        True, description="Com portas de abrir: se este vão tem porta (False = nicho aberto)."
+    )
+
+
+class Construcao(_Modelo):
+    """Como o móvel planejado é construído por dentro (marcenaria em chapa).
+
+    Caixa com laterais inteiras, base e tampo entre as laterais, divisórias entre a
+    base e o tampo, fundo sobreposto, portas sobrepostas (de abrir, por vão) ou de
+    correr (no móvel todo, conforme ``Movel.portas``) e gavetas com corrediça
+    telescópica.
+    """
+
+    chapa: Chapa
+    fundo: Chapa
+    rodape: Medida | None = Field(None, description="Altura do rodapé (base recuada).")
+    vaos: list[Vao] = Field(min_length=1, description="Da esquerda para a direita (de frente).")
+
+
 class Movel(_Modelo):
     """Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).
 
@@ -272,6 +318,9 @@ class Movel(_Modelo):
         ),
     )
     polegadas: int | None = Field(None, ge=10, le=150, description="Diagonal da tela (TV).")
+    construcao: Construcao | None = Field(
+        None, description="Móvel planejado: estrutura interna para desenho e lista de corte."
+    )
 
     @property
     def ocupa_piso(self) -> bool:
