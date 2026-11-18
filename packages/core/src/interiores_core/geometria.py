@@ -11,7 +11,15 @@ from shapely import LineString, Point, Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import polygonize, unary_union
 
-from interiores_core.modelo import Comodo, Movel, Parede, Pavimento, Pilar, PontoInstalacao
+from interiores_core.modelo import (
+    Comodo,
+    Movel,
+    Parede,
+    Pavimento,
+    Pilar,
+    PontoInstalacao,
+    Porta,
+)
 
 FOLGA_LADO = 10.0
 """Distância extra além da face da parede ao testar de que lado está um cômodo."""
@@ -87,6 +95,45 @@ def area_util_m2(pavimento: Pavimento, comodo: Comodo) -> float | None:
     """Área útil em m², arredondada a 2 casas."""
     util = poligono_util(pavimento, comodo)
     return None if util is None else round(util.area / 1_000_000, 2)
+
+
+def direcao(parede: Parede) -> tuple[tuple[float, float], tuple[float, float]]:
+    """Unitário ao longo da parede (início → fim) e normal à esquerda (lado ``a``)."""
+    (x0, y0), (x1, y1) = parede.inicio, parede.fim
+    tam = comprimento(parede)
+    u = ((x1 - x0) / tam, (y1 - y0) / tam)
+    return u, (-u[1], u[0])
+
+
+def giro_porta(pavimento: Pavimento, porta: Porta, passos: int = 12) -> Polygon | None:
+    """Quarto de círculo varrido pela folha de uma porta de giro (``None`` se for de correr).
+
+    A dobradiça fica na face da parede do lado para onde a porta abre.
+    """
+    parede = pavimento.parede(porta.parede)
+    if porta.folha != "giro" or parede is None or comprimento(parede) == 0:
+        return None
+    u, n = direcao(parede)
+    s = 1 if porta.abre_para == parede.lado_a else -1
+    meia = parede.espessura.valor / 2
+    larg = porta.largura.valor
+    d0 = porta.distancia_inicio.valor
+    ini = (parede.inicio[0] + u[0] * d0, parede.inicio[1] + u[1] * d0)
+    fim = (ini[0] + u[0] * larg, ini[1] + u[1] * larg)
+    dobradica, outro = (ini, fim) if porta.dobradica != "fim" else (fim, ini)
+    centro = (dobradica[0] + n[0] * s * meia, dobradica[1] + n[1] * s * meia)
+    ang_folha = math.atan2(n[1] * s, n[0] * s)
+    ang_fecha = math.atan2(outro[1] - dobradica[1], outro[0] - dobradica[0])
+    varredura = (ang_folha - ang_fecha) % (2 * math.pi)
+    sentido = 1 if abs(varredura - math.pi / 2) < 1e-6 else -1
+    arco = [
+        (
+            centro[0] + larg * math.cos(ang_fecha + sentido * (math.pi / 2) * k / passos),
+            centro[1] + larg * math.sin(ang_fecha + sentido * (math.pi / 2) * k / passos),
+        )
+        for k in range(passos + 1)
+    ]
+    return Polygon([centro, *arco])
 
 
 _GIROS = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}

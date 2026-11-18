@@ -49,6 +49,8 @@ class Problema(BaseModel):
     comodo: str | None = None
     elemento: str | None = None
     posicao: tuple[int, int] | None = None
+    regiao: list[tuple[int, int]] | None = None
+    """Contorno da área com problema (para desenhar na camada RESTRICAO)."""
 
     def __str__(self) -> str:
         onde = " · ".join(

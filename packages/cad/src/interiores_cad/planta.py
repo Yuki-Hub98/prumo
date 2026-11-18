@@ -41,9 +41,13 @@ from interiores_core.modelo import (
     Porta,
     TipoInstalacao,
 )
+from interiores_core.regras import VERSAO_REGRAS, checar
 
-VERSAO_GERADOR = f"interiores-cad {__version__} · planta v3"
-"""Entra na chave de cache das saídas: mudou o desenho, suba o ``planta vN``."""
+VERSAO_GERADOR = f"interiores-cad {__version__} · planta v4 · {VERSAO_REGRAS}"
+"""Entra na chave de cache das saídas: mudou o desenho, suba o ``planta vN``.
+
+Inclui a versão das regras porque as checagens são desenhadas na planta.
+"""
 
 ELETRICOS = {TipoInstalacao.TOMADA, TipoInstalacao.INTERRUPTOR, TipoInstalacao.PONTO_LUZ}
 HIDRAULICOS = {
@@ -263,9 +267,9 @@ class _Planta:
         if round((ang_folha - ang_fecha) % 360) != 90:
             ini, fim = fim, ini
         self.msp.add_arc(centro, larg, ini, fim, dxfattribs={"layer": "ABERTURA"})
-        passos = [math.radians(ini + 90 * k / 12) for k in range(13)]
-        arco = [(centro[0] + larg * math.cos(a), centro[1] + larg * math.sin(a)) for a in passos]
-        self.giros.append(Polygon([centro, *arco]))
+        giro = geometria.giro_porta(self.recorte, porta)
+        if giro is not None:
+            self.giros.append(giro)
         # soleira: linha do vão na face oposta ao giro
         self.msp.add_line(
             _som(a0, n, -s * meia), _som(a1, n, -s * meia), dxfattribs={"layer": "ABERTURA"}
@@ -522,6 +526,32 @@ class _Planta:
         self.cota((xmin, ymin), (xmax, ymin), (0, -1), total)
         self.cota((xmin, ymin), (xmin, ymax), (-1, 0), total)
 
+    # -- checagens de uso
+
+    def restricoes(self) -> list[str]:
+        """Desenha na camada RESTRICAO as áreas com problema e devolve as linhas do painel."""
+        problemas = [
+            p
+            for p in checar(
+                self.carregado.projeto,
+                self.carregado.dados_comodos,
+                self.carregado.regras,
+                comodo=self.comodos[0].id if self.por_comodo else None,
+            )
+            if p.comodo in self.ids_comodos and p.pavimento == self.pavimento.id
+        ]
+        cam = {"layer": "RESTRICAO"}
+        r = self.mm(2.2)
+        linhas = []
+        for i, p in enumerate(problemas, 1):
+            if p.regiao:
+                self.msp.add_lwpolyline(p.regiao, close=True, dxfattribs=cam)
+            if p.posicao:
+                self.msp.add_circle(p.posicao, r, dxfattribs=cam)
+                self.texto(str(i), p.posicao, Texto.INSTALACAO * 1.2, "RESTRICAO")
+            linhas.append(f"{i}. [{p.severidade}] {p.mensagem}")
+        return linhas
+
     # -- montagem
 
     def desenhar(self, titulo: str, escopo: str, data: str) -> Desenho:
@@ -534,6 +564,7 @@ class _Planta:
             self.cotas_comodo(self.comodos[0])
         else:
             self.cotas_gerais()
+        checagens = self.restricoes()
         estimadas = (
             self.carregado.estimadas(self.comodos[0].id)
             if self.por_comodo
@@ -554,6 +585,7 @@ class _Planta:
                 gerador=VERSAO_GERADOR,
                 estimadas=estimadas,
                 legenda=LEGENDA,
+                checagens=checagens,
             ),
         )
         return Desenho(self.doc, self.folha, titulo, estimadas)

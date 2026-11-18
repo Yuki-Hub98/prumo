@@ -132,14 +132,24 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 
 ## Roadmap
 
-- [ ] Esqueleto do monorepo (uv, Docker, pre-commit, commitizen)
-- [ ] `core`: schema Projeto → Imóvel → Pavimento → Cômodo
-- [ ] Checagens do quarto (passagem, cama, guarda-roupa, portas, tomadas)
-- [ ] Planta e cortes do quarto em DXF/PDF com carimbo e aviso de obra
+- [x] Esqueleto do monorepo (uv, Docker, pre-commit, commitizen)
+- [x] `core`: schema Projeto → Imóvel → Pavimento → Cômodo
+- [x] Checagens do quarto (passagem, cama, guarda-roupa, portas, tomadas)
+- [x] Planta do quarto e do pavimento em DXF/PDF com carimbo, aviso de obra e instalações
+- [ ] Cortes e elevações do quarto
+- [ ] Móveis — catálogo: todo tipo de móvel para posicionar nos cômodos (cama, guarda-roupa,
+      armário, sofá, TV/rack, mesa, cadeira, cômoda, criado-mudo, escrivaninha, estante...),
+      cada um com medidas padrão editáveis, frente/lados de uso, símbolo na planta, modelo 3D
+      e checagens próprias (ex.: distância sofá–TV)
+- [ ] Móveis — planejados: projetar o móvel por dentro (divisórias, prateleiras, gavetas,
+      portas, chapas e acabamento), com desenho técnico cotado, lista de corte e de ferragens
+      (`.xlsx`) para o marceneiro
 - [ ] Render do quarto no Blender com variações de cor e móvel
 - [ ] Comparador lado a lado e cálculo de tinta
 - [ ] API + banco (histórico de medidas, variações, escolhas)
 - [ ] Frontend: visor 3D, comparador, formulário de medidas, painel de problemas
+- [ ] Frontend — editor de móveis: escolher do catálogo, arrastar, girar e redimensionar na
+      planta/3D, editar medidas e criar móveis planejados, com as checagens rodando na hora
 - [ ] Cozinha (hidráulica, gás, triângulo de trabalho)
 - [ ] Planta geral do pavimento e 3D da casa
 - [ ] Deploy

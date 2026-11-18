@@ -251,6 +251,16 @@ class Movel(_Modelo):
         description="Dimensão de costas a frente (eixo y antes da rotação)."
     )
     altura: Medida
+    portas: Literal["abrir", "correr"] | None = Field(
+        None,
+        description=(
+            "Portas na frente do móvel (guarda-roupa, armário). Define o espaço livre "
+            "exigido à frente: de abrir precisa de mais."
+        ),
+    )
+    largura_porta: Medida | None = Field(
+        None, description="Largura de cada folha de porta de abrir (para o espaço de giro)."
+    )
 
 
 class DadosComodo(_Modelo):

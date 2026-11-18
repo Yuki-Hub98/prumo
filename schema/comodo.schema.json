@@ -109,6 +109,35 @@
         },
         "altura": {
           "$ref": "#/$defs/Medida"
+        },
+        "portas": {
+          "anyOf": [
+            {
+              "enum": [
+                "abrir",
+                "correr"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Portas na frente do móvel (guarda-roupa, armário). Define o espaço livre exigido à frente: de abrir precisa de mais.",
+          "title": "Portas"
+        },
+        "largura_porta": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Largura de cada folha de porta de abrir (para o espaço de giro)."
         }
       },
       "required": [

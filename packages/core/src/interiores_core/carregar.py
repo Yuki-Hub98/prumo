@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -20,6 +21,8 @@ class ProjetoCarregado:
     projeto: Projeto
     dados_comodos: dict[str, DadosComodo] = field(default_factory=dict)
     hash_entrada: str = ""
+    regras: dict[str, object] = field(default_factory=dict)
+    """Conteúdo do ``regras.toml`` do projeto (limites que sobrescrevem os padrões)."""
 
     @property
     def hash_curto(self) -> str:
@@ -74,8 +77,9 @@ def _canonico(obj: object) -> bytes:
 def carregar(pasta: Path | str) -> ProjetoCarregado:
     """Carrega e valida o formato de um projeto.
 
-    Levanta ``pydantic.ValidationError`` se o JSON não seguir o schema e
-    ``FileNotFoundError`` se faltar o ``projeto.json``. Consistência entre
+    Levanta ``pydantic.ValidationError`` se o JSON não seguir o schema,
+    ``FileNotFoundError`` se faltar o ``projeto.json`` e ``tomllib.TOMLDecodeError``
+    se o ``regras.toml`` (opcional) for inválido. Consistência entre
     elementos é checada depois, com :func:`interiores_core.validacao.validar`.
 
     O hash da entrada é calculado sobre o conteúdo canônico (chaves ordenadas)
@@ -94,6 +98,16 @@ def carregar(pasta: Path | str) -> ProjetoCarregado:
             dados[arquivo.stem] = DadosComodo.model_validate(conteudo)
             hash_.update(f"\0comodos/{arquivo.name}\0".encode() + _canonico(conteudo))
 
+    regras: dict[str, object] = {}
+    arquivo_regras = pasta / "regras.toml"
+    if arquivo_regras.is_file():
+        regras = tomllib.loads(arquivo_regras.read_text(encoding="utf-8"))
+        hash_.update(b"\0regras.toml\0" + _canonico(regras))
+
     return ProjetoCarregado(
-        pasta=pasta, projeto=projeto, dados_comodos=dados, hash_entrada=hash_.hexdigest()
+        pasta=pasta,
+        projeto=projeto,
+        dados_comodos=dados,
+        hash_entrada=hash_.hexdigest(),
+        regras=regras,
     )
