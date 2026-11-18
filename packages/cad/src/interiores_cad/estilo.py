@@ -47,6 +47,8 @@ COR_PREENCHIMENTO_PAREDE = (90, 90, 90)
 ESTILO_TEXTO = "PRUMO"
 ESTILO_COTA = "PRUMO"
 FONTE = "DejaVuSans.ttf"
+TRACEJADO = "TRACEJADO"
+"""Tipo de linha para o que está acima do plano de corte (móvel elevado)."""
 
 
 class Texto:
@@ -78,6 +80,12 @@ def novo_documento(escala: int) -> Drawing:
         layer.dxf.lineweight = camada.espessura
 
     doc.styles.add(ESTILO_TEXTO, font=FONTE)
+    # traço de 3 mm e espaço de 1,5 mm no papel
+    doc.linetypes.add(
+        TRACEJADO,
+        pattern=[4.5 * escala, 3.0 * escala, -1.5 * escala],
+        description="Tracejado __ __ __",
+    )
 
     cota = doc.dimstyles.add(ESTILO_COTA)
     cota.dxf.dimscale = escala

@@ -180,6 +180,38 @@ def test_checagens_na_planta(casa: ProjetoCarregado, copia: Path) -> None:
     assert "Nenhum problema nas checagens de uso." in _textos(doc)
 
 
+def test_simbolos_do_catalogo(copia: Path) -> None:
+    """Cada tipo ganha seu símbolo; móvel elevado sai tracejado e com a elevação."""
+    from interiores_core.catalogo import novo_movel
+
+    arq = copia / "comodos" / "quarto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    d["moveis"] = [
+        novo_movel("sofa", "sofa", (1300, 525), "3_lugares"),
+        novo_movel("tv", "tv", (1300, 2535), "55pol", rotacao=180),
+        novo_movel("guarda_roupa", "gr", (3150, 3200), "2_portas", rotacao=90),
+        {**novo_movel("cama", "x", (2800, 1300)), "tipo": "rede"},  # fora do catálogo
+    ]
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    doc = desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc
+    msp = doc.modelspace()
+    tracejadas = [e for e in msp.query('*[layer=="MOVEL"]') if e.dxf.linetype == "TRACEJADO"]
+    assert tracejadas and all(e.dxf.linetype == "TRACEJADO" for e in tracejadas)
+    textos = _textos(doc, "MOVEL")
+    assert '55" · 1230 × 80' in textos and "elev. 1000" in textos
+    linhas = msp.query('LINE[layer=="MOVEL"]')
+
+    # sofá 3 lugares (centro 1300,525; 2100 × 900 → x 250..2350, y 75..975):
+    # encosto + 2 braços + 2 divisões de lugar
+    def dentro_do_sofa(e: Any) -> bool:
+        return all(250 <= p.x <= 2350 and 75 <= p.y <= 975 for p in (e.dxf.start, e.dxf.end))
+
+    sofa_y = [e for e in linhas if dentro_do_sofa(e)]
+    assert len(sofa_y) == 5
+    # guarda-roupa de 2 portas de abrir (450): linha das portas + 1 divisão + cabideiro
+    assert "TRACEJADO" in [lt.dxf.name for lt in doc.linetypes]
+
+
 def test_carimbo(casa: ProjetoCarregado) -> None:
     desenho = desenhar_planta(casa, "terreo", "quarto", DATA)
     textos = _textos(desenho.doc)

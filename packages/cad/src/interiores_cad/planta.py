@@ -14,6 +14,7 @@ from ezdxf.document import Drawing
 from ezdxf.enums import TextEntityAlignment
 from ezdxf.layouts.layout import Modelspace
 from shapely import LineString, MultiPolygon, Point, Polygon
+from shapely.affinity import translate
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.polygon import orient
 from shapely.ops import polylabel, unary_union
@@ -23,12 +24,20 @@ from interiores_cad.estilo import (
     COR_PREENCHIMENTO_PAREDE,
     ESTILO_COTA,
     ESTILO_TEXTO,
+    TRACEJADO,
     Texto,
     novo_documento,
 )
-from interiores_cad.folha import DadosCarimbo, Folha, desenhar_folha, escolher_folha
-from interiores_core import geometria
+from interiores_cad.folha import (
+    LARGURA_LETRA,
+    DadosCarimbo,
+    Folha,
+    desenhar_folha,
+    escolher_folha,
+)
+from interiores_core import catalogo, geometria
 from interiores_core.carregar import ProjetoCarregado
+from interiores_core.catalogo import Simbolo
 from interiores_core.medidas import Medida
 from interiores_core.modelo import (
     EXTERNO,
@@ -43,7 +52,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.regras import VERSAO_REGRAS, checar
 
-VERSAO_GERADOR = f"interiores-cad {__version__} · planta v4 · {VERSAO_REGRAS}"
+VERSAO_GERADOR = f"interiores-cad {__version__} · planta v6 · {VERSAO_REGRAS}"
 """Entra na chave de cache das saídas: mudou o desenho, suba o ``planta vN``.
 
 Inclui a versão das regras porque as checagens são desenhadas na planta.
@@ -279,29 +288,41 @@ class _Planta:
     # -- móveis
 
     def moveis_(self) -> None:
-        """Contorno, nome, dimensões e a indicação de frente (convenção em ``Movel``)."""
+        """Contorno, símbolo do tipo (catálogo), nome e dimensões.
+
+        Móvel elevado (TV na parede, armário aéreo) sai tracejado, como na convenção
+        de planta para o que está acima do plano de corte.
+        """
         for m in self.moveis:
-            cam = {"layer": "MOVEL"}
+            cam: dict[str, object] = {"layer": "MOVEL"}
+            if not m.ocupa_piso:
+                cam["linetype"] = TRACEJADO
             self.msp.add_lwpolyline(geometria.cantos_movel(m), close=True, dxfattribs=cam)
             for ini, fim in self.detalhes_movel(m):
                 self.msp.add_line(
                     geometria.girar_movel(m, *ini), geometria.girar_movel(m, *fim), dxfattribs=cam
                 )
-            nome = m.nome or m.tipo
-            dim = f"{m.largura.valor} × {m.profundidade.valor}"
-            passo = self.mm(Texto.MOVEL * 0.8)
-            self.texto(nome, (m.centro[0], m.centro[1] + passo), Texto.MOVEL, "MOVEL")
-            self.texto(dim, (m.centro[0], m.centro[1] - passo), Texto.MOVEL * 0.85, "MOVEL")
+            linhas = [m.nome or m.tipo, f"{m.largura.valor} × {m.profundidade.valor}"]
+            if m.polegadas:
+                linhas[1] = f'{m.polegadas}" · {linhas[1]}'
+            if m.elevacao and m.elevacao.valor:
+                linhas.append(f"elev. {m.elevacao.valor}")
+            passo = self.mm(Texto.MOVEL * 1.6)
+            y0 = m.centro[1] + passo * (len(linhas) - 1) / 2
+            for i, linha in enumerate(linhas):
+                altura = Texto.MOVEL if i == 0 else Texto.MOVEL * 0.85
+                self.texto(linha, (m.centro[0], y0 - i * passo), altura, "MOVEL")
 
     def detalhes_movel(self, m: Movel) -> list[tuple[Vetor, Vetor]]:
-        """Linhas no referencial do móvel (costas em -y, frente em +y, rotação 0).
+        """Linhas do símbolo no referencial do móvel (costas em -y, frente em +y).
 
-        - cama: cabeceira e travesseiros junto às costas;
-        - guarda-roupa: linha das portas junto à frente e cabideiro no meio;
-        - demais: seta no meio da frente apontando para fora.
+        O símbolo vem do catálogo (``Simbolo``); tipo fora do catálogo usa o genérico
+        (seta na frente).
         """
         w, d = m.largura.valor / 2, m.profundidade.valor / 2
         linhas: list[tuple[Vetor, Vetor]] = []
+        item = catalogo.item_do_tipo(m.tipo)
+        simbolo = item.simbolo if item else Simbolo.GENERICO
 
         def ret(x0: float, y0: float, x1: float, y1: float) -> None:
             linhas.extend(
@@ -313,7 +334,11 @@ class _Planta:
                 ]
             )
 
-        if m.tipo == "cama":
+        def seta() -> None:
+            s = min(self.mm(1.5), w / 2, d / 2)
+            linhas.extend([((-s, d - 2 * s), (0, d - s)), ((0, d - s), (s, d - 2 * s))])
+
+        if simbolo is Simbolo.CAMA:
             linhas.append(((-w, -d + 60), (w, -d + 60)))  # cabeceira
             n = 2 if m.largura.valor >= 1200 else 1
             folga = 80.0
@@ -321,12 +346,45 @@ class _Planta:
             for i in range(n):
                 x0 = -w + folga + i * (larg + folga)
                 ret(x0, -d + 120, x0 + larg, -d + 120 + min(320.0, d))
-        elif m.tipo == "guarda_roupa":
-            linhas.append(((-w, d - 40), (w, d - 40)))  # portas
-            linhas.append(((-w + 60, 0), (w - 60, 0)))  # cabideiro
-        else:
-            s = min(self.mm(1.5), w / 2, d / 2)
-            linhas += [((-s, d - 2 * s), (0, d - s)), ((0, d - s), (s, d - 2 * s))]
+        elif simbolo is Simbolo.PORTAS:
+            if m.portas == "correr":  # duas folhas sobrepostas
+                linhas.append(((-w, d - 30), (w * 0.1, d - 30)))
+                linhas.append(((-w * 0.1, d - 60), (w, d - 60)))
+            else:  # de abrir: linha das portas e divisão das folhas
+                linhas.append(((-w, d - 40), (w, d - 40)))
+                folha = m.largura_porta.valor if m.largura_porta else 0
+                if folha > 0:
+                    x = -w + folha
+                    while x < w - 1:
+                        linhas.append(((x, d - 40), (x, d)))
+                        x += folha
+            if m.tipo == "guarda_roupa":
+                linhas.append(((-w + 60, 0), (w - 60, 0)))  # cabideiro
+        elif simbolo is Simbolo.ASSENTO:
+            encosto, braco = min(200.0, d / 3), min(150.0, w / 4)
+            linhas.append(((-w, -d + encosto), (w, -d + encosto)))
+            linhas.append(((-w + braco, -d + encosto), (-w + braco, d)))
+            linhas.append(((w - braco, -d + encosto), (w - braco, d)))
+            assento = 2 * (w - braco)
+            lugares = max(1, round(assento / 650))
+            for i in range(1, lugares):
+                x = -w + braco + assento * i / lugares
+                linhas.append(((x, -d + encosto), (x, d)))
+        elif simbolo is Simbolo.CADEIRA:
+            linhas.append(((-w, -d + min(80.0, d / 3)), (w, -d + min(80.0, d / 3))))
+        elif simbolo is Simbolo.TELA:
+            linhas.append(((-w, d - 15), (w, d - 15)))  # face da tela
+        elif simbolo is Simbolo.MESA:
+            k = min(40.0, w / 4, d / 4)
+            ret(-w + k, -d + k, w - k, d - k)
+        elif simbolo is Simbolo.PRATELEIRAS:
+            linhas.append(((-w, d - 30), (w, d - 30)))
+            linhas.append(((-w, -d), (w, d - 30)))
+            seta()
+        else:  # gavetas e genérico
+            if simbolo is Simbolo.GAVETAS:
+                linhas.append(((-w, d - 30), (w, d - 30)))
+            seta()
         return linhas
 
     # -- instalações elétricas
@@ -425,13 +483,19 @@ class _Planta:
             # afasta das paredes para o texto não encostar nelas
             miolo = util.buffer(-self.mm(4)) if not util.buffer(-self.mm(4)).is_empty else util
             vazio: BaseGeometry = miolo.difference(livres) if obstaculos else miolo
-            alvo = _maior_poligono(vazio) or _maior_poligono(util)
+            info = f"{area:.2f} m²".replace(".", ",") + f" · pé-direito {pe}"
+            # caixa do texto (mm de modelo), para achar um lugar onde ele caiba inteiro
+            larg = max(len(c.nome) * Texto.TITULO_COMODO, len(info) * Texto.INFO_COMODO) * self.mm(
+                LARGURA_LETRA
+            )
+            alt = self.mm(Texto.TITULO_COMODO * 1.4 + Texto.INFO_COMODO * 1.4)
+            cabe = _onde_cabe(vazio, larg, alt)
+            alvo = cabe or _maior_poligono(vazio) or _maior_poligono(util)
             if alvo is None:
                 continue
             p = polylabel(alvo, tolerance=10)
             h = self.mm(Texto.TITULO_COMODO)
             self.texto(c.nome, (p.x, p.y + h * 0.7), Texto.TITULO_COMODO, "TEXTO")
-            info = f"{area:.2f} m²".replace(".", ",") + f" · pé-direito {pe}"
             self.texto(info, (p.x, p.y - h * 0.7), Texto.INFO_COMODO, "TEXTO")
 
     # -- cotas
@@ -543,12 +607,18 @@ class _Planta:
         cam = {"layer": "RESTRICAO"}
         r = self.mm(2.2)
         linhas = []
+        usados: list[Vetor] = []
         for i, p in enumerate(problemas, 1):
             if p.regiao:
                 self.msp.add_lwpolyline(p.regiao, close=True, dxfattribs=cam)
             if p.posicao:
-                self.msp.add_circle(p.posicao, r, dxfattribs=cam)
-                self.texto(str(i), p.posicao, Texto.INSTALACAO * 1.2, "RESTRICAO")
+                pos: Vetor = (float(p.posicao[0]), float(p.posicao[1]))
+                # marcas no mesmo lugar vão para o lado, sem se sobrepor
+                while any(math.dist(pos, u) < 2 * r for u in usados):
+                    pos = (pos[0] + 2.2 * r, pos[1])
+                usados.append(pos)
+                self.msp.add_circle(pos, r, dxfattribs=cam)
+                self.texto(str(i), pos, Texto.INSTALACAO * 1.2, "RESTRICAO")
             linhas.append(f"{i}. [{p.severidade}] {p.mensagem}")
         return linhas
 
@@ -596,6 +666,23 @@ def _alinhamento_para(v: Vetor) -> TextEntityAlignment:
     if abs(v[0]) >= abs(v[1]):
         return TextEntityAlignment.MIDDLE_LEFT if v[0] > 0 else TextEntityAlignment.MIDDLE_RIGHT
     return TextEntityAlignment.BOTTOM_CENTER if v[1] > 0 else TextEntityAlignment.TOP_CENTER
+
+
+def _onde_cabe(area: BaseGeometry, largura: float, altura: float) -> Polygon | None:
+    """Maior região de ``area`` onde o centro de uma caixa largura × altura pode ficar.
+
+    Erosão por retângulo: encolhe meia altura em todas as direções (quadrado) e
+    o resto da meia largura só na horizontal (interseção de cópias deslocadas).
+    """
+    meia_alt = altura / 2
+    folga_h = max(0.0, largura / 2 - meia_alt)
+    base = area.buffer(-meia_alt, join_style="mitre")
+    if base.is_empty:
+        return None
+    centros = base.intersection(translate(base, folga_h, 0)).intersection(
+        translate(base, -folga_h, 0)
+    )
+    return _maior_poligono(centros)
 
 
 def _maior_poligono(geom: BaseGeometry | None) -> Polygon | None:

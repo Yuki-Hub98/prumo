@@ -719,8 +719,8 @@
   "camada": "TEXTO",
   "texto": "Quarto (suíte)",
   "ponto": [
-   2790,
-   3425
+   2675,
+   2335
   ]
  },
  {
@@ -728,8 +728,8 @@
   "camada": "TEXTO",
   "texto": "11,04 m² · pé-direito 2600",
   "ponto": [
-   2790,
-   3302
+   2675,
+   2212
   ]
  },
  {
@@ -1159,7 +1159,7 @@
  {
   "tipo": "TEXT",
   "camada": "TEXTO",
-  "texto": "interiores-cad 0.1.0 · planta v4 · regras v1",
+  "texto": "interiores-cad 0.1.0 · planta v6 · regras v1",
   "ponto": [
    5512,
    -1055
