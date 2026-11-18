@@ -533,7 +533,7 @@ class _Planta:
                 continue
             u = (dx / tam, dy / tam)
             fora = (u[1], -u[0])  # anel anti-horário: exterior à direita
-            paredes = self.paredes_da_face(p, q, u)
+            paredes = geometria.paredes_da_face(self.pavimento, c, p, q)
             esp = max((pa.espessura.valor for pa in paredes), default=0)
             cortes = sorted({0.0, tam, *self.cortes_aberturas(paredes, p, u, tam)})
             fileira = esp + self.mm(9)
@@ -543,19 +543,6 @@ class _Planta:
                         self.cota(_som(p, u, t0), _som(p, u, t1), fora, fileira)
                 fileira += self.mm(7)
             self.cota(p, q, fora, fileira)
-
-    def paredes_da_face(self, p: Vetor, q: Vetor, u: Vetor) -> list[Parede]:
-        meio = LineString([p, q]).interpolate(0.5, normalized=True)
-        achadas = []
-        for parede in self.recorte.paredes:
-            pu, _ = _direcao(parede)
-            paralela = abs(pu[0] * u[1] - pu[1] * u[0]) < 1e-6
-            if (
-                paralela
-                and abs(geometria.eixo(parede).distance(meio) - parede.espessura.valor / 2) < 2
-            ):
-                achadas.append(parede)
-        return achadas
 
     def cortes_aberturas(
         self, paredes: list[Parede], p: Vetor, u: Vetor, tam: float
