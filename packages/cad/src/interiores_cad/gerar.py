@@ -104,3 +104,66 @@ def gerar_planta(
         desenho.folha.escala,
         desenho.folha.formato.nome,
     )
+
+
+def gerar_movel(
+    carregado: ProjetoCarregado,
+    saida: Path,
+    comodo: str,
+    movel_id: str,
+    variacao: str = VARIACAO_BASE,
+    forcar: bool = False,
+    data: date | None = None,
+) -> Resultado:
+    """Grava ``planejado-<movel>.dxf/.pdf/.json`` na pasta do cômodo."""
+    from interiores_cad.movel import VERSAO_MOVEL, desenhar_movel
+
+    pav = carregado.projeto.pavimento_do_comodo(comodo)
+    if pav is None:
+        raise KeyError(f"cômodo '{comodo}' não existe no projeto")
+    pasta = pasta_saida(saida, carregado.projeto.projeto, pav.id, comodo, variacao)
+    base = f"planejado-{movel_id}"
+    dxf, pdf, meta = pasta / f"{base}.dxf", pasta / f"{base}.pdf", pasta / f"{base}.json"
+    arquivos = (dxf, pdf, meta)
+    minha_chave = hashlib.sha256(
+        f"{carregado.hash_entrada}\0{VERSAO_MOVEL}\0{movel_id}".encode()
+    ).hexdigest()
+    if not forcar and all(a.exists() for a in arquivos):
+        anterior = json.loads(meta.read_text(encoding="utf-8"))
+        if anterior.get("chave") == minha_chave:
+            return Resultado(
+                Situacao.INALTERADO,
+                arquivos,
+                anterior["preliminar"],
+                anterior["escala"],
+                anterior["folha"],
+            )
+    desenho = desenhar_movel(carregado, comodo, movel_id, data)
+    pasta.mkdir(parents=True, exist_ok=True)
+    desenho.doc.saveas(dxf)
+    salvar_pdf(desenho, pdf)
+    meta.write_text(
+        json.dumps(
+            {
+                "chave": minha_chave,
+                "hash_entrada": carregado.hash_entrada,
+                "gerador": VERSAO_MOVEL,
+                "escopo": {"comodo": comodo, "movel": movel_id, "variacao": variacao},
+                "escala": desenho.folha.escala,
+                "folha": desenho.folha.formato.nome,
+                "preliminar": desenho.preliminar,
+                "estimadas": [c for c, _ in desenho.estimadas],
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return Resultado(
+        Situacao.GERADO,
+        arquivos,
+        desenho.preliminar,
+        desenho.folha.escala,
+        desenho.folha.formato.nome,
+    )

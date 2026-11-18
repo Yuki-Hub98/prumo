@@ -108,23 +108,40 @@ def escolher_folha(caixa: tuple[float, float, float, float]) -> Folha:
 
 # ---------------------------------------------------------------- estimadas
 
-_ITEM = re.compile(r"\[([^\]]+)\]\.?([^\[]*)$")
+
+_COLCHETE = re.compile(r"\[([^\]]+)\]")
+_NOMES_INDICE = {"vaos": "vão", "espacos": "espaço"}
+
+
+def _elemento_e_campo(caminho: str) -> tuple[str, str]:
+    """Separa o caminho no último ``[id]`` não numérico e descreve o resto.
+
+    ``comodos/quarto.moveis[gr].construcao.vaos[0].espacos[3].altura`` vira
+    ``("gr", "vão 1 espaço 4 altura")``; índices numéricos viram "vão N"/"espaço N".
+    """
+    ids = [m for m in _COLCHETE.finditer(caminho) if not m.group(1).isdigit()]
+    if not ids:
+        elemento, _, campo = caminho.rpartition(".")
+        return elemento, campo
+    ultimo = ids[-1]
+    resto = caminho[ultimo.end() :].lstrip(".").removeprefix("construcao.")
+
+    def numero(m: re.Match[str]) -> str:
+        return f"{_NOMES_INDICE.get(m.group(1), m.group(1))} {int(m.group(2)) + 1} "
+
+    resto = re.sub(r"(\w+)\[(\d+)\]\.?", numero, resto).replace(".", " ")
+    return ultimo.group(1), resto.strip() or "valor"
 
 
 def agrupar_estimadas(estimadas: Sequence[tuple[str, Medida]]) -> list[str]:
     """Agrupa caminhos por elemento: ``"janela-quarto: largura, altura"``.
 
-    O elemento é o último ``[id]`` do caminho; sem ``[id]``, o prefixo (pavimento).
-    Mantém a ordem da primeira aparição.
+    O elemento é o último ``[id]`` não numérico do caminho; sem ``[id]``, o prefixo
+    (pavimento). Mantém a ordem da primeira aparição.
     """
     grupos: dict[str, list[str]] = {}
     for caminho, _ in estimadas:
-        achado = _ITEM.search(caminho)
-        if achado:
-            elemento, campo = achado.group(1), achado.group(2) or "valor"
-        else:
-            elemento, _, campo = caminho.rpartition(".")
-            elemento = _ITEM.sub(r"\1", elemento) if "[" in elemento else elemento
+        elemento, campo = _elemento_e_campo(caminho)
         grupos.setdefault(elemento, []).append(campo)
     return [f"{elemento}: {', '.join(campos)}" for elemento, campos in grupos.items()]
 
