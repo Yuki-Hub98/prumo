@@ -7,10 +7,10 @@
       "tipo": "cama",
       "nome": "Cama de casal",
       "centro": [
-        2485,
-        1325
+        1015,
+        1750
       ],
-      "rotacao": 90,
+      "rotacao": 270,
       "largura": {
         "valor": 1380,
         "origem": "estimada",
@@ -32,10 +32,10 @@
       "tipo": "guarda_roupa",
       "nome": "Guarda-roupa",
       "centro": [
-        350,
-        1325
+        3600,
+        3150
       ],
-      "rotacao": 270,
+      "rotacao": 180,
       "portas": "correr",
       "largura": {
         "valor": 1800,
@@ -58,10 +58,10 @@
       "tipo": "tv",
       "nome": "TV",
       "centro": [
-        1000,
-        2535
+        4635,
+        1750
       ],
-      "rotacao": 180,
+      "rotacao": 90,
       "largura": {
         "valor": 1170,
         "origem": "estimada",
@@ -90,10 +90,10 @@
       "modelo": "alto",
       "nome": "Armário",
       "centro": [
-        3225,
-        3000
+        3150,
+        275
       ],
-      "rotacao": 90,
+      "rotacao": 0,
       "largura": {
         "valor": 800,
         "origem": "estimada",

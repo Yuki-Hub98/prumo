@@ -32,13 +32,13 @@
             0
           ],
           "fim": [
-            3500,
+            4750,
             0
           ],
           "espessura": {
             "valor": 150,
             "origem": "estimada",
-            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário em 2026-11-17: suíte 3,35 × 4,60 m por dentro (eixo = medida interna + meia espessura das externas)"
+            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário: quarto 4,60 × 3,35 m por dentro (4,60 na parede da janela), banheiro atrás ocupando toda a largura; eixo = medida interna + meia espessura; parede da janela e da porta do quarto"
           },
           "lado_a": "quarto",
           "lado_b": "externo"
@@ -46,17 +46,17 @@
         {
           "id": "p2",
           "inicio": [
-            3500,
+            4750,
             0
           ],
           "fim": [
-            3500,
-            4750
+            4750,
+            3485
           ],
           "espessura": {
             "valor": 150,
             "origem": "estimada",
-            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário em 2026-11-17: suíte 3,35 × 4,60 m por dentro (eixo = medida interna + meia espessura das externas)"
+            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário: quarto 4,60 × 3,35 m por dentro (4,60 na parede da janela), banheiro atrás ocupando toda a largura; eixo = medida interna + meia espessura"
           },
           "lado_a": "quarto",
           "lado_b": "externo"
@@ -64,35 +64,35 @@
         {
           "id": "p3",
           "inicio": [
-            3500,
-            4750
+            4750,
+            3485
           ],
           "fim": [
-            2095,
-            4750
+            4750,
+            5600
           ],
           "espessura": {
             "valor": 150,
             "origem": "estimada",
-            "obs": "estimada: parede do corredor; resto da casa ainda não modelado; posição do eixo: aproximada informada pelo usuário em 2026-11-17: suíte 3,35 × 4,60 m por dentro (eixo = medida interna + meia espessura das externas) e aproximada informada pelo usuário em 2026-11-17: banheiro 1,96 × 1,98 m por dentro (1,96 assumido no sentido da largura da suíte)"
+            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário: quarto 4,60 × 3,35 m por dentro (4,60 na parede da janela), banheiro atrás ocupando toda a largura; eixo = medida interna + meia espessura; fundo do banheiro 1,98 m por dentro (medida aproximada anterior do usuário; a largura agora é a do quarto, pelo croqui do usuário (img.png, 2026-11-18))"
           },
-          "lado_a": "quarto",
+          "lado_a": "banheiro",
           "lado_b": "externo"
         },
         {
           "id": "p4",
           "inicio": [
-            2095,
-            4750
+            4750,
+            5600
           ],
           "fim": [
             0,
-            4750
+            5600
           ],
           "espessura": {
             "valor": 150,
             "origem": "estimada",
-            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário em 2026-11-17: suíte 3,35 × 4,60 m por dentro (eixo = medida interna + meia espessura das externas)"
+            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: fundo do banheiro 1,98 m por dentro (medida aproximada anterior do usuário; a largura agora é a do quarto, pelo croqui do usuário (img.png, 2026-11-18))"
           },
           "lado_a": "banheiro",
           "lado_b": "externo"
@@ -101,16 +101,16 @@
           "id": "p5",
           "inicio": [
             0,
-            4750
+            5600
           ],
           "fim": [
             0,
-            2635
+            3485
           ],
           "espessura": {
             "valor": 150,
             "origem": "estimada",
-            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário em 2026-11-17: suíte 3,35 × 4,60 m por dentro (eixo = medida interna + meia espessura das externas) e aproximada informada pelo usuário em 2026-11-17: banheiro 1,96 × 1,98 m por dentro (1,96 assumido no sentido da largura da suíte)"
+            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário: quarto 4,60 × 3,35 m por dentro (4,60 na parede da janela), banheiro atrás ocupando toda a largura; eixo = medida interna + meia espessura; fundo do banheiro 1,98 m por dentro (medida aproximada anterior do usuário; a largura agora é a do quarto, pelo croqui do usuário (img.png, 2026-11-18))"
           },
           "lado_a": "banheiro",
           "lado_b": "externo"
@@ -119,7 +119,7 @@
           "id": "p6",
           "inicio": [
             0,
-            2635
+            3485
           ],
           "fim": [
             0,
@@ -128,7 +128,7 @@
           "espessura": {
             "valor": 150,
             "origem": "estimada",
-            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário em 2026-11-17: suíte 3,35 × 4,60 m por dentro (eixo = medida interna + meia espessura das externas)"
+            "obs": "estimada: parede externa típica (bloco 14 cm + reboco); posição do eixo: aproximada informada pelo usuário: quarto 4,60 × 3,35 m por dentro (4,60 na parede da janela), banheiro atrás ocupando toda a largura; eixo = medida interna + meia espessura"
           },
           "lado_a": "quarto",
           "lado_b": "externo"
@@ -137,34 +137,16 @@
           "id": "p7",
           "inicio": [
             0,
-            2635
+            3485
           ],
           "fim": [
-            2095,
-            2635
+            4750,
+            3485
           ],
           "espessura": {
             "valor": 120,
             "origem": "estimada",
-            "obs": "estimada: parede interna de banheiro típica; posição do eixo: aproximada informada pelo usuário em 2026-11-17: banheiro 1,96 × 1,98 m por dentro (1,96 assumido no sentido da largura da suíte)"
-          },
-          "lado_a": "banheiro",
-          "lado_b": "quarto"
-        },
-        {
-          "id": "p8",
-          "inicio": [
-            2095,
-            2635
-          ],
-          "fim": [
-            2095,
-            4750
-          ],
-          "espessura": {
-            "valor": 120,
-            "origem": "estimada",
-            "obs": "estimada: parede interna de banheiro típica; posição do eixo: aproximada informada pelo usuário em 2026-11-17: banheiro 1,96 × 1,98 m por dentro (1,96 assumido no sentido da largura da suíte)"
+            "obs": "estimada: parede interna de banheiro típica; posição do eixo: aproximada informada pelo usuário: quarto 4,60 × 3,35 m por dentro (4,60 na parede da janela), banheiro atrás ocupando toda a largura; eixo = medida interna + meia espessura"
           },
           "lado_a": "banheiro",
           "lado_b": "quarto"
@@ -174,16 +156,16 @@
         {
           "id": "porta-quarto",
           "tipo": "porta",
-          "parede": "p3",
+          "parede": "p1",
           "de": "externo",
           "para": "quarto",
           "folha": "giro",
           "abre_para": "quarto",
-          "dobradica": "inicio",
+          "dobradica": "fim",
           "distancia_inicio": {
-            "valor": 300,
+            "valor": 3775,
             "origem": "estimada",
-            "obs": "estimada: posição da porta não informada"
+            "obs": "estimada: canto direito da parede da janela, pelo croqui do usuário (img.png, 2026-11-18); 10 cm da parede lateral; abre para dentro (usuário, 2026-11-18)"
           },
           "largura": {
             "valor": 800,
@@ -199,16 +181,16 @@
         {
           "id": "porta-banheiro",
           "tipo": "porta",
-          "parede": "p8",
+          "parede": "p7",
           "de": "quarto",
           "para": "banheiro",
           "folha": "giro",
           "abre_para": "banheiro",
           "dobradica": "inicio",
           "distancia_inicio": {
-            "valor": 300,
+            "valor": 225,
             "origem": "estimada",
-            "obs": "estimada: posição da porta não informada"
+            "obs": "estimada: ponta esquerda da parede do banheiro, pelo croqui do usuário (img.png, 2026-11-18); abre para dentro do banheiro (usuário, 2026-11-18)"
           },
           "largura": {
             "valor": 700,
@@ -226,9 +208,9 @@
           "tipo": "janela",
           "parede": "p1",
           "distancia_inicio": {
-            "valor": 1000,
+            "valor": 1100,
             "origem": "estimada",
-            "obs": "estimada: centralizada na parede"
+            "obs": "estimada: à esquerda do centro da parede, pelo croqui do usuário (img.png, 2026-11-18)"
           },
           "largura": {
             "valor": 1500,
@@ -245,31 +227,6 @@
             "origem": "estimada",
             "obs": "estimada: peitoril padrão"
           }
-        },
-        {
-          "id": "basculante-banheiro",
-          "tipo": "janela",
-          "parede": "p4",
-          "distancia_inicio": {
-            "valor": 750,
-            "origem": "estimada",
-            "obs": "estimada: posição não informada"
-          },
-          "largura": {
-            "valor": 600,
-            "origem": "estimada",
-            "obs": "estimada: basculante padrão"
-          },
-          "altura": {
-            "valor": 600,
-            "origem": "estimada",
-            "obs": "estimada"
-          },
-          "peitoril": {
-            "valor": 1500,
-            "origem": "estimada",
-            "obs": "estimada"
-          }
         }
       ],
       "estrutura": [],
@@ -279,58 +236,58 @@
           "forma": "ponto",
           "tipo": "tomada",
           "posicao": [
-            3500,
-            400
+            0,
+            850
           ],
           "altura": {
             "valor": 300,
             "origem": "estimada",
             "obs": "estimada: tomada baixa ao lado da cabeceira"
           },
-          "parede": "p2"
+          "parede": "p6"
         },
         {
           "id": "tomada-cama-dir",
           "forma": "ponto",
           "tipo": "tomada",
           "posicao": [
-            3500,
-            2250
+            0,
+            2650
           ],
           "altura": {
             "valor": 300,
             "origem": "estimada",
             "obs": "estimada: tomada baixa ao lado da cabeceira"
           },
-          "parede": "p2"
+          "parede": "p6"
         },
         {
           "id": "interruptor-quarto",
           "forma": "ponto",
           "tipo": "interruptor",
           "posicao": [
-            3350,
-            4750
+            3625,
+            0
           ],
           "altura": {
             "valor": 1100,
             "origem": "estimada",
-            "obs": "estimada: ao lado da porta"
+            "obs": "estimada: ao lado da porta, do lado da fechadura"
           },
-          "parede": "p3"
+          "parede": "p1"
         },
         {
           "id": "luz-quarto",
           "forma": "ponto",
           "tipo": "ponto_luz",
           "posicao": [
-            1750,
-            1300
+            2375,
+            1750
           ],
           "altura": {
             "valor": 2600,
             "origem": "estimada",
-            "obs": "estimada: centro da parte maior do quarto, no teto"
+            "obs": "estimada: centro do quarto, no teto"
           }
         },
         {
@@ -338,8 +295,8 @@
           "forma": "ponto",
           "tipo": "ponto_luz",
           "posicao": [
-            1048,
-            3693
+            2375,
+            4535
           ],
           "altura": {
             "valor": 2620,
@@ -352,8 +309,8 @@
           "forma": "ponto",
           "tipo": "agua_fria",
           "posicao": [
-            1000,
-            2635
+            1600,
+            3485
           ],
           "altura": {
             "valor": 600,
@@ -368,8 +325,8 @@
           "forma": "ponto",
           "tipo": "esgoto",
           "posicao": [
-            1600,
-            4400
+            2800,
+            5250
           ],
           "altura": {
             "valor": 0,
@@ -382,8 +339,8 @@
           "forma": "ponto",
           "tipo": "ralo",
           "posicao": [
-            525,
-            4225
+            4200,
+            4535
           ],
           "altura": {
             "valor": 0,
@@ -396,15 +353,15 @@
           "forma": "ponto",
           "tipo": "agua_quente",
           "posicao": [
-            0,
-            4225
+            4750,
+            4535
           ],
           "altura": {
             "valor": 2100,
             "origem": "estimada",
             "obs": "estimada: altura padrão de chuveiro"
           },
-          "parede": "p5"
+          "parede": "p3"
         }
       ],
       "comodos": [
@@ -415,8 +372,6 @@
           "paredes": [
             "p1",
             "p2",
-            "p3",
-            "p8",
             "p7",
             "p6"
           ]
@@ -426,10 +381,10 @@
           "nome": "Banheiro da suíte",
           "tipo": "banheiro",
           "paredes": [
+            "p3",
             "p4",
             "p5",
-            "p7",
-            "p8"
+            "p7"
           ],
           "pe_direito": {
             "valor": 2620,
