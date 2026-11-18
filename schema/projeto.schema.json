@@ -496,6 +496,19 @@
           "default": null,
           "title": "Parede"
         },
+        "comodo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Cômodo atendido pelo ponto. Obrigatório em parede entre dois cômodos: diz de que lado da parede ele fica.",
+          "title": "Comodo"
+        },
         "obs": {
           "anyOf": [
             {

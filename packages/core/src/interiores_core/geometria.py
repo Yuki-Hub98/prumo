@@ -11,7 +11,7 @@ from shapely import LineString, Point, Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import polygonize, unary_union
 
-from interiores_core.modelo import Comodo, Parede, Pavimento, Pilar, PontoInstalacao
+from interiores_core.modelo import Comodo, Movel, Parede, Pavimento, Pilar, PontoInstalacao
 
 FOLGA_LADO = 10.0
 """Distância extra além da face da parede ao testar de que lado está um cômodo."""
@@ -72,11 +72,15 @@ def corpos_paredes(pavimento: Pavimento) -> BaseGeometry:
 
 
 def poligono_util(pavimento: Pavimento, comodo: Comodo) -> BaseGeometry | None:
-    """Área livre do cômodo (polígono de eixo menos as paredes), ou ``None`` se não fechar."""
+    """Área livre do cômodo (polígono de eixo menos as paredes), ou ``None`` se não fechar.
+
+    Vértices colineares que sobram do recorte (encontro de paredes de espessuras
+    diferentes) são removidos: cada face de parede vira um único lado.
+    """
     poligono = poligono_eixo(pavimento, comodo)
     if poligono is None:
         return None
-    return poligono.difference(corpos_paredes(pavimento))
+    return poligono.difference(corpos_paredes(pavimento)).simplify(0)
 
 
 def area_util_m2(pavimento: Pavimento, comodo: Comodo) -> float | None:
@@ -85,12 +89,47 @@ def area_util_m2(pavimento: Pavimento, comodo: Comodo) -> float | None:
     return None if util is None else round(util.area / 1_000_000, 2)
 
 
+_GIROS = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
+"""cos e sen de cada rotação permitida (inteiros, sem erro de ponto flutuante)."""
+
+
+def girar_movel(movel: Movel, x: float, y: float) -> tuple[float, float]:
+    """Ponto no referencial do móvel (centro na origem, rotação 0) → coordenada global."""
+    cos, sen = _GIROS[movel.rotacao]
+    return (movel.centro[0] + x * cos - y * sen, movel.centro[1] + x * sen + y * cos)
+
+
+def frente_movel(movel: Movel) -> tuple[int, int]:
+    """Vetor unitário para onde o móvel está virado (lado de uso).
+
+    Convenção (ver :class:`Movel`): em rotação 0 a frente é +y.
+    """
+    cos, sen = _GIROS[movel.rotacao]
+    return (-sen, cos)
+
+
+def cantos_movel(movel: Movel) -> list[tuple[float, float]]:
+    """Cantos em ordem anti-horária, começando pelas costas.
+
+    Ordem: costas-esq., costas-dir., frente-dir., frente-esq. ("esquerda/direita"
+    no referencial do móvel em rotação 0, com x para a direita).
+    """
+    w, d = movel.largura.valor / 2, movel.profundidade.valor / 2
+    return [girar_movel(movel, x, y) for x, y in ((-w, -d), (w, -d), (w, d), (-w, d))]
+
+
+def poligono_movel(movel: Movel) -> Polygon:
+    """Projeção do móvel no piso."""
+    return Polygon(cantos_movel(movel))
+
+
 def recorte_do_comodo(pavimento: Pavimento, comodo_id: str) -> Pavimento:
     """Cópia do pavimento só com o que pertence ao cômodo (para carimbo e desenho).
 
     Mantém: as paredes do cômodo, aberturas nessas paredes, instalações e estrutura
-    dentro ou na borda do polígono de eixo. Se o cômodo não fechar, fica com as
-    paredes e aberturas apenas.
+    dentro ou na borda do polígono de eixo. Ponto com ``comodo`` de outro cômodo
+    fica de fora (ex.: ponto da pia do banheiro na parede que divide com o quarto).
+    Se o cômodo não fechar, fica com as paredes e aberturas apenas.
     """
     comodo = pavimento.comodo(comodo_id)
     if comodo is None:
@@ -104,7 +143,11 @@ def recorte_do_comodo(pavimento: Pavimento, comodo_id: str) -> Pavimento:
     instalacoes = [
         i
         for i in pavimento.instalacoes
-        if (isinstance(i, PontoInstalacao) and (i.parede in ids or toca(Point(i.posicao))))
+        if (
+            isinstance(i, PontoInstalacao)
+            and i.comodo in (None, comodo_id)
+            and (i.parede in ids or toca(Point(i.posicao)))
+        )
         or (not isinstance(i, PontoInstalacao) and toca(LineString(i.caminho)))
     ]
     estrutura = [
