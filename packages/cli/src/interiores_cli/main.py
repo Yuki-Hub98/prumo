@@ -8,7 +8,7 @@ from typing import Annotated
 import typer
 from pydantic import ValidationError
 
-from interiores_cad.gerar import Resultado, Situacao, gerar_movel, gerar_planta
+from interiores_cad.gerar import Resultado, Situacao, gerar_movel, gerar_planta, gerar_vistas
 from interiores_core import __version__, catalogo, editar, geometria, planejado, schema
 from interiores_core.carregar import ProjetoCarregado, carregar
 from interiores_core.medidas import medidas_em
@@ -93,9 +93,10 @@ def cmd_cad(
         bool, typer.Option("--forcar", help="Regera mesmo se a entrada não mudou.")
     ] = False,
 ) -> None:
-    """Gera plantas em DXF e PDF.
+    """Gera plantas, cortes e elevações em DXF e PDF.
 
-    Com --comodo, a planta do cômodo; com --pavimento, a planta geral dele;
+    Com --comodo, a planta, os cortes AA/BB e a elevação de cada parede do cômodo;
+    com --pavimento, a planta geral dele;
     sem nenhum dos dois, a planta geral de cada pavimento e a de cada cômodo.
     """
     carregado = _carregar(projetos / projeto)
@@ -130,6 +131,10 @@ def cmd_cad(
             continue
         preliminar |= r.preliminar
         _mostrar_resultado(nome, r)
+        if com_id is not None:
+            situacao, arquivos = gerar_vistas(carregado, saida, pav_id, com_id, forcar=forcar)
+            pdfs = [a.stem for a in arquivos if a.suffix == ".pdf"]
+            print(f"      cortes e elevações ({situacao}): {', '.join(pdfs)}")
 
     print()
     _listar_problemas(_problemas(carregado))

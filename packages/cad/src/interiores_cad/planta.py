@@ -52,7 +52,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.regras import VERSAO_REGRAS, checar
 
-VERSAO_GERADOR = f"interiores-cad {__version__} · planta v6 · {VERSAO_REGRAS}"
+VERSAO_GERADOR = f"interiores-cad {__version__} · planta v7 · {VERSAO_REGRAS}"
 """Entra na chave de cache das saídas: mudou o desenho, suba o ``planta vN``.
 
 Inclui a versão das regras porque as checagens são desenhadas na planta.
@@ -622,6 +622,50 @@ class _Planta:
             linhas.append(f"{i}. [{p.severidade}] {p.mensagem}")
         return linhas
 
+    # -- referências para cortes e elevações
+
+    def ids_das_paredes(self) -> None:
+        """Id de cada parede junto à face, do lado do cômodo (elevação e ``--parede``)."""
+        for parede in self.recorte.paredes:
+            if geometria.comprimento(parede) == 0:
+                continue
+            u, n = geometria.direcao(parede)
+            lado = self.lado_do_comodo(parede)
+            meio = (
+                (parede.inicio[0] + parede.fim[0]) / 2,
+                (parede.inicio[1] + parede.fim[1]) / 2,
+            )
+            ponto = _som(meio, n, lado * (parede.espessura.valor / 2 + self.mm(2)))
+            # um pouco para o lado, para não cair em cima da etiqueta da abertura
+            ponto = _som(ponto, u, self.mm(8))
+            self.texto(parede.id, ponto, Texto.ABERTURA, "TEXTO", _angulo_legivel(u))
+
+    def linhas_de_corte(self) -> None:
+        """Linhas AA/BB tracejadas com a letra e a seta do lado para onde o corte olha."""
+        from interiores_cad.vistas import vistas_do_comodo
+
+        r = self.mm(2.4)
+        for v in vistas_do_comodo(self.pavimento, self.comodos[0]):
+            if v.elevacao:
+                continue
+            letra = v.titulo.split()[-1][0]
+            u = v.u
+            # letras fora das paredes cortadas, para não cobrir parede nem etiquetas
+            a = _som(v.p0, u, -self.mm(5))
+            b = _som(v.p1, u, self.mm(5))
+            self.msp.add_line(a, b, dxfattribs={"layer": "TEXTO", "linetype": TRACEJADO})
+            for ponta in (a, b):
+                self.msp.add_circle(ponta, r, dxfattribs={"layer": "TEXTO"})
+                self.texto(letra, ponta, Texto.ABERTURA * 1.2, "TEXTO")
+                seta = _som(ponta, v.olhar, r)
+                k = r * 0.6
+                lado = (-v.olhar[1], v.olhar[0])
+                self.msp.add_lwpolyline(
+                    [_som(seta, lado, k), _som(seta, v.olhar, r * 0.9), _som(seta, lado, -k)],
+                    close=True,
+                    dxfattribs={"layer": "TEXTO"},
+                )
+
     # -- montagem
 
     def desenhar(self, titulo: str, escopo: str, data: str) -> Desenho:
@@ -632,8 +676,10 @@ class _Planta:
         self.rotulos()
         if self.por_comodo:
             self.cotas_comodo(self.comodos[0])
+            self.linhas_de_corte()
         else:
             self.cotas_gerais()
+        self.ids_das_paredes()
         checagens = self.restricoes()
         estimadas = (
             self.carregado.estimadas(self.comodos[0].id)

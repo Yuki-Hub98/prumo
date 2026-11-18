@@ -58,6 +58,8 @@ def test_cad_comodo_e_cache(tmp_path: Path) -> None:
     assert (tmp_path / "casa/terreo/quarto/base/planta.pdf").exists()
     assert "PRELIMINAR — NÃO USAR PARA OBRA" in r.output
     assert "INFO" in r.output  # problemas listados depois da geração
+    assert "cortes e elevações (gerado): corte-aa, corte-bb, elevacao-" in r.output
+    assert (tmp_path / "casa/terreo/quarto/base/elevacao-p1.pdf").exists()
 
     r = runner.invoke(app, [*args, "--comodo", "quarto"])
     assert "inalterado" in r.output
