@@ -36,6 +36,7 @@
         1325
       ],
       "rotacao": 270,
+      "portas": "correr",
       "largura": {
         "valor": 1800,
         "origem": "estimada",
