@@ -18,6 +18,7 @@ def test_validar_casa() -> None:
     assert "quarto" in r.output and "banheiro" in r.output
     assert "PRELIMINAR — NÃO USAR PARA OBRA" in r.output
     assert "pavimentos[terreo].pe_direito = 2600 mm" in r.output
+    assert "lateral_cama" in r.output and "AVISO (3)" in r.output  # checagens de uso
 
 
 def test_validar_com_erro_sai_com_1(tmp_path: Path) -> None:

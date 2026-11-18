@@ -11,7 +11,8 @@ from pydantic import ValidationError
 from interiores_cad.gerar import Resultado, Situacao, gerar_planta
 from interiores_core import __version__, geometria, schema
 from interiores_core.carregar import ProjetoCarregado, carregar
-from interiores_core.validacao import Problema, Severidade, validar
+from interiores_core.regras import checar
+from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, Severidade, validar
 
 app = typer.Typer(help="Projeto de interiores a partir de medidas reais.", no_args_is_help=True)
 
@@ -48,7 +49,7 @@ def cmd_validar(
         bool, typer.Option("--estimadas", help="Lista cada medida estimada.")
     ] = False,
 ) -> None:
-    """Valida o projeto e lista os problemas por severidade."""
+    """Valida o projeto, roda as checagens de uso e lista os problemas por severidade."""
     carregado = _carregar(projetos / projeto)
     proj = carregado.projeto
     print(f"projeto {proj.projeto} · {proj.imovel.tipo} · hash {carregado.hash_curto}")
@@ -60,7 +61,7 @@ def cmd_validar(
             n_est = len(carregado.estimadas(c.id))
             print(f"  {c.id:<16} {c.tipo:<12} {area_txt:>10}   estimadas: {n_est}")
 
-    problemas = validar(proj, carregado.dados_comodos)
+    problemas = _problemas(carregado)
     print()
     _listar_problemas(problemas)
 
@@ -129,7 +130,7 @@ def cmd_cad(
         _mostrar_resultado(nome, r)
 
     print()
-    _listar_problemas(validar(proj, carregado.dados_comodos))
+    _listar_problemas(_problemas(carregado))
     if preliminar:
         print("\nPRELIMINAR — NÃO USAR PARA OBRA: há medidas estimadas nos desenhos")
         print("  (veja a lista no carimbo ou em `interiores validar --estimadas`)")
@@ -146,6 +147,15 @@ def _carregar(pasta: Path) -> ProjetoCarregado:
     except ValidationError as e:
         print(f"erro: formato inválido em {pasta}:\n{e}")
         raise typer.Exit(2) from e
+
+
+def _problemas(carregado: ProjetoCarregado) -> list[Problema]:
+    """Validação estrutural + checagens de uso, por severidade."""
+    proj = carregado.projeto
+    todos = validar(proj, carregado.dados_comodos) + checar(
+        proj, carregado.dados_comodos, carregado.regras
+    )
+    return sorted(todos, key=lambda p: ORDEM_SEVERIDADE[p.severidade])
 
 
 def _listar_problemas(problemas: list[Problema]) -> None:
