@@ -131,6 +131,21 @@ Duas formas de posicionar:
 `--elevacao` deixa o móvel suspenso (TV na parede, armário aéreo). Depois de cada mudança
 as checagens do cômodo rodam.
 
+Móveis planejados (por dentro: vãos, gavetas, prateleiras, cabideiros, portas e chapas):
+
+```bash
+uv run interiores planejado criar casa quarto guarda-roupa   # construção padrão do tipo
+uv run interiores planejado gerar casa quarto                # todos os planejados do cômodo
+make planejado P=casa C=quarto M=guarda-roupa
+```
+
+Gera em `out/<projeto>/<pavimento>/<cômodo>/base/` o desenho técnico do móvel
+(`planejado-<móvel>.dxf/.pdf`: vista frontal sem portas e vista lateral, cotadas) e a
+lista de corte `planejado-<móvel>-corte.xlsx` (peças com medidas e fita de borda,
+ferragens e estimativa de chapas). A construção fica no campo `construcao` do móvel em
+`comodos/<cômodo>.json`; vãos sem largura e espaços sem altura dividem igualmente o que
+sobra.
+
 Stack completa:
 
 ```bash
@@ -159,11 +174,11 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] Checagens do quarto (passagem, cama, guarda-roupa, portas, tomadas)
 - [x] Planta do quarto e do pavimento em DXF/PDF com carimbo, aviso de obra e instalações
 - [ ] Cortes e elevações do quarto
-- [ ] Móveis — catálogo: todo tipo de móvel para posicionar nos cômodos (cama, guarda-roupa,
+- [x] Móveis — catálogo (modelo 3D vem com o render): todo tipo de móvel para posicionar nos cômodos (cama, guarda-roupa,
       armário, sofá, TV/rack, mesa, cadeira, cômoda, criado-mudo, escrivaninha, estante...),
       cada um com medidas padrão editáveis, frente/lados de uso, símbolo na planta, modelo 3D
       e checagens próprias (ex.: distância sofá–TV)
-- [ ] Móveis — planejados: projetar o móvel por dentro (divisórias, prateleiras, gavetas,
+- [x] Móveis — planejados (plano de corte otimizado e 3D ficam para depois): projetar o móvel por dentro (divisórias, prateleiras, gavetas,
       portas, chapas e acabamento), com desenho técnico cotado, lista de corte e de ferragens
       (`.xlsx`) para o marceneiro
 - [ ] Render do quarto no Blender com variações de cor e móvel
