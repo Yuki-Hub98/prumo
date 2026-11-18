@@ -167,3 +167,51 @@ def gerar_movel(
         desenho.folha.escala,
         desenho.folha.formato.nome,
     )
+
+
+def gerar_vistas(
+    carregado: ProjetoCarregado,
+    saida: Path,
+    pavimento: str,
+    comodo: str,
+    variacao: str = VARIACAO_BASE,
+    forcar: bool = False,
+    data: date | None = None,
+) -> tuple[Situacao, list[Path]]:
+    """Grava ``corte-aa``, ``corte-bb`` e ``elevacao-<parede>`` (DXF e PDF) do cômodo.
+
+    Usa ``vistas.json`` na pasta para pular a geração se nada mudou.
+    """
+    from interiores_cad.vistas import VERSAO_VISTAS, desenhar_vistas
+
+    pasta = pasta_saida(saida, carregado.projeto.projeto, pavimento, comodo, variacao)
+    meta = pasta / "vistas.json"
+    minha_chave = hashlib.sha256(
+        f"{carregado.hash_entrada}\0{VERSAO_VISTAS}\0{comodo}".encode()
+    ).hexdigest()
+    if not forcar and meta.exists():
+        anterior = json.loads(meta.read_text(encoding="utf-8"))
+        arquivos = [pasta / nome for nome in anterior.get("arquivos", [])]
+        if anterior.get("chave") == minha_chave and all(a.exists() for a in arquivos):
+            return Situacao.INALTERADO, arquivos
+    pasta.mkdir(parents=True, exist_ok=True)
+    arquivos = []
+    for vista, desenho in desenhar_vistas(carregado, pavimento, comodo, data):
+        dxf, pdf = pasta / f"{vista.nome}.dxf", pasta / f"{vista.nome}.pdf"
+        desenho.doc.saveas(dxf)
+        salvar_pdf(desenho, pdf)
+        arquivos += [dxf, pdf]
+    meta.write_text(
+        json.dumps(
+            {
+                "chave": minha_chave,
+                "gerador": VERSAO_VISTAS,
+                "arquivos": [a.name for a in arquivos],
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return Situacao.GERADO, arquivos

@@ -958,6 +958,232 @@
   ]
  },
  {
+  "tipo": "LINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    -250,
+    1325
+   ],
+   [
+    3750,
+    1325
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "TEXTO",
+  "centro": [
+   -250,
+   1325
+  ],
+  "raio": 60
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "A",
+  "ponto": [
+   -250,
+   1325
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    -286,
+    1385
+   ],
+   [
+    -250,
+    1439
+   ],
+   [
+    -214,
+    1385
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "TEXTO",
+  "centro": [
+   3750,
+   1325
+  ],
+  "raio": 60
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "A",
+  "ponto": [
+   3750,
+   1325
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    3714,
+    1385
+   ],
+   [
+    3750,
+    1439
+   ],
+   [
+    3786,
+    1385
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    1750,
+    -250
+   ],
+   [
+    1750,
+    2900
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "TEXTO",
+  "centro": [
+   1750,
+   -250
+  ],
+  "raio": 60
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "B",
+  "ponto": [
+   1750,
+   -250
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    1690,
+    -286
+   ],
+   [
+    1636,
+    -250
+   ],
+   [
+    1690,
+    -214
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "TEXTO",
+  "centro": [
+   1750,
+   2900
+  ],
+  "raio": 60
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "B",
+  "ponto": [
+   1750,
+   2900
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    1690,
+    2864
+   ],
+   [
+    1636,
+    2900
+   ],
+   [
+    1690,
+    2936
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p1",
+  "ponto": [
+   1950,
+   125
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p2",
+  "ponto": [
+   3375,
+   2575
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p3",
+  "ponto": [
+   2598,
+   4625
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p6",
+  "ponto": [
+   125,
+   1118
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p7",
+  "ponto": [
+   1248,
+   2525
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p8",
+  "ponto": [
+   2205,
+   3892
+  ]
+ },
+ {
   "tipo": "LWPOLYLINE",
   "camada": "RESTRICAO",
   "pontos": [
@@ -1159,7 +1385,7 @@
  {
   "tipo": "TEXT",
   "camada": "TEXTO",
-  "texto": "interiores-cad 0.1.0 · planta v6 · regras v1",
+  "texto": "interiores-cad 0.1.0 · planta v7 · regras v1",
   "ponto": [
    5512,
    -1055

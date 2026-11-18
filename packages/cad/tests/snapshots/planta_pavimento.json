@@ -1125,6 +1125,78 @@
   ]
  },
  {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p1",
+  "ponto": [
+   1950,
+   125
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p2",
+  "ponto": [
+   3375,
+   2575
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p3",
+  "ponto": [
+   2598,
+   4625
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p4",
+  "ponto": [
+   848,
+   4625
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p5",
+  "ponto": [
+   125,
+   3492
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p6",
+  "ponto": [
+   125,
+   1118
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p7",
+  "ponto": [
+   1248,
+   2745
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p8",
+  "ponto": [
+   1985,
+   3892
+  ]
+ },
+ {
   "tipo": "LWPOLYLINE",
   "camada": "RESTRICAO",
   "pontos": [
@@ -1326,7 +1398,7 @@
  {
   "tipo": "TEXT",
   "camada": "TEXTO",
-  "texto": "interiores-cad 0.1.0 · planta v6 · regras v1",
+  "texto": "interiores-cad 0.1.0 · planta v7 · regras v1",
   "ponto": [
    5512,
    -1055
