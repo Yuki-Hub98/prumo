@@ -106,8 +106,12 @@ Sem Docker (core, CAD e CLI):
 
 ```bash
 make validate P=casa              # valida medidas + checagens
-make cad P=casa C=quarto          # planta e cortes do quarto
+make cad P=casa C=quarto          # planta, cortes AA/BB e elevação de cada parede
 ```
+
+A planta do cômodo mostra o id de cada parede (`p1`, `p2`...) e as linhas dos cortes AA e
+BB; cada parede vira `elevacao-<id>.pdf` (vista de dentro do cômodo, com portas, janelas,
+tomadas, pontos de água e móveis na altura certa).
 
 Móveis (catálogo com medidas padrão, que entram como estimadas e podem ser ajustadas):
 
@@ -173,7 +177,7 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] `core`: schema Projeto → Imóvel → Pavimento → Cômodo
 - [x] Checagens do quarto (passagem, cama, guarda-roupa, portas, tomadas)
 - [x] Planta do quarto e do pavimento em DXF/PDF com carimbo, aviso de obra e instalações
-- [ ] Cortes e elevações do quarto
+- [x] Cortes e elevações do quarto
 - [x] Móveis — catálogo (modelo 3D vem com o render): todo tipo de móvel para posicionar nos cômodos (cama, guarda-roupa,
       armário, sofá, TV/rack, mesa, cadeira, cômoda, criado-mudo, escrivaninha, estante...),
       cada um com medidas padrão editáveis, frente/lados de uso, símbolo na planta, modelo 3D
