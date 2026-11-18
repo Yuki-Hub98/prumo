@@ -1,0 +1,162 @@
+{
+  "$defs": {
+    "Medida": {
+      "additionalProperties": false,
+      "description": "Medida em milímetros inteiros, sempre com origem.\n\nExemplo: ``{\"valor\": 3150, \"origem\": \"trena\", \"obs\": \"rodapé a rodapé\"}``.\nValores com casa decimal são recusados (unidade interna é mm inteiro).",
+      "properties": {
+        "valor": {
+          "description": "Valor inteiro em milímetros.",
+          "minimum": 0,
+          "title": "Valor",
+          "type": "integer"
+        },
+        "origem": {
+          "$ref": "#/$defs/Origem"
+        },
+        "obs": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Obs"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data"
+        }
+      },
+      "required": [
+        "valor",
+        "origem"
+      ],
+      "title": "Medida",
+      "type": "object"
+    },
+    "Movel": {
+      "additionalProperties": false,
+      "description": "Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "tipo": {
+          "description": "cama, guarda_roupa, criado_mudo, ...",
+          "title": "Tipo",
+          "type": "string"
+        },
+        "nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nome"
+        },
+        "centro": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Centro",
+          "type": "array"
+        },
+        "rotacao": {
+          "default": 0,
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ],
+          "title": "Rotacao",
+          "type": "integer"
+        },
+        "largura": {
+          "$ref": "#/$defs/Medida",
+          "description": "Dimensão ao longo do eixo x antes da rotação."
+        },
+        "profundidade": {
+          "$ref": "#/$defs/Medida"
+        },
+        "altura": {
+          "$ref": "#/$defs/Medida"
+        }
+      },
+      "required": [
+        "id",
+        "tipo",
+        "centro",
+        "largura",
+        "profundidade",
+        "altura"
+      ],
+      "title": "Movel",
+      "type": "object"
+    },
+    "Origem": {
+      "description": "De onde veio a medida.",
+      "enum": [
+        "trena",
+        "estimada",
+        "projeto"
+      ],
+      "title": "Origem",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Raiz de ``comodos/<comodo>.json``: mobiliário e dados específicos.",
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "comodo": {
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "title": "Comodo",
+      "type": "string"
+    },
+    "moveis": {
+      "items": {
+        "$ref": "#/$defs/Movel"
+      },
+      "title": "Moveis",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "comodo"
+  ],
+  "title": "DadosComodo",
+  "type": "object"
+}
