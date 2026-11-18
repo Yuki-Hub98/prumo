@@ -1,6 +1,6 @@
 # Atalhos do projeto — ver CLAUDE.md §12.
 .DEFAULT_GOAL := help
-.PHONY: help setup sync lint format typecheck test check schema validate cad up down logs
+.PHONY: help setup sync lint format typecheck test check schema validate cad planejado up down logs
 
 help: ## Lista os comandos
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -40,6 +40,10 @@ validate: ## Valida um projeto: make validate P=casa
 cad: ## Plantas DXF/PDF: make cad P=casa [A=terreo] [C=quarto] [F=1 força]
 	@test -n "$(P)" || { echo "informe o projeto: make cad P=<projeto> [A=<pavimento>] [C=<cômodo>]"; exit 2; }
 	uv run interiores cad $(P) $(if $(A),--pavimento $(A)) $(if $(C),--comodo $(C)) $(if $(F),--forcar)
+
+planejado: ## Desenho e lista de corte: make planejado P=casa C=quarto [M=móvel] [F=1]
+	@test -n "$(P)" -a -n "$(C)" || { echo "informe: make planejado P=<projeto> C=<cômodo> [M=<móvel>]"; exit 2; }
+	uv run interiores planejado gerar $(P) $(C) $(M) $(if $(F),--forcar)
 
 up: ## Sobe a infra (docker compose)
 	docker compose up -d

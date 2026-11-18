@@ -190,3 +190,46 @@ def test_movel_na_parede(tmp_path: Path) -> None:
     )
     for args in erros:
         assert runner.invoke(app, ["movel", *args]).exit_code == 2, args
+
+
+def test_planejado_criar_e_gerar(tmp_path: Path) -> None:
+    shutil.copytree(DADOS / "casa", tmp_path / "casa")
+    p = ["--projetos", str(tmp_path)]
+    r = runner.invoke(app, ["planejado", "criar", "casa", "quarto", "guarda-roupa", *p])
+    assert r.exit_code == 0, r.output
+    assert "2 vão(s)" in r.output and "MDF branco 18 mm" in r.output
+    assert "planejado gerar casa quarto guarda-roupa" in r.output
+    r = runner.invoke(app, ["planejado", "criar", "casa", "quarto", "guarda-roupa", *p])
+    assert r.exit_code == 2 and "já tem construção" in r.output
+    r = runner.invoke(
+        app, ["planejado", "criar", "casa", "quarto", "guarda-roupa", "--substituir", *p]
+    )
+    assert r.exit_code == 0
+    saida = tmp_path / "out"
+    r = runner.invoke(app, ["planejado", "gerar", "casa", "quarto", *p, "--saida", str(saida)])
+    assert r.exit_code == 0, r.output
+    base = saida / "casa/terreo/quarto/base"
+    for nome in (
+        "planejado-guarda-roupa.pdf",
+        "planejado-guarda-roupa.dxf",
+        "planejado-guarda-roupa-corte.xlsx",
+    ):
+        assert (base / nome).exists(), nome
+    r = runner.invoke(
+        app, ["planejado", "gerar", "casa", "quarto", "guarda-roupa", *p, "--saida", str(saida)]
+    )
+    assert "inalterado" in r.output
+
+
+def test_planejado_erros(tmp_path: Path) -> None:
+    shutil.copytree(DADOS / "casa", tmp_path / "casa")
+    p = ["--projetos", str(tmp_path)]
+    assert runner.invoke(app, ["planejado", "criar", "casa", "quarto", "nada", *p]).exit_code == 2
+    r = runner.invoke(app, ["planejado", "criar", "casa", "quarto", "cama", *p])
+    assert r.exit_code == 2 and "não é planejável" in r.output
+    r = runner.invoke(app, ["planejado", "gerar", "casa", "quarto", *p])
+    assert r.exit_code == 2 and "nenhum móvel planejado" in r.output
+    r = runner.invoke(
+        app, ["planejado", "gerar", "casa", "quarto", "cama", *p, "--saida", str(tmp_path / "o")]
+    )
+    assert r.exit_code == 1 and "FALHOU" in r.output
