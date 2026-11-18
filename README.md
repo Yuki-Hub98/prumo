@@ -150,6 +150,24 @@ ferragens e estimativa de chapas). A construção fica no campo `construcao` do 
 `comodos/<cômodo>.json`; vãos sem largura e espaços sem altura dividem igualmente o que
 sobra.
 
+Render 3D (Blender LTS headless; sem Blender instalado, usa a imagem Docker):
+
+```bash
+make blender-imagem                        # uma vez: interiores-blender:4.5.16 (~2 GB)
+make render P=casa C=quarto                # perspectiva + vista de cima + quarto.glb
+make render P=casa C=quarto V=todas        # todas as variações de cor
+```
+
+Saídas em `out/<projeto>/<pavimento>/<cômodo>/<variação>/`. Variações de cor ficam em
+`projetos/<projeto>/variacoes/<cômodo>/<nome>.json` (schema em `schema/variacao.schema.json`):
+
+```json
+{"schema_version": 1, "comodo": "quarto", "nome": "Escura",
+ "cores": {"parede": "#7A8B94", "piso": "#5C3D24", "moveis": {"guarda_roupa": "#2F3B45"}}}
+```
+
+`INTERIORES_BLENDER` aponta para um Blender local; `INTERIORES_BLENDER_IMAGEM` troca a imagem.
+
 Stack completa:
 
 ```bash
@@ -185,10 +203,13 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] Móveis — planejados (plano de corte otimizado e 3D ficam para depois): projetar o móvel por dentro (divisórias, prateleiras, gavetas,
       portas, chapas e acabamento), com desenho técnico cotado, lista de corte e de ferragens
       (`.xlsx`) para o marceneiro
-- [ ] Render do quarto no Blender com variações de cor e móvel
+- [x] Render do quarto no Blender com variações de cor (variação de layout de móveis fica para depois)
 - [ ] Comparador lado a lado e cálculo de tinta
 - [ ] API + banco (histórico de medidas, variações, escolhas)
 - [ ] Frontend: visor 3D, comparador, formulário de medidas, painel de problemas
+- [ ] Frontend — criar casa do zero (editor de planta): desenhar paredes com as medidas,
+      colocar portas e janelas, nomear os cômodos (derivados das paredes) e instalações, com
+      as checagens rodando na hora; precisa de funções de edição no core como as de móveis
 - [ ] Frontend — editor de móveis: escolher do catálogo, arrastar, girar e redimensionar na
       planta/3D, editar medidas e criar móveis planejados, com as checagens rodando na hora
 - [ ] Cozinha (hidráulica, gás, triângulo de trabalho)

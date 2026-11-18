@@ -4,6 +4,7 @@ import json
 import shutil
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from interiores_cli.main import app
@@ -235,3 +236,26 @@ def test_planejado_erros(tmp_path: Path) -> None:
         app, ["planejado", "gerar", "casa", "quarto", "cama", *p, "--saida", str(tmp_path / "o")]
     )
     assert r.exit_code == 1 and "FALHOU" in r.output
+
+
+def test_render_com_blender_falso(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import stat
+
+    exe = tmp_path / "blender"
+    exe.write_text(
+        "#!/usr/bin/env python3\nimport json, sys\nfrom pathlib import Path\n"
+        "a = sys.argv[sys.argv.index('--') + 1:]\nc = json.loads(Path(a[0]).read_text())\n"
+        "for n in ('render-perspectiva.png', 'render-superior.png', c['comodo'] + '.glb'):\n"
+        "    (Path(a[1]) / n).write_bytes(b'ok')\n",
+        encoding="utf-8",
+    )
+    exe.chmod(exe.stat().st_mode | stat.S_IEXEC)
+    monkeypatch.setenv("INTERIORES_BLENDER", str(exe))
+    args = ["render", "casa", "quarto", "--projetos", str(DADOS), "--saida", str(tmp_path / "o")]
+    r = runner.invoke(app, args)
+    assert r.exit_code == 0, r.output
+    assert "quarto/base" in r.output and "gerado" in r.output and "PRELIMINAR" in r.output
+    assert "inalterado" in runner.invoke(app, args).output
+    assert runner.invoke(app, [*args, "--variacao", "nada"]).exit_code == 2
+    r = runner.invoke(app, ["render", "casa", "cozinha", "--projetos", str(DADOS)])
+    assert r.exit_code == 2

@@ -117,24 +117,6 @@ def _maior(geom: BaseGeometry | None) -> Polygon | None:
     return max(partes, key=lambda g: g.area, default=None)
 
 
-def paredes_da_face(pav: Pavimento, comodo: Comodo, p: Vetor, q: Vetor) -> list[Parede]:
-    """Paredes do cômodo cuja face coincide com o lado p→q da área útil."""
-    meio = Point((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
-    tam = math.dist(p, q)
-    u = ((q[0] - p[0]) / tam, (q[1] - p[1]) / tam)
-    achadas = []
-    for pid in comodo.paredes:
-        parede = pav.parede(pid)
-        if parede is None or geometria.comprimento(parede) == 0:
-            continue
-        pu, _ = geometria.direcao(parede)
-        paralela = abs(pu[0] * u[1] - pu[1] * u[0]) < 1e-6
-        dist = geometria.eixo(parede).distance(meio)
-        if paralela and abs(dist - parede.espessura.valor / 2) < 2:
-            achadas.append(parede)
-    return achadas
-
-
 def vistas_do_comodo(pav: Pavimento, comodo: Comodo) -> list[Vista]:
     """Cortes AA e BB pelo meio do cômodo e uma elevação por face de parede."""
     util = _maior(geometria.poligono_util(pav, comodo))
@@ -169,7 +151,7 @@ def vistas_do_comodo(pav: Pavimento, comodo: Comodo) -> list[Vista]:
             continue
         u = ((q[0] - p[0]) / tam, (q[1] - p[1]) / tam)
         fora = (u[1], -u[0])  # anel anti-horário: exterior à direita
-        paredes = paredes_da_face(pav, comodo, p, q)
+        paredes = geometria.paredes_da_face(pav, comodo, p, q)
         ids = "-".join(par.id for par in paredes) or f"face{len(vistas) - 1}"
         dist = min(DIST_ELEVACAO, tam)  # não atravessa o cômodo em faces curtas
         # de dentro, olhando a parede, a direita é o sentido q → p
@@ -342,7 +324,7 @@ class _Desenhista:
             if not de_frente or not v.faixa.intersects(LineString([p, q])):
                 continue
             s0, s1 = sorted((v.s(*p), v.s(*q)))
-            achadas.append((s0, s1, paredes_da_face(self.pav, self.comodo, p, q)))
+            achadas.append((s0, s1, geometria.paredes_da_face(self.pav, self.comodo, p, q)))
         return achadas
 
     def desenhar_faces(self) -> None:

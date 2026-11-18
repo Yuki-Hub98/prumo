@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "CoresVariacao": {
+      "additionalProperties": false,
+      "description": "Paleta de uma variação. Tudo opcional: o que faltar usa a cor padrão.",
+      "properties": {
+        "parede": {
+          "anyOf": [
+            {
+              "description": "Cor em hexadecimal: #RRGGBB.",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parede"
+        },
+        "piso": {
+          "anyOf": [
+            {
+              "description": "Cor em hexadecimal: #RRGGBB.",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Piso"
+        },
+        "teto": {
+          "anyOf": [
+            {
+              "description": "Cor em hexadecimal: #RRGGBB.",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Teto"
+        },
+        "rodape": {
+          "anyOf": [
+            {
+              "description": "Cor em hexadecimal: #RRGGBB.",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rodape"
+        },
+        "moveis": {
+          "additionalProperties": {
+            "description": "Cor em hexadecimal: #RRGGBB.",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "type": "string"
+          },
+          "description": "Cor por id de móvel ou por tipo (o id tem prioridade).",
+          "title": "Moveis",
+          "type": "object"
+        }
+      },
+      "title": "CoresVariacao",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Raiz de ``variacoes/<comodo>/<nome>.json``: uma alternativa de acabamento.\n\nVariações nunca alteram o ``projeto.json`` base (CLAUDE.md §7).",
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "comodo": {
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "title": "Comodo",
+      "type": "string"
+    },
+    "nome": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Nome para exibir; o id é o nome do arquivo.",
+      "title": "Nome"
+    },
+    "descricao": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Descricao"
+    },
+    "cores": {
+      "$ref": "#/$defs/CoresVariacao"
+    }
+  },
+  "required": [
+    "schema_version",
+    "comodo"
+  ],
+  "title": "Variacao",
+  "type": "object"
+}

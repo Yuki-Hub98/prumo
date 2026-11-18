@@ -1,6 +1,6 @@
 # Atalhos do projeto — ver CLAUDE.md §12.
 .DEFAULT_GOAL := help
-.PHONY: help setup sync lint format typecheck test check schema validate cad planejado up down logs
+.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem up down logs
 
 help: ## Lista os comandos
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -44,6 +44,15 @@ cad: ## Plantas DXF/PDF: make cad P=casa [A=terreo] [C=quarto] [F=1 força]
 planejado: ## Desenho e lista de corte: make planejado P=casa C=quarto [M=móvel] [F=1]
 	@test -n "$(P)" -a -n "$(C)" || { echo "informe: make planejado P=<projeto> C=<cômodo> [M=<móvel>]"; exit 2; }
 	uv run interiores planejado gerar $(P) $(C) $(M) $(if $(F),--forcar)
+
+BLENDER_VERSION ?= 4.5.16
+
+blender-imagem: ## Constrói a imagem Docker do Blender headless (uma vez)
+	docker build -f docker/blender.Dockerfile --build-arg BLENDER_VERSION=$(BLENDER_VERSION) -t interiores-blender:$(BLENDER_VERSION) .
+
+render: ## Renders 3D: make render P=casa C=quarto [V=variação|todas] [F=1]
+	@test -n "$(P)" -a -n "$(C)" || { echo "informe: make render P=<projeto> C=<cômodo> [V=<variação>|todas]"; exit 2; }
+	uv run interiores render $(P) $(C) $(if $(V),--variacao $(V)) $(if $(F),--forcar)
 
 up: ## Sobe a infra (docker compose)
 	docker compose up -d

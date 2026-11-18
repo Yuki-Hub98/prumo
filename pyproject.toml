@@ -65,6 +65,7 @@ files = ["packages/core/src", "packages/cad/src"]
 testpaths = ["tests", "packages"]
 pythonpath = ["packages/core/tests"]
 addopts = "-ra --strict-markers --import-mode=importlib"
+markers = ["blender: usa o Blender de verdade (lento; rode com PRUMO_TESTAR_BLENDER=1)"]
 
 [tool.coverage.run]
 source = ["interiores_core"]

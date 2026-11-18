@@ -10,7 +10,7 @@ from pathlib import Path
 
 from interiores_core.geometria import recorte_do_comodo
 from interiores_core.medidas import Medida, medidas_estimadas
-from interiores_core.modelo import DadosComodo, Projeto
+from interiores_core.modelo import DadosComodo, Projeto, Variacao
 
 
 @dataclass(frozen=True)
@@ -23,6 +23,8 @@ class ProjetoCarregado:
     hash_entrada: str = ""
     regras: dict[str, object] = field(default_factory=dict)
     """Conteúdo do ``regras.toml`` do projeto (limites que sobrescrevem os padrões)."""
+    variacoes: dict[str, dict[str, Variacao]] = field(default_factory=dict)
+    """``variacoes/<comodo>/<nome>.json`` por cômodo e nome."""
 
     @property
     def hash_curto(self) -> str:
@@ -104,10 +106,25 @@ def carregar(pasta: Path | str) -> ProjetoCarregado:
         regras = tomllib.loads(arquivo_regras.read_text(encoding="utf-8"))
         hash_.update(b"\0regras.toml\0" + _canonico(regras))
 
+    variacoes: dict[str, dict[str, Variacao]] = {}
+    pasta_variacoes = pasta / "variacoes"
+    if pasta_variacoes.is_dir():
+        for arquivo in sorted(pasta_variacoes.glob("*/*.json")):
+            conteudo = _ler_json(arquivo)
+            var = Variacao.model_validate(conteudo)
+            if var.comodo != arquivo.parent.name:
+                raise ValueError(
+                    f"{arquivo}: comodo '{var.comodo}' diferente da pasta '{arquivo.parent.name}'"
+                )
+            variacoes.setdefault(var.comodo, {})[arquivo.stem] = var
+            rel = f"variacoes/{arquivo.parent.name}/{arquivo.name}"
+            hash_.update(f"\0{rel}\0".encode() + _canonico(conteudo))
+
     return ProjetoCarregado(
         pasta=pasta,
         projeto=projeto,
         dados_comodos=dados,
         hash_entrada=hash_.hexdigest(),
         regras=regras,
+        variacoes=variacoes,
     )

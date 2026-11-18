@@ -88,6 +88,7 @@ def test_exporta_schema(tmp_path: Path) -> None:
     assert {g.name for g in gravados} == {
         "projeto.schema.json",
         "comodo.schema.json",
+        "variacao.schema.json",
         "catalogo.json",
     }
     projeto = json.loads((tmp_path / "schema" / "projeto.schema.json").read_text(encoding="utf-8"))
@@ -100,3 +101,24 @@ def test_schema_versionado_esta_atualizado(tmp_path: Path) -> None:
     for gerado in schema.exportar(tmp_path):
         versionado = RAIZ / "schema" / gerado.name
         assert versionado.read_text(encoding="utf-8") == gerado.read_text(encoding="utf-8")
+
+
+def test_variacoes(copia: Path) -> None:
+    sem = carregar(copia)
+    assert sem.variacoes == {}
+    pasta = copia / "variacoes" / "quarto"
+    pasta.mkdir(parents=True)
+    (pasta / "clara.json").write_text(
+        '{"schema_version": 1, "comodo": "quarto", "cores": {"parede": "#FFFFFF"}}', "utf-8"
+    )
+    com = carregar(copia)
+    assert com.variacoes["quarto"]["clara"].cores.parede == "#FFFFFF"
+    assert com.hash_entrada != sem.hash_entrada
+    (pasta / "ruim.json").write_text('{"schema_version": 1, "comodo": "banheiro"}', "utf-8")
+    with pytest.raises(ValueError, match="diferente da pasta"):
+        carregar(copia)
+    (pasta / "ruim.json").write_text(
+        '{"schema_version": 1, "comodo": "quarto", "cores": {"piso": "vermelho"}}', "utf-8"
+    )
+    with pytest.raises(ValidationError):
+        carregar(copia)

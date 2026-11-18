@@ -15,6 +15,7 @@ from interiores_core.medidas import medidas_em
 from interiores_core.regras import checar
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, Severidade, validar
 from interiores_relatorios.lista_corte import gerar_lista
+from interiores_render import gerar as render
 
 app = typer.Typer(help="Projeto de interiores a partir de medidas reais.", no_args_is_help=True)
 
@@ -153,6 +154,9 @@ def _carregar(pasta: Path) -> ProjetoCarregado:
         raise typer.Exit(2) from e
     except ValidationError as e:
         print(f"erro: formato inválido em {pasta}:\n{e}")
+        raise typer.Exit(2) from e
+    except ValueError as e:
+        print(f"erro: {e}")
         raise typer.Exit(2) from e
 
 
@@ -467,3 +471,44 @@ def _resumo_planejado(pasta: Path, comodo: str, id_: str) -> None:
         f"  gere o desenho e a lista de corte: interiores planejado gerar {pasta.name} {comodo} "
         f"{id_}"
     )
+
+
+# ---------------------------------------------------------------- render 3D
+
+
+@app.command("render")
+def cmd_render(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    variacao: Annotated[
+        str,
+        typer.Option(help="Variação (arquivo em variacoes/<cômodo>/), 'base' ou 'todas'."),
+    ] = "base",
+    projetos: PastaProjetos = Path("projetos"),
+    saida: Annotated[Path, typer.Option(help="Pasta das saídas geradas.")] = Path("out"),
+    forcar: Annotated[
+        bool, typer.Option("--forcar", help="Regera mesmo se a entrada não mudou.")
+    ] = False,
+    amostras: Annotated[int, typer.Option(help="Amostras do Cycles (qualidade × tempo).")] = 96,
+) -> None:
+    """Render 3D do cômodo no Blender: perspectiva, vista de cima e modelo .glb."""
+    carregado = _carregar(projetos / projeto)
+    if carregado.projeto.pavimento_do_comodo(comodo) is None:
+        print(f"erro: cômodo '{comodo}' não existe")
+        raise typer.Exit(2)
+    nomes = render.variacoes_do_comodo(carregado, comodo) if variacao == "todas" else [variacao]
+    for nome in nomes:
+        try:
+            r = render.renderizar(carregado, saida, comodo, nome, forcar, amostras=amostras)
+        except KeyError as e:
+            print(f"erro: {e.args[0]}")
+            raise typer.Exit(2) from e
+        except (render.BlenderIndisponivelError, render.RenderFalhouError) as e:
+            print(f"erro: {e}")
+            raise typer.Exit(1) from e
+        marca = "gerado    " if r.gerado else "inalterado"
+        aviso = "  PRELIMINAR" if r.preliminar else ""
+        print(f"  {comodo}/{nome:<18} {marca}{aviso}")
+        if r.gerado:
+            for arq in r.arquivos:
+                print(f"      {arq}")
