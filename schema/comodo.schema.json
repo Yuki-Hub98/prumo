@@ -1,5 +1,96 @@
 {
   "$defs": {
+    "Chapa": {
+      "additionalProperties": false,
+      "description": "Material de chapa (MDF, MDP, HDF...) e sua espessura.",
+      "properties": {
+        "material": {
+          "description": "Ex.: \"MDF branco\", \"MDP carvalho\", \"HDF branco\".",
+          "title": "Material",
+          "type": "string"
+        },
+        "espessura": {
+          "$ref": "#/$defs/Medida"
+        }
+      },
+      "required": [
+        "material",
+        "espessura"
+      ],
+      "title": "Chapa",
+      "type": "object"
+    },
+    "Construcao": {
+      "additionalProperties": false,
+      "description": "Como o móvel planejado é construído por dentro (marcenaria em chapa).\n\nCaixa com laterais inteiras, base e tampo entre as laterais, divisórias entre a\nbase e o tampo, fundo sobreposto, portas sobrepostas (de abrir, por vão) ou de\ncorrer (no móvel todo, conforme ``Movel.portas``) e gavetas com corrediça\ntelescópica.",
+      "properties": {
+        "chapa": {
+          "$ref": "#/$defs/Chapa"
+        },
+        "fundo": {
+          "$ref": "#/$defs/Chapa"
+        },
+        "rodape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Altura do rodapé (base recuada)."
+        },
+        "vaos": {
+          "description": "Da esquerda para a direita (de frente).",
+          "items": {
+            "$ref": "#/$defs/Vao"
+          },
+          "minItems": 1,
+          "title": "Vaos",
+          "type": "array"
+        }
+      },
+      "required": [
+        "chapa",
+        "fundo",
+        "vaos"
+      ],
+      "title": "Construcao",
+      "type": "object"
+    },
+    "Espaco": {
+      "additionalProperties": false,
+      "description": "Espaço dentro de um vão, de baixo para cima.\n\nEntre dois espaços seguidos entra uma prateleira, exceto entre duas gavetas\n(que ficam empilhadas). ``altura`` é a altura livre do espaço (na gaveta, a\naltura da frente); se faltar, divide igualmente o que sobra no vão.",
+      "properties": {
+        "tipo": {
+          "enum": [
+            "gaveta",
+            "nicho",
+            "cabideiro"
+          ],
+          "title": "Tipo",
+          "type": "string"
+        },
+        "altura": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "tipo"
+      ],
+      "title": "Espaco",
+      "type": "object"
+    },
     "Medida": {
       "additionalProperties": false,
       "description": "Medida em milímetros inteiros, sempre com origem.\n\nExemplo: ``{\"valor\": 3150, \"origem\": \"trena\", \"obs\": \"rodapé a rodapé\"}``.\nValores com casa decimal são recusados (unidade interna é mm inteiro).",
@@ -178,6 +269,18 @@
           "default": null,
           "description": "Diagonal da tela (TV).",
           "title": "Polegadas"
+        },
+        "construcao": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Construcao"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Móvel planejado: estrutura interna para desenho e lista de corte."
         }
       },
       "required": [
@@ -200,6 +303,44 @@
       ],
       "title": "Origem",
       "type": "string"
+    },
+    "Vao": {
+      "additionalProperties": false,
+      "description": "Coluna do móvel entre duas divisórias (ou entre a lateral e uma divisória).",
+      "properties": {
+        "largura": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Largura livre; se faltar, divide igualmente o que sobra."
+        },
+        "espacos": {
+          "description": "De baixo para cima.",
+          "items": {
+            "$ref": "#/$defs/Espaco"
+          },
+          "minItems": 1,
+          "title": "Espacos",
+          "type": "array"
+        },
+        "porta": {
+          "default": true,
+          "description": "Com portas de abrir: se este vão tem porta (False = nicho aberto).",
+          "title": "Porta",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "espacos"
+      ],
+      "title": "Vao",
+      "type": "object"
     }
   },
   "additionalProperties": false,

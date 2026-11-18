@@ -6,17 +6,28 @@ from shapely import LineString, Point, Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import nearest_points
 
-from interiores_core import catalogo, geometria
+from interiores_core import catalogo, geometria, planejado
 from interiores_core.modelo import Movel, PontoInstalacao, TipoInstalacao
 from interiores_core.regras.contexto import Contexto, Regra, lado_local
 from interiores_core.validacao import Severidade
 
-LIMITES = {"passagem_livre": 700, "distancia_tela_pct": 150}
+LIMITES = {
+    "passagem_livre": 700,
+    "distancia_tela_pct": 150,
+    "prateleira_vao_max": 900,
+    "cabideiro_altura_min": 1000,
+    "cabideiro_profundidade_min": 550,
+    "gaveta_largura_min": 300,
+}
 """Padrões; o ``regras.toml`` do projeto pode sobrescrever.
 
 - ``passagem_livre``: mm;
 - ``distancia_tela_pct``: distância mínima da tela até quem assiste, em % da
-  diagonal (150 = 1,5 × a diagonal).
+  diagonal (150 = 1,5 × a diagonal);
+- móveis planejados (mm): vão máximo de prateleira sem apoio no meio (referência
+  para MDF 18 mm com carga leve), altura
+  mínima do espaço de cabideiro, profundidade mínima do móvel com cabideiro
+  (cabide ~450 + folga) e largura mínima de vão com gaveta.
 """
 
 TOLERANCIA = 10.0
@@ -226,8 +237,68 @@ def moveis_no_lugar(ctx: Contexto) -> None:
                 )
 
 
+def planejados(ctx: Contexto) -> None:
+    """Construção dos móveis planejados: cabe no móvel e respeita os limites de uso."""
+    for movel in ctx.moveis:
+        if movel.construcao is None:
+            continue
+        nome = movel.nome or movel.id
+        regiao = ctx.poligonos[movel.id]
+        try:
+            calc = planejado.calcular(movel)
+        except planejado.ConstrucaoInvalidaError as e:
+            ctx.add(Severidade.ERRO, "construcao_invalida", f"'{nome}': {e}", movel.id, regiao)
+            continue
+        lim = ctx.limites
+        for i, (vao, w) in enumerate(zip(movel.construcao.vaos, calc.larguras_vaos, strict=True)):
+            tipos = [esp.tipo for esp in vao.espacos]
+            onde = f"'{nome}', vão {i + 1} ({w:.0f} mm)"
+            if (
+                w > lim["prateleira_vao_max"]
+                and len(tipos) > 1
+                and tipos != ["gaveta"] * len(tipos)
+            ):
+                ctx.add(
+                    Severidade.AVISO,
+                    "prateleira_longa",
+                    f"{onde}: prateleira sem apoio acima de {lim['prateleira_vao_max']} mm "
+                    "tende a envergar; divida o vão",
+                    movel.id,
+                    regiao,
+                )
+            if "gaveta" in tipos and w < lim["gaveta_largura_min"]:
+                ctx.add(
+                    Severidade.AVISO,
+                    "gaveta_estreita",
+                    f"{onde}: gaveta com menos de {lim['gaveta_largura_min']} mm de vão",
+                    movel.id,
+                    regiao,
+                )
+            for esp, h in zip(vao.espacos, calc.alturas[i], strict=True):
+                if esp.tipo == "cabideiro" and h < lim["cabideiro_altura_min"]:
+                    ctx.add(
+                        Severidade.AVISO,
+                        "cabideiro_baixo",
+                        f"{onde}: cabideiro com {h:.0f} mm de altura; mínimo "
+                        f"{lim['cabideiro_altura_min']} para camisas",
+                        movel.id,
+                        regiao,
+                    )
+        com_cabide = any(e.tipo == "cabideiro" for v in movel.construcao.vaos for e in v.espacos)
+        if com_cabide and movel.profundidade.valor < lim["cabideiro_profundidade_min"]:
+            ctx.add(
+                Severidade.AVISO,
+                "cabideiro_raso",
+                f"'{nome}': {movel.profundidade.valor} mm de profundidade não comporta "
+                f"cabide (mínimo {lim['cabideiro_profundidade_min']})",
+                movel.id,
+                regiao,
+            )
+
+
 REGRAS: list[Regra] = [
     moveis_no_lugar,
+    planejados,
     passagem_livre,
     porta_colide_movel,
     instalacao_obstruida,
