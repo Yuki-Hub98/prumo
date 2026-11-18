@@ -1,4 +1,4 @@
-# Infra base. api, worker, blender e frontend entram quando seus Dockerfiles existirem.
+# Infra base + wiki. api, worker, blender e frontend entram quando seus Dockerfiles existirem.
 # Versões sempre fixadas (CLAUDE.md §10).
 name: interiores
 
@@ -36,7 +36,21 @@ services:
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes: [minio-data:/data]
 
+  wiki:
+    # Wiki.js 2.5 (SQLite próprio, não usa o Postgres do projeto). As páginas são os
+    # Markdown versionados em docs/wiki/: Admin > Armazenamento > Sistema de arquivos
+    # local, caminho /wiki/docs, "Importar tudo" (ver docs/wiki/home.md).
+    image: requarks/wiki:2.5.317
+    environment:
+      DB_TYPE: sqlite
+      DB_FILEPATH: /wiki/data/db.sqlite
+    ports: ["${WIKI_PORT:-3000}:3000"]
+    volumes:
+      - wiki-data:/wiki/data
+      - ./docs/wiki:/wiki/docs
+
 volumes:
   db-data:
   redis-data:
   minio-data:
+  wiki-data:
