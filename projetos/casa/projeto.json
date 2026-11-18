@@ -360,7 +360,8 @@
             "origem": "estimada",
             "obs": "estimada: ponto da pia"
           },
-          "parede": "p7"
+          "parede": "p7",
+          "comodo": "banheiro"
         },
         {
           "id": "esgoto-vaso",
