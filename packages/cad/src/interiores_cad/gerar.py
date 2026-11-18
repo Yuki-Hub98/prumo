@@ -169,6 +169,18 @@ def gerar_movel(
     )
 
 
+PADROES_VISTAS = ("corte-*.dxf", "corte-*.pdf", "elevacao-*.dxf", "elevacao-*.pdf")
+
+
+def _apagar_vistas_obsoletas(pasta: Path, atuais: list[Path]) -> None:
+    """Remove da pasta os arquivos de vista que esta geração não produziu."""
+    manter = {a.name for a in atuais}
+    for padrao in PADROES_VISTAS:
+        for arquivo in pasta.glob(padrao):
+            if arquivo.name not in manter:
+                arquivo.unlink()
+
+
 def gerar_vistas(
     carregado: ProjetoCarregado,
     saida: Path,
@@ -180,7 +192,9 @@ def gerar_vistas(
 ) -> tuple[Situacao, list[Path]]:
     """Grava ``corte-aa``, ``corte-bb`` e ``elevacao-<parede>`` (DXF e PDF) do cômodo.
 
-    Usa ``vistas.json`` na pasta para pular a geração se nada mudou.
+    Usa ``vistas.json`` na pasta para pular a geração se nada mudou. Ao regerar,
+    apaga cortes e elevações que não existem mais (ex.: parede que deixou de
+    delimitar o cômodo), para não sobrar desenho velho na pasta.
     """
     from interiores_cad.vistas import VERSAO_VISTAS, desenhar_vistas
 
@@ -201,6 +215,7 @@ def gerar_vistas(
         desenho.doc.saveas(dxf)
         salvar_pdf(desenho, pdf)
         arquivos += [dxf, pdf]
+    _apagar_vistas_obsoletas(pasta, arquivos)
     meta.write_text(
         json.dumps(
             {

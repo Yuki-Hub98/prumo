@@ -144,3 +144,15 @@ def test_gerar_vistas_com_cache(casa: ProjetoCarregado, tmp_path: Path) -> None:
     assert situacao is Situacao.INALTERADO and de_novo == arquivos
     (tmp_path / "casa/terreo/quarto/base/corte-aa.pdf").unlink()  # arquivo some: regera
     assert gerar_vistas(casa, tmp_path, "terreo", "quarto", data=DATA)[0] is Situacao.GERADO
+
+
+def test_gerar_vistas_apaga_obsoletas(casa: ProjetoCarregado, tmp_path: Path) -> None:
+    pasta = tmp_path / "casa/terreo/quarto/base"
+    pasta.mkdir(parents=True)
+    velhas = [pasta / "elevacao-p99.dxf", pasta / "elevacao-p99.pdf", pasta / "corte-cc.pdf"]
+    outra = pasta / "planta.pdf"  # saída de outro gerador: fica
+    for arquivo in [*velhas, outra]:
+        arquivo.write_bytes(b"velho")
+    _, arquivos = gerar_vistas(casa, tmp_path, "terreo", "quarto", data=DATA)
+    assert not any(v.exists() for v in velhas)
+    assert outra.exists() and all(a.exists() for a in arquivos)
