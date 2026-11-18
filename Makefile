@@ -1,6 +1,6 @@
 # Atalhos do projeto — ver CLAUDE.md §12.
 .DEFAULT_GOAL := help
-.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem up down logs
+.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem wiki up down logs
 
 help: ## Lista os comandos
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -53,6 +53,9 @@ blender-imagem: ## Constrói a imagem Docker do Blender headless (uma vez)
 render: ## Renders 3D: make render P=casa C=quarto [V=variação|todas] [F=1]
 	@test -n "$(P)" -a -n "$(C)" || { echo "informe: make render P=<projeto> C=<cômodo> [V=<variação>|todas]"; exit 2; }
 	uv run interiores render $(P) $(C) $(if $(V),--variacao $(V)) $(if $(F),--forcar)
+
+wiki: ## Sobe só a wiki de documentação (http://localhost:3000)
+	docker compose up -d wiki
 
 up: ## Sobe a infra (docker compose)
 	docker compose up -d

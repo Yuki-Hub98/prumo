@@ -100,7 +100,12 @@ git clone https://github.com/Yuki-Hub98/interiores.git
 cd interiores
 cp .env.example .env
 make setup        # uv sync + pre-commit install
+make wiki         # documentação completa em http://localhost:3000 (Wiki.js)
 ```
+
+A documentação (uso, arquitetura, modelo de dados, desenvolvimento) fica em `docs/wiki/`
+e é servida pela Wiki.js; na primeira vez, siga "Como esta wiki funciona" em
+`docs/wiki/home.md`.
 
 Sem Docker (core, CAD e CLI):
 
