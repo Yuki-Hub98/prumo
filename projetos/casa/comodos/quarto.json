@@ -52,6 +52,69 @@
         "origem": "estimada",
         "obs": "estimada"
       }
+    },
+    {
+      "id": "tv",
+      "tipo": "tv",
+      "nome": "TV",
+      "centro": [
+        1000,
+        2535
+      ],
+      "rotacao": 180,
+      "largura": {
+        "valor": 1170,
+        "origem": "estimada",
+        "obs": "estimada: TV de 52\" informada pelo usuário em 2026-11-17 (\"acho que é 52\"); tela 16:9 de 1151 × 648 mm + borda típica"
+      },
+      "profundidade": {
+        "valor": 80,
+        "origem": "estimada",
+        "obs": "estimada: padrão do catálogo (tv 50\")"
+      },
+      "altura": {
+        "valor": 670,
+        "origem": "estimada",
+        "obs": "estimada: TV de 52\" informada pelo usuário em 2026-11-17 (\"acho que é 52\"); tela 16:9 de 1151 × 648 mm + borda típica"
+      },
+      "elevacao": {
+        "valor": 1000,
+        "origem": "estimada",
+        "obs": "estimada: padrão do catálogo (tv 50\")"
+      },
+      "polegadas": 52
+    },
+    {
+      "id": "armario",
+      "tipo": "armario",
+      "modelo": "alto",
+      "nome": "Armário",
+      "centro": [
+        3225,
+        3000
+      ],
+      "rotacao": 90,
+      "largura": {
+        "valor": 800,
+        "origem": "estimada",
+        "obs": "estimada: padrão do catálogo (armário Alto (80 × 40))"
+      },
+      "profundidade": {
+        "valor": 400,
+        "origem": "estimada",
+        "obs": "estimada: padrão do catálogo (armário Alto (80 × 40))"
+      },
+      "altura": {
+        "valor": 1800,
+        "origem": "estimada",
+        "obs": "estimada: padrão do catálogo (armário Alto (80 × 40))"
+      },
+      "portas": "abrir",
+      "largura_porta": {
+        "valor": 400,
+        "origem": "estimada",
+        "obs": "estimada: padrão do catálogo (armário Alto (80 × 40))"
+      }
     }
   ]
 }

@@ -154,3 +154,34 @@ def test_recorte_respeita_comodo_do_ponto(
     item(pav(casa_dict)["instalacoes"], "agua-pia").pop("comodo")
     p = montar().pavimentos[0]
     assert "agua-pia" in {i.id for i in geometria.recorte_do_comodo(p, "quarto").instalacoes}
+
+
+@pytest.mark.parametrize(
+    ("parede", "centro", "rotacao"),
+    [
+        ("p1", (1000, 275), 0),  # parede de baixo: frente para cima
+        ("p2", (3225, 1000), 90),  # parede leste: frente para a esquerda
+        ("p3", (2500, 4475), 180),  # parede de cima (início em x=3500): frente para baixo
+        ("p6", (275, 1635), 270),  # parede oeste (início em y=2635): frente para a direita
+    ],
+)
+def test_na_parede(
+    montar: Callable[[], Projeto], parede: str, centro: tuple[int, int], rotacao: int
+) -> None:
+    """Móvel 1000 × 400 a 500 mm do início da parede, costas na face (meia parede 75)."""
+    p = montar().pavimentos[0]
+    assert geometria.na_parede(p, "quarto", parede, 500, 1000, 400) == (centro, rotacao)
+
+
+def test_na_parede_lado_b_e_erros(casa_dict: dict[str, Any], montar: Callable[[], Projeto]) -> None:
+    p = montar().pavimentos[0]
+    # p7 (banheiro | quarto): do lado do quarto a frente aponta para baixo
+    assert geometria.na_parede(p, "quarto", "p7", 0, 400, 400) == ((200, 2375), 180)
+    assert geometria.na_parede(p, "banheiro", "p7", 0, 400, 400) == ((200, 2895), 0)
+    with pytest.raises(KeyError):
+        geometria.na_parede(p, "quarto", "p99", 0, 1, 1)
+    with pytest.raises(ValueError, match="não delimita"):
+        geometria.na_parede(p, "quarto", "p4", 0, 1, 1)
+    item(pav(casa_dict)["paredes"], "p1")["fim"] = [3500, 300]  # parede inclinada
+    with pytest.raises(ValueError, match="horizontal nem vertical"):
+        geometria.na_parede(montar().pavimentos[0], "quarto", "p1", 0, 1, 1)

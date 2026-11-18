@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "comodo": "quarto",
+  "moveis": [
+    {
+      "id": "cama",
+      "tipo": "cama",
+      "nome": "Cama de casal",
+      "centro": [
+        2485,
+        1325
+      ],
+      "rotacao": 90,
+      "largura": {
+        "valor": 1380,
+        "origem": "estimada",
+        "obs": "estimada: colchão casal padrão 138 cm"
+      },
+      "profundidade": {
+        "valor": 1880,
+        "origem": "estimada",
+        "obs": "estimada: colchão casal padrão 188 cm"
+      },
+      "altura": {
+        "valor": 550,
+        "origem": "estimada",
+        "obs": "estimada"
+      }
+    },
+    {
+      "id": "guarda-roupa",
+      "tipo": "guarda_roupa",
+      "nome": "Guarda-roupa",
+      "centro": [
+        350,
+        1325
+      ],
+      "rotacao": 270,
+      "portas": "correr",
+      "largura": {
+        "valor": 1800,
+        "origem": "estimada",
+        "obs": "estimada"
+      },
+      "profundidade": {
+        "valor": 550,
+        "origem": "estimada",
+        "obs": "estimada"
+      },
+      "altura": {
+        "valor": 2300,
+        "origem": "estimada",
+        "obs": "estimada"
+      }
+    }
+  ]
+}

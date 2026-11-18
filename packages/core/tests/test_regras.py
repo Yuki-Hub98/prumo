@@ -11,7 +11,7 @@ import pytest
 from apoio import CASA, item, pav
 from shapely import Point
 
-from interiores_core import geometria
+from interiores_core import catalogo, geometria
 from interiores_core.carregar import carregar
 from interiores_core.modelo import DadosComodo, Porta, Projeto
 from interiores_core.regras import checar, limites_do_tipo, validar_regras
@@ -212,7 +212,7 @@ def test_limites_do_tipo() -> None:
     assert limites["passagem_livre"] == 900 and limites["lateral_cama"] == 600
     assert not problemas
     limites, _ = limites_do_tipo("banheiro", {"geral": {"passagem_livre": 800}})
-    assert limites == {"passagem_livre": 800}
+    assert limites == {"passagem_livre": 800, "distancia_tela_pct": 150}
     _, problemas = limites_do_tipo("quarto", {"quarto": {"lateral_cama": "60 cm"}})
     assert [p.codigo for p in problemas] == ["regra_invalida"]
     _, problemas = limites_do_tipo("quarto", {"quarto": {"lateral_cama": True}})
@@ -279,3 +279,61 @@ def test_lados_do_movel(moveis: dict[str, Any]) -> None:
     assert onde_na_planta((0, 1)) == "acima na planta"
     assert onde_na_planta((1, 0)) == "à direita na planta"
     assert onde_na_planta((-1, 0)) == "à esquerda na planta"
+
+
+# ---------------------------------------------------------------- catálogo nas regras
+
+
+def test_distancia_da_tela(rodar: Checar, moveis: dict[str, Any]) -> None:
+    # TV de 43" na parede oeste, de frente para a cama (pés a 1545): distância 1345
+    moveis["moveis"].append(catalogo.novo_movel("tv", "tv", (160, 1325), "43pol", rotacao=270))
+    movel(moveis, "guarda-roupa")["centro"] = [2800, 3800]  # tira o guarda-roupa da parede
+    movel(moveis, "guarda-roupa")["rotacao"] = 90
+    p = next(p for p in rodar() if p.codigo == "distancia_tela")
+    assert "1345 mm" in p.mensagem and "mínimo 1638" in p.mensagem and p.regiao
+    assert "distancia_tela" not in codigos(rodar({"geral": {"distancia_tela_pct": 100}}))
+    moveis["moveis"][-1]["rotacao"] = 90  # tela virada para a parede: ninguém assiste
+    assert "distancia_tela" not in codigos(rodar())
+    del moveis["moveis"][-1]["polegadas"]
+    assert "distancia_tela" not in codigos(rodar())
+
+
+def test_movel_elevado_nao_ocupa_piso(rodar: Checar, moveis: dict[str, Any]) -> None:
+    """Armário aéreo sobre a passagem da porta não bloqueia nem colide com a porta."""
+    base = codigos(rodar())
+    moveis["moveis"].append(
+        catalogo.novo_movel("armario", "aereo", (2800, 4475), "aereo", rotacao=180)
+    )
+    assert codigos(rodar()) == base
+    moveis["moveis"][-1]["elevacao"]["valor"] = 0  # no chão: bate na porta
+    assert "porta_colide_movel" in codigos(rodar())
+
+
+def test_moveis_fora_do_lugar(rodar: Checar, moveis: dict[str, Any]) -> None:
+    moveis["moveis"].append(catalogo.novo_movel("comoda", "comoda", (2485, 1325)))
+    assert ("moveis_sobrepostos", "cama") in {(p.codigo, p.elemento) for p in rodar()}
+    moveis["moveis"][-1]["centro"] = [3400, 1325]  # metade dentro da parede leste
+    erro = next(p for p in rodar() if p.codigo == "movel_fora_do_comodo")
+    assert erro.severidade is Severidade.ERRO and erro.elemento == "comoda"
+
+
+def test_tv_acima_do_rack_nao_colide(rodar: Checar, moveis: dict[str, Any]) -> None:
+    moveis["moveis"] += [
+        catalogo.novo_movel("rack", "rack", (1300, 2375), "pequeno", rotacao=180),
+        catalogo.novo_movel("tv", "tv", (1300, 2535), "43pol", rotacao=180),
+    ]
+    moveis["moveis"][-1]["centro"] = [1300, 2400]  # TV sobre o rack, em projeção
+    assert "moveis_sobrepostos" not in codigos(rodar())
+    moveis["moveis"][-1]["elevacao"]["valor"] = 300  # desce até a altura do rack
+    assert "moveis_sobrepostos" in codigos(rodar())
+
+
+def test_tomada_acima_de_movel_baixo_nao_e_obstruida(rodar: Checar, moveis: dict[str, Any]) -> None:
+    """Rack de 500 na frente da tomada a 300: tapa. TV elevada a 1000: não tapa."""
+    moveis["moveis"].append(catalogo.novo_movel("tv", "tv", (3380, 400), "32pol", rotacao=90))
+    assert "instalacao_obstruida" not in codigos(rodar())
+    moveis["moveis"].append(
+        catalogo.novo_movel("rack", "rack", (3225, 1000), "pequeno", rotacao=90)
+    )
+    p = next(p for p in rodar() if p.codigo == "instalacao_obstruida")
+    assert "de 0 a 500 do piso" in p.mensagem

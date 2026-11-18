@@ -57,9 +57,22 @@
           "type": "string"
         },
         "tipo": {
-          "description": "cama, guarda_roupa, criado_mudo, ...",
+          "description": "Tipo do catálogo (cama, guarda_roupa, sofa, tv...); fora dele vira caixa.",
           "title": "Tipo",
           "type": "string"
+        },
+        "modelo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Modelo do catálogo de onde vieram as medidas.",
+          "title": "Modelo"
         },
         "nome": {
           "anyOf": [
@@ -138,6 +151,33 @@
           ],
           "default": null,
           "description": "Largura de cada folha de porta de abrir (para o espaço de giro)."
+        },
+        "elevacao": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Do piso até a base do móvel (TV na parede, armário aéreo). Móvel elevado não ocupa o piso: não conta para passagem nem para o giro de portas."
+        },
+        "polegadas": {
+          "anyOf": [
+            {
+              "maximum": 150,
+              "minimum": 10,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Diagonal da tela (TV).",
+          "title": "Polegadas"
         }
       },
       "required": [

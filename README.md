@@ -109,6 +109,28 @@ make validate P=casa              # valida medidas + checagens
 make cad P=casa C=quarto          # planta e cortes do quarto
 ```
 
+Móveis (catálogo com medidas padrão, que entram como estimadas e podem ser ajustadas):
+
+```bash
+uv run interiores catalogo                      # tipos de móvel
+uv run interiores catalogo tv                   # modelos de um tipo
+uv run interiores movel adicionar casa quarto tv --modelo 50pol --parede p7 --a 400 --elevacao 1000
+uv run interiores movel adicionar casa quarto cama --em 2485,1325 --rotacao 90
+uv run interiores movel mover casa quarto tv --parede p2 --a 1200
+uv run interiores movel listar casa quarto
+uv run interiores movel remover casa quarto tv
+```
+
+Duas formas de posicionar:
+
+- `--parede <id> --a <mm>`: prende as costas do móvel na parede, virado para o cômodo
+  (`--a` é a distância do início da parede até a borda do móvel, como nas portas e janelas);
+- `--em x,y --rotacao r`: centro em mm no sistema do pavimento; rotação 0/90/180/270 (em 0
+  a frente do móvel aponta para cima na planta).
+
+`--elevacao` deixa o móvel suspenso (TV na parede, armário aéreo). Depois de cada mudança
+as checagens do cômodo rodam.
+
 Stack completa:
 
 ```bash

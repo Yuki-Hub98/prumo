@@ -17,13 +17,14 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 from shapely import LineString, Point
 
-from interiores_core import geometria
+from interiores_core import catalogo, geometria
 from interiores_core.modelo import (
     EXTERNO,
     Comodo,
     DadosComodo,
     Instalacao,
     Janela,
+    Movel,
     Parede,
     Pavimento,
     PontoInstalacao,
@@ -440,6 +441,35 @@ class _Validador:
                     comodo=d.comodo,
                     elemento=rep,
                 )
+            for m in d.moveis:
+                self.movel_no_catalogo(d.comodo, m)
+
+    def movel_no_catalogo(self, comodo: str, m: Movel) -> None:
+        onde: dict[str, Any] = {"comodo": comodo, "elemento": m.id, "posicao": m.centro}
+        item = catalogo.item_do_tipo(m.tipo)
+        if item is None:
+            self.add(
+                Severidade.INFO,
+                "movel_fora_do_catalogo",
+                f"tipo '{m.tipo}' não está no catálogo: desenhado como caixa, usa só a frente",
+                **onde,
+            )
+            return
+        if m.modelo is not None and item.modelo(m.modelo) is None:
+            ids = ", ".join(x.id for x in item.modelos)
+            self.add(
+                Severidade.AVISO,
+                "modelo_desconhecido",
+                f"modelo '{m.modelo}' não existe para '{m.tipo}' ({ids})",
+                **onde,
+            )
+        if item.simbolo is catalogo.Simbolo.TELA and m.polegadas is None:
+            self.add(
+                Severidade.INFO,
+                "tela_sem_polegadas",
+                "informe `polegadas` para checar a distância de quem assiste",
+                **onde,
+            )
 
 
 def validar(

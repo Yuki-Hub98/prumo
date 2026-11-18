@@ -236,7 +236,10 @@ class Movel(_Modelo):
     """
 
     id: Id
-    tipo: str = Field(description="cama, guarda_roupa, criado_mudo, ...")
+    tipo: str = Field(
+        description="Tipo do catálogo (cama, guarda_roupa, sofa, tv...); fora dele vira caixa."
+    )
+    modelo: str | None = Field(None, description="Modelo do catálogo de onde vieram as medidas.")
     nome: str | None = None
     centro: Ponto
     rotacao: Literal[0, 90, 180, 270] = Field(
@@ -261,6 +264,18 @@ class Movel(_Modelo):
     largura_porta: Medida | None = Field(
         None, description="Largura de cada folha de porta de abrir (para o espaço de giro)."
     )
+    elevacao: Medida | None = Field(
+        None,
+        description=(
+            "Do piso até a base do móvel (TV na parede, armário aéreo). Móvel elevado "
+            "não ocupa o piso: não conta para passagem nem para o giro de portas."
+        ),
+    )
+    polegadas: int | None = Field(None, ge=10, le=150, description="Diagonal da tela (TV).")
+
+    @property
+    def ocupa_piso(self) -> bool:
+        return self.elevacao is None or self.elevacao.valor == 0
 
 
 class DadosComodo(_Modelo):

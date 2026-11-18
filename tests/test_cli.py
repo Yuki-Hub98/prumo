@@ -9,11 +9,13 @@ from typer.testing import CliRunner
 from interiores_cli.main import app
 
 RAIZ = Path(__file__).resolve().parents[1]
+DADOS = RAIZ / "packages" / "core" / "tests" / "dados"
+"""Cópia congelada de projetos/casa (os testes não dependem dos dados reais)."""
 runner = CliRunner()
 
 
 def test_validar_casa() -> None:
-    r = runner.invoke(app, ["validar", "casa", "--projetos", str(RAIZ / "projetos"), "--estimadas"])
+    r = runner.invoke(app, ["validar", "casa", "--projetos", str(DADOS), "--estimadas"])
     assert r.exit_code == 0, r.output
     assert "quarto" in r.output and "banheiro" in r.output
     assert "PRELIMINAR — NÃO USAR PARA OBRA" in r.output
@@ -22,7 +24,7 @@ def test_validar_casa() -> None:
 
 
 def test_validar_com_erro_sai_com_1(tmp_path: Path) -> None:
-    shutil.copytree(RAIZ / "projetos" / "casa", tmp_path / "casa")
+    shutil.copytree(DADOS / "casa", tmp_path / "casa")
     arq = tmp_path / "casa" / "projeto.json"
     d = json.loads(arq.read_text(encoding="utf-8"))
     d["pavimentos"][0]["comodos"][1]["paredes"].remove("p4")
@@ -48,7 +50,7 @@ def test_schema(tmp_path: Path) -> None:
 
 
 def test_cad_comodo_e_cache(tmp_path: Path) -> None:
-    args = ["cad", "casa", "--projetos", str(RAIZ / "projetos"), "--saida", str(tmp_path)]
+    args = ["cad", "casa", "--projetos", str(DADOS), "--saida", str(tmp_path)]
     r = runner.invoke(app, [*args, "--comodo", "quarto"])
     assert r.exit_code == 0, r.output
     assert "terreo/quarto" in r.output and "gerado" in r.output and "1:25 A3" in r.output
@@ -62,7 +64,7 @@ def test_cad_comodo_e_cache(tmp_path: Path) -> None:
 
 
 def test_cad_tudo_e_pavimento(tmp_path: Path) -> None:
-    args = ["cad", "casa", "--projetos", str(RAIZ / "projetos"), "--saida", str(tmp_path)]
+    args = ["cad", "casa", "--projetos", str(DADOS), "--saida", str(tmp_path)]
     r = runner.invoke(app, args)
     assert r.exit_code == 0, r.output
     for pasta in ("_geral", "quarto/base", "banheiro/base"):
@@ -72,13 +74,13 @@ def test_cad_tudo_e_pavimento(tmp_path: Path) -> None:
 
 
 def test_cad_escopo_inexistente_e_comodo_aberto(tmp_path: Path) -> None:
-    args = ["cad", "casa", "--projetos", str(RAIZ / "projetos"), "--saida", str(tmp_path)]
+    args = ["cad", "casa", "--projetos", str(DADOS), "--saida", str(tmp_path)]
     assert runner.invoke(app, [*args, "--comodo", "cozinha"]).exit_code == 2
     assert runner.invoke(app, [*args, "--pavimento", "superior"]).exit_code == 2
     r = runner.invoke(app, [*args, "--comodo", "quarto", "--pavimento", "superior"])
     assert r.exit_code == 2
 
-    shutil.copytree(RAIZ / "projetos" / "casa", tmp_path / "p" / "casa")
+    shutil.copytree(DADOS / "casa", tmp_path / "p" / "casa")
     arq = tmp_path / "p" / "casa" / "projeto.json"
     d = json.loads(arq.read_text(encoding="utf-8"))
     d["pavimentos"][0]["comodos"][1]["paredes"].remove("p4")
@@ -88,3 +90,103 @@ def test_cad_escopo_inexistente_e_comodo_aberto(tmp_path: Path) -> None:
     )
     assert r.exit_code == 1
     assert "banheiro" in r.output and "FALHOU" in r.output
+
+
+def test_catalogo() -> None:
+    r = runner.invoke(app, ["catalogo"])
+    assert r.exit_code == 0 and "guarda_roupa" in r.output and "eletronicos" in r.output
+    r = runner.invoke(app, ["catalogo", "cama"])
+    assert "queen" in r.output and "(padrão)" in r.output
+    assert runner.invoke(app, ["catalogo", "foguete"]).exit_code == 2
+
+
+def test_movel_adicionar_mover_listar_remover(tmp_path: Path) -> None:
+    shutil.copytree(DADOS / "casa", tmp_path / "casa")
+    p = ["--projetos", str(tmp_path)]
+    r = runner.invoke(
+        app,
+        [
+            "movel",
+            "adicionar",
+            "casa",
+            "quarto",
+            "tv",
+            "--modelo",
+            "43pol",
+            "--em",
+            "160,1325",
+            "--rotacao",
+            "270",
+            *p,
+        ],
+    )
+    assert r.exit_code == 0, r.output
+    assert "adicionado 'tv'" in r.output and "moveis_sobrepostos" in r.output
+    r = runner.invoke(
+        app, ["movel", "mover", "casa", "quarto", "tv", "--em", "3380,1325", "--rotacao", "90", *p]
+    )
+    assert r.exit_code == 0 and "movido 'tv'" in r.output
+    r = runner.invoke(app, ["movel", "listar", "casa", "quarto", *p])
+    assert "tv" in r.output and "em (3380, 1325) rot 90" in r.output
+    r = runner.invoke(
+        app,
+        [
+            "movel",
+            "adicionar",
+            "casa",
+            "quarto",
+            "cama",
+            "--em",
+            "1,1",
+            "--largura",
+            "1500",
+            "--origem",
+            "trena",
+            *p,
+        ],
+    )
+    assert "adicionado 'cama-2'" in r.output
+    dados = json.loads((tmp_path / "casa/comodos/quarto.json").read_text(encoding="utf-8"))
+    assert dados["moveis"][-1]["largura"]["origem"] == "trena"
+    assert runner.invoke(app, ["movel", "remover", "casa", "quarto", "tv", *p]).exit_code == 0
+    assert runner.invoke(app, ["movel", "remover", "casa", "quarto", "tv", *p]).exit_code == 2
+    assert runner.invoke(app, ["movel", "mover", "casa", "quarto", "tv", *p]).exit_code == 2
+    r = runner.invoke(app, ["movel", "listar", "casa", "banheiro", *p])
+    assert "nenhum móvel" in r.output
+
+
+def test_movel_erros(tmp_path: Path) -> None:
+    shutil.copytree(DADOS / "casa", tmp_path / "casa")
+    p = ["--projetos", str(tmp_path)]
+    for args in (
+        ["foguete", "--em", "1,1"],
+        ["cama", "--modelo", "x", "--em", "1,1"],
+        ["cama", "--id", "cama", "--em", "1,1"],
+    ):
+        r = runner.invoke(app, ["movel", "adicionar", "casa", "quarto", *args, *p])
+        assert r.exit_code == 2 and "erro:" in r.output
+    r = runner.invoke(app, ["movel", "adicionar", "casa", "quarto", "cama", "--em", "1", *p])
+    assert r.exit_code == 2
+
+
+def test_movel_na_parede(tmp_path: Path) -> None:
+    shutil.copytree(DADOS / "casa", tmp_path / "casa")
+    p = ["--projetos", str(tmp_path)]
+    r = runner.invoke(
+        app,
+        ["movel", "adicionar", "casa", "quarto", "criado_mudo", "--parede", "p2", "--a", "100", *p],
+    )
+    assert r.exit_code == 0, r.output
+    assert "centro (3225, 325), rotação 90" in r.output
+    r = runner.invoke(
+        app, ["movel", "mover", "casa", "quarto", "criado-mudo", "--parede", "p1", "--a", "200", *p]
+    )
+    assert "centro (425, 275), rotação 0" in r.output
+    erros = (
+        ["adicionar", "casa", "quarto", "estante", *p],
+        ["adicionar", "casa", "quarto", "estante", "--em", "1,1", "--parede", "p1", *p],
+        ["adicionar", "casa", "quarto", "estante", "--parede", "p4", *p],
+        ["mover", "casa", "quarto", "criado-mudo", "--parede", "p1", "--rotacao", "0", *p],
+    )
+    for args in erros:
+        assert runner.invoke(app, ["movel", *args]).exit_code == 2, args

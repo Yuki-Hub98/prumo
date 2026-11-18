@@ -9,8 +9,9 @@ import typer
 from pydantic import ValidationError
 
 from interiores_cad.gerar import Resultado, Situacao, gerar_planta
-from interiores_core import __version__, geometria, schema
+from interiores_core import __version__, catalogo, editar, geometria, schema
 from interiores_core.carregar import ProjetoCarregado, carregar
+from interiores_core.medidas import medidas_em
 from interiores_core.regras import checar
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, Severidade, validar
 
@@ -176,3 +177,187 @@ def _mostrar_resultado(nome: str, r: Resultado) -> None:
     if r.situacao is Situacao.GERADO:
         for arq in r.arquivos[:2]:
             print(f"      {arq}")
+
+
+# ---------------------------------------------------------------- catálogo e móveis
+
+movel_app = typer.Typer(help="Adiciona, move, remove e lista móveis de um cômodo.")
+app.add_typer(movel_app, name="movel")
+
+
+def _ponto(texto: str) -> tuple[int, int]:
+    try:
+        x, y = (int(v) for v in texto.replace(";", ",").split(","))
+    except ValueError as e:
+        raise typer.BadParameter(f"use x,y em mm (ex.: 1200,800), não '{texto}'") from e
+    return x, y
+
+
+@app.command("catalogo")
+def cmd_catalogo(
+    tipo: Annotated[str | None, typer.Argument(help="Mostra os modelos deste tipo.")] = None,
+) -> None:
+    """Lista os tipos de móvel do catálogo, ou os modelos de um tipo."""
+    if tipo is None:
+        for cat in catalogo.Categoria:
+            itens = [i for i in catalogo.CATALOGO.values() if i.categoria is cat]
+            print(f"\n{cat.value}")
+            for i in itens:
+                print(f"  {i.tipo:<14} {i.nome:<16} {len(i.modelos)} modelo(s)")
+        print("\nuse `interiores catalogo <tipo>` para ver os modelos")
+        return
+    item = catalogo.item_do_tipo(tipo)
+    if item is None:
+        print(f"erro: tipo '{tipo}' não está no catálogo")
+        raise typer.Exit(2)
+    print(f"{item.nome} ({item.tipo}) · lados de uso: {', '.join(item.lados_uso) or 'nenhum'}")
+    for m in item.modelos:
+        padrao = "  (padrão)" if m.id == item.modelo_padrao else ""
+        extra = "".join(
+            [
+                f" · {m.portas}" if m.portas else "",
+                f" · elev. {m.elevacao}" if m.elevacao else "",
+            ]
+        )
+        print(
+            f"  {m.id:<12} {m.nome:<22} {m.largura} × {m.profundidade} × {m.altura}{extra}{padrao}"
+        )
+
+
+@movel_app.command("listar")
+def cmd_movel_listar(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    projetos: PastaProjetos = Path("projetos"),
+) -> None:
+    """Lista os móveis do cômodo com posição e medidas."""
+    carregado = _carregar(projetos / projeto)
+    dados = carregado.dados_comodos.get(comodo)
+    if dados is None or not dados.moveis:
+        print("nenhum móvel")
+        return
+    for m in dados.moveis:
+        est = " (estimadas)" if any(md.estimada for _, md in medidas_em(m)) else ""
+        print(
+            f"  {m.id:<16} {m.tipo:<13} {m.largura.valor} × {m.profundidade.valor} × "
+            f"{m.altura.valor}  em ({m.centro[0]}, {m.centro[1]}) rot {m.rotacao}{est}"
+        )
+
+
+@movel_app.command("adicionar")
+def cmd_movel_adicionar(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    tipo: Annotated[str, typer.Argument(help="Tipo do catálogo (veja `interiores catalogo`).")],
+    em: Annotated[str | None, typer.Option("--em", help="Centro do móvel: x,y em mm.")] = None,
+    parede: Annotated[
+        str | None,
+        typer.Option(help="Prende o móvel nesta parede, virado para o cômodo (no lugar de --em)."),
+    ] = None,
+    a: Annotated[
+        int, typer.Option("--a", help="Com --parede: mm do início da parede até a borda do móvel.")
+    ] = 0,
+    modelo: Annotated[str | None, typer.Option(help="Modelo do catálogo.")] = None,
+    id_: Annotated[str | None, typer.Option("--id", help="Id do móvel.")] = None,
+    rotacao: Annotated[int, typer.Option(help="0, 90, 180 ou 270 (frente para +y em 0).")] = 0,
+    nome: Annotated[str | None, typer.Option(help="Nome no desenho.")] = None,
+    largura: Annotated[int | None, typer.Option(help="mm (substitui a do modelo).")] = None,
+    profundidade: Annotated[int | None, typer.Option(help="mm.")] = None,
+    altura: Annotated[int | None, typer.Option(help="mm.")] = None,
+    elevacao: Annotated[int | None, typer.Option(help="mm do piso até a base.")] = None,
+    origem: Annotated[
+        str, typer.Option(help="Origem das medidas informadas: estimada, trena ou projeto.")
+    ] = "estimada",
+    projetos: PastaProjetos = Path("projetos"),
+) -> None:
+    """Adiciona um móvel do catálogo ao cômodo e roda as checagens dele.
+
+    Posição: --em x,y (centro, com --rotacao) ou --parede <id> --a <mm>, que encosta
+    as costas do móvel na parede, virado para o cômodo.
+    """
+    pasta = projetos / projeto
+    medidas = {
+        k: v
+        for k, v in {
+            "largura": largura,
+            "profundidade": profundidade,
+            "altura": altura,
+            "elevacao": elevacao,
+        }.items()
+        if v is not None
+    }
+    if (em is None) == (parede is None):
+        print("erro: informe a posição com --em x,y ou com --parede <id> [--a mm]")
+        raise typer.Exit(2)
+    try:
+        novo_id = id_ or editar.id_livre(pasta, comodo, tipo)
+        movel = catalogo.novo_movel(
+            tipo, novo_id, _ponto(em) if em else (0, 0), modelo, rotacao, nome, medidas, origem
+        )
+        if parede is not None:
+            editar.encostar(pasta, comodo, movel, parede, a)
+        editar.adicionar_movel(pasta, comodo, movel)
+    except (KeyError, ValueError) as e:
+        print(f"erro: {e.args[0] if isinstance(e, KeyError) else e}")
+        raise typer.Exit(2) from e
+    cx, cy = movel["centro"]
+    print(
+        f"adicionado '{novo_id}' ({tipo} {movel['modelo']}) em {comodo}: "
+        f"centro ({cx}, {cy}), rotação {movel['rotacao']}"
+    )
+    _checagens_do_comodo(pasta, comodo)
+
+
+@movel_app.command("mover")
+def cmd_movel_mover(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    id_: Annotated[str, typer.Argument(metavar="ID", help="Id do móvel.")],
+    em: Annotated[str | None, typer.Option("--em", help="Novo centro: x,y em mm.")] = None,
+    rotacao: Annotated[int | None, typer.Option(help="Nova rotação.")] = None,
+    parede: Annotated[
+        str | None, typer.Option(help="Prende nesta parede, virado para o cômodo.")
+    ] = None,
+    a: Annotated[
+        int, typer.Option("--a", help="Com --parede: mm do início da parede até a borda do móvel.")
+    ] = 0,
+    projetos: PastaProjetos = Path("projetos"),
+) -> None:
+    """Muda a posição e/ou a rotação de um móvel (ou o prende numa parede) e roda as checagens."""
+    pasta = projetos / projeto
+    if parede is not None and (em is not None or rotacao is not None):
+        print("erro: com --parede a posição e a rotação são calculadas; não use --em/--rotacao")
+        raise typer.Exit(2)
+    try:
+        dados = editar.mover_movel(
+            pasta, comodo, id_, _ponto(em) if em else None, rotacao, parede, a
+        )
+    except (KeyError, ValueError) as e:
+        print(f"erro: {e.args[0] if isinstance(e, KeyError) else e}")
+        raise typer.Exit(2) from e
+    m = next(x for x in dados.moveis if x.id == id_)
+    print(f"movido '{id_}': centro ({m.centro[0]}, {m.centro[1]}), rotação {m.rotacao}")
+    _checagens_do_comodo(pasta, comodo)
+
+
+@movel_app.command("remover")
+def cmd_movel_remover(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    id_: Annotated[str, typer.Argument(metavar="ID", help="Id do móvel.")],
+    projetos: PastaProjetos = Path("projetos"),
+) -> None:
+    """Remove um móvel do cômodo."""
+    try:
+        editar.remover_movel(projetos / projeto, comodo, id_)
+    except KeyError as e:
+        print(f"erro: {e.args[0]}")
+        raise typer.Exit(2) from e
+    print(f"removido '{id_}'")
+
+
+def _checagens_do_comodo(pasta: Path, comodo: str) -> None:
+    carregado = _carregar(pasta)
+    problemas = checar(carregado.projeto, carregado.dados_comodos, carregado.regras, comodo)
+    print()
+    _listar_problemas(problemas)

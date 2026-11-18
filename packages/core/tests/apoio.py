@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Any
 
 RAIZ = Path(__file__).resolve().parents[3]
-CASA = RAIZ / "projetos" / "casa"
+CASA = Path(__file__).resolve().parent / "dados" / "casa"
+"""Cópia congelada do projeto de exemplo: editar ``projetos/casa`` (móveis, medidas)
+não pode quebrar os testes. Atualize a cópia só quando o teste precisar."""
 
 
 def pav(d: dict[str, Any]) -> dict[str, Any]:

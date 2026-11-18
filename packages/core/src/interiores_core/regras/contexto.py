@@ -37,7 +37,13 @@ class Contexto:
 
     @cached_property
     def poligonos(self) -> dict[str, Polygon]:
+        """Projeção no piso de todos os móveis."""
         return {m.id: geometria.poligono_movel(m) for m in self.moveis}
+
+    @cached_property
+    def no_piso(self) -> dict[str, Polygon]:
+        """Só os móveis apoiados no piso (os elevados não bloqueiam passagem nem porta)."""
+        return {m.id: self.poligonos[m.id] for m in self.moveis if m.ocupa_piso}
 
     @cached_property
     def fora(self) -> BaseGeometry:
@@ -48,7 +54,7 @@ class Contexto:
     @cached_property
     def livre(self) -> BaseGeometry:
         """Piso livre: área útil menos a projeção dos móveis."""
-        return self.util.difference(unary_union(list(self.poligonos.values())))
+        return self.util.difference(unary_union(list(self.no_piso.values())))
 
     @cached_property
     def portas(self) -> list[Porta]:
@@ -61,8 +67,8 @@ class Contexto:
         ]
 
     def obstaculos(self, exceto: str | None = None) -> BaseGeometry:
-        """Paredes/exterior e todos os móveis, menos o indicado."""
-        outros = [p for mid, p in self.poligonos.items() if mid != exceto]
+        """Paredes/exterior e os móveis apoiados no piso, menos o indicado."""
+        outros = [p for mid, p in self.no_piso.items() if mid != exceto]
         return unary_union([self.fora, *outros])
 
     def folga(self, lado: Lado, direcao: Ponto, exceto: str | None = None) -> float:
@@ -86,7 +92,9 @@ class Contexto:
         bate = faixa.intersection(self.obstaculos(exceto))
         if bate.is_empty or bate.area == 0:
             return ALCANCE
-        return float(LineString(lado).distance(bate))
+        dist = float(LineString(lado).distance(bate))
+        # obstáculo colado ao lado (ou sobreposto): a faixa afastada 1 mm acusa 1 mm
+        return 0.0 if dist <= FOLGA_NUMERICA + 1e-6 else dist
 
     @staticmethod
     def faixa(lado: Lado, direcao: Ponto, profundidade: float) -> Polygon:
