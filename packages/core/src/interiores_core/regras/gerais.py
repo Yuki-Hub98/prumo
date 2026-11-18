@@ -4,20 +4,26 @@ from __future__ import annotations
 
 from shapely import LineString, Point, Polygon
 from shapely.geometry.base import BaseGeometry
+from shapely.ops import nearest_points
 
-from interiores_core import geometria
-from interiores_core.modelo import PontoInstalacao, TipoInstalacao
+from interiores_core import catalogo, geometria
+from interiores_core.modelo import Movel, PontoInstalacao, TipoInstalacao
 from interiores_core.regras.contexto import Contexto, Regra, lado_local
 from interiores_core.validacao import Severidade
 
-LIMITES = {"passagem_livre": 700}
-"""Padrões em mm; o ``regras.toml`` do projeto pode sobrescrever."""
+LIMITES = {"passagem_livre": 700, "distancia_tela_pct": 150}
+"""Padrões; o ``regras.toml`` do projeto pode sobrescrever.
 
-LADOS_DE_USO = {"cama": ("esquerda", "direita", "frente")}
-"""Lados por onde se usa cada tipo de móvel; os demais usam só a frente."""
+- ``passagem_livre``: mm;
+- ``distancia_tela_pct``: distância mínima da tela até quem assiste, em % da
+  diagonal (150 = 1,5 × a diagonal).
+"""
 
 TOLERANCIA = 10.0
 """Folga numérica (mm) ao testar se uma área livre encosta num ponto."""
+
+SOBRA = 100.0
+"""Área (mm²) de sobreposição tolerada (arredondamento de medidas)."""
 
 ENCOSTA = 50.0
 """Até quantos mm da face da parede um móvel tapa uma tomada/interruptor."""
@@ -78,7 +84,9 @@ def passagem_livre(ctx: Contexto) -> None:
     if principal is None:
         return
     for movel in ctx.moveis:
-        lados = LADOS_DE_USO.get(movel.tipo, ("frente",))
+        lados = catalogo.lados_de_uso(movel.tipo)
+        if not lados or not movel.ocupa_piso:
+            continue  # não precisa de acesso (TV na parede, armário aéreo)
         usos = [lado_local(movel, q) for q in lados]
         if not any(principal.distance(LineString(seg)) <= TOLERANCIA for seg, _ in usos):
             uso = "da frente" if lados == ("frente",) else "das laterais e dos pés"
@@ -102,6 +110,8 @@ def porta_colide_movel(ctx: Contexto) -> None:
         if giro is None:
             continue
         for movel in ctx.moveis:
+            if not movel.ocupa_piso:
+                continue
             choque = giro.intersection(ctx.poligonos[movel.id])
             if choque.area > 1:
                 ctx.add(
@@ -132,15 +142,94 @@ def instalacao_obstruida(ctx: Contexto) -> None:
         face = Point(inst.posicao[0] + n[0] * lado * meia, inst.posicao[1] + n[1] * lado * meia)
         for movel in ctx.moveis:
             perto = ctx.poligonos[movel.id].distance(face) <= ENCOSTA
-            if perto and movel.altura.valor > inst.altura.valor:
+            base = movel.elevacao.valor if movel.elevacao else 0
+            if perto and base <= inst.altura.valor < base + movel.altura.valor:
                 ctx.add(
                     Severidade.AVISO,
                     "instalacao_obstruida",
                     f"{inst.tipo.replace('_', ' ')} '{inst.id}' (h{inst.altura.valor}) fica "
-                    f"atrás de '{movel.nome or movel.id}' (altura {movel.altura.valor})",
+                    f"atrás de '{movel.nome or movel.id}' (de {base} a {base + movel.altura.valor} "
+                    "do piso)",
                     elemento=inst.id,
                     regiao=face.buffer(150),
                 )
 
 
-REGRAS: list[Regra] = [passagem_livre, porta_colide_movel, instalacao_obstruida]
+def distancia_tela(ctx: Contexto) -> None:
+    """TV perto demais de quem assiste: mínimo ``distancia_tela_pct`` % da diagonal.
+
+    Quem assiste: móveis-assento do catálogo (sofá, poltrona, cama) à frente da
+    tela. A distância vai do meio da tela até o ponto mais próximo do assento.
+    """
+    fator = ctx.limites["distancia_tela_pct"] / 100
+    assentos = [m for m in ctx.moveis if (i := catalogo.item_do_tipo(m.tipo)) and i.assento]
+    for tv in ctx.moveis:
+        item = catalogo.item_do_tipo(tv.tipo)
+        if item is None or item.simbolo is not catalogo.Simbolo.TELA or tv.polegadas is None:
+            continue
+        (a, b), (dx, dy) = lado_local(tv, "frente")
+        meio = Point((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+        minimo = fator * tv.polegadas * 25.4
+        for assento in assentos:
+            alvo = ctx.poligonos[assento.id]
+            c = alvo.centroid
+            if (c.x - meio.x) * dx + (c.y - meio.y) * dy <= 0:
+                continue  # atrás da tela
+            dist = meio.distance(alvo)
+            if dist < minimo:
+                perto, _ = nearest_points(alvo, meio)
+                ctx.add(
+                    Severidade.AVISO,
+                    "distancia_tela",
+                    f"'{tv.nome or tv.id}' ({tv.polegadas}\") a {dist:.0f} mm de "
+                    f"'{assento.nome or assento.id}'; mínimo {minimo:.0f} "
+                    f"({fator:g} × a diagonal)",
+                    elemento=tv.id,
+                    regiao=LineString([meio, perto]).buffer(40),
+                )
+
+
+def _faixa_altura(m: Movel) -> tuple[int, int]:
+    base = m.elevacao.valor if m.elevacao else 0
+    return base, base + m.altura.valor
+
+
+def moveis_no_lugar(ctx: Contexto) -> None:
+    """Móvel entrando na parede/fora do cômodo, ou dois móveis no mesmo lugar.
+
+    Dois móveis colidem se se sobrepõem na planta **e** nas faixas de altura.
+    """
+    for movel in ctx.moveis:
+        fora = ctx.poligonos[movel.id].intersection(ctx.fora)
+        if fora.area > SOBRA:
+            ctx.add(
+                Severidade.ERRO,
+                "movel_fora_do_comodo",
+                f"'{movel.nome or movel.id}' entra {fora.area / 1e4:.0f} cm² na parede "
+                "ou fora do cômodo",
+                elemento=movel.id,
+                regiao=fora,
+            )
+    for i, a in enumerate(ctx.moveis):
+        for b in ctx.moveis[i + 1 :]:
+            (a0, a1), (b0, b1) = _faixa_altura(a), _faixa_altura(b)
+            if a1 <= b0 or b1 <= a0:
+                continue  # um acima do outro (ex.: TV na parede sobre o rack)
+            junto = ctx.poligonos[a.id].intersection(ctx.poligonos[b.id])
+            if junto.area > SOBRA:
+                ctx.add(
+                    Severidade.AVISO,
+                    "moveis_sobrepostos",
+                    f"'{a.nome or a.id}' e '{b.nome or b.id}' ocupam o mesmo lugar",
+                    elemento=a.id,
+                    regiao=junto,
+                )
+
+
+REGRAS: list[Regra] = [
+    moveis_no_lugar,
+    passagem_livre,
+    porta_colide_movel,
+    instalacao_obstruida,
+    distancia_tela,
+]

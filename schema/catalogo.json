@@ -1,0 +1,669 @@
+{
+  "versao": 1,
+  "itens": [
+    {
+      "tipo": "cama",
+      "nome": "Cama",
+      "categoria": "dormir",
+      "simbolo": "cama",
+      "lados_uso": [
+        "esquerda",
+        "direita",
+        "frente"
+      ],
+      "assento": true,
+      "modelos": [
+        {
+          "id": "solteiro",
+          "nome": "Solteiro (88 × 188)",
+          "largura": 880,
+          "profundidade": 1880,
+          "altura": 550,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "viuva",
+          "nome": "Viúva (128 × 188)",
+          "largura": 1280,
+          "profundidade": 1880,
+          "altura": 550,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "casal",
+          "nome": "Casal (138 × 188)",
+          "largura": 1380,
+          "profundidade": 1880,
+          "altura": 550,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "queen",
+          "nome": "Queen (158 × 198)",
+          "largura": 1580,
+          "profundidade": 1980,
+          "altura": 550,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "king",
+          "nome": "King (193 × 203)",
+          "largura": 1930,
+          "profundidade": 2030,
+          "altura": 550,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "casal"
+    },
+    {
+      "tipo": "berco",
+      "nome": "Berço",
+      "categoria": "dormir",
+      "simbolo": "generico",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (70 × 130)",
+          "largura": 700,
+          "profundidade": 1300,
+          "altura": 1000,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "criado_mudo",
+      "nome": "Criado-mudo",
+      "categoria": "dormir",
+      "simbolo": "gavetas",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (45 × 40)",
+          "largura": 450,
+          "profundidade": 400,
+          "altura": 550,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "pequeno",
+          "nome": "Pequeno (35 × 30)",
+          "largura": 350,
+          "profundidade": 300,
+          "altura": 500,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "guarda_roupa",
+      "nome": "Guarda-roupa",
+      "categoria": "guardar",
+      "simbolo": "portas",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "2_portas",
+          "nome": "2 portas de abrir",
+          "largura": 900,
+          "profundidade": 550,
+          "altura": 2100,
+          "elevacao": null,
+          "portas": "abrir",
+          "largura_porta": 450,
+          "polegadas": null
+        },
+        {
+          "id": "4_portas",
+          "nome": "4 portas de abrir",
+          "largura": 1600,
+          "profundidade": 550,
+          "altura": 2300,
+          "elevacao": null,
+          "portas": "abrir",
+          "largura_porta": 400,
+          "polegadas": null
+        },
+        {
+          "id": "correr_2",
+          "nome": "2 portas de correr",
+          "largura": 1800,
+          "profundidade": 600,
+          "altura": 2300,
+          "elevacao": null,
+          "portas": "correr",
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "correr_3",
+          "nome": "3 portas de correr",
+          "largura": 2400,
+          "profundidade": 600,
+          "altura": 2400,
+          "elevacao": null,
+          "portas": "correr",
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "correr_2"
+    },
+    {
+      "tipo": "armario",
+      "nome": "Armário",
+      "categoria": "guardar",
+      "simbolo": "portas",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "baixo",
+          "nome": "Baixo (80 × 40)",
+          "largura": 800,
+          "profundidade": 400,
+          "altura": 850,
+          "elevacao": null,
+          "portas": "abrir",
+          "largura_porta": 400,
+          "polegadas": null
+        },
+        {
+          "id": "alto",
+          "nome": "Alto (80 × 40)",
+          "largura": 800,
+          "profundidade": 400,
+          "altura": 1800,
+          "elevacao": null,
+          "portas": "abrir",
+          "largura_porta": 400,
+          "polegadas": null
+        },
+        {
+          "id": "aereo",
+          "nome": "Aéreo (80 × 35)",
+          "largura": 800,
+          "profundidade": 350,
+          "altura": 700,
+          "elevacao": 1500,
+          "portas": "abrir",
+          "largura_porta": 400,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "alto"
+    },
+    {
+      "tipo": "comoda",
+      "nome": "Cômoda",
+      "categoria": "guardar",
+      "simbolo": "gavetas",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (100 × 50)",
+          "largura": 1000,
+          "profundidade": 500,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "estante",
+      "nome": "Estante",
+      "categoria": "guardar",
+      "simbolo": "prateleiras",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (90 × 35)",
+          "largura": 900,
+          "profundidade": 350,
+          "altura": 1800,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "baixa",
+          "nome": "Baixa (90 × 35)",
+          "largura": 900,
+          "profundidade": 350,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "sapateira",
+      "nome": "Sapateira",
+      "categoria": "guardar",
+      "simbolo": "portas",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (70 × 35)",
+          "largura": 700,
+          "profundidade": 350,
+          "altura": 1000,
+          "elevacao": null,
+          "portas": "abrir",
+          "largura_porta": 350,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "sofa",
+      "nome": "Sofá",
+      "categoria": "sentar",
+      "simbolo": "assento",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": true,
+      "modelos": [
+        {
+          "id": "2_lugares",
+          "nome": "2 lugares",
+          "largura": 1600,
+          "profundidade": 900,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "3_lugares",
+          "nome": "3 lugares",
+          "largura": 2100,
+          "profundidade": 900,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "retratil",
+          "nome": "Retrátil (fechado)",
+          "largura": 2300,
+          "profundidade": 1000,
+          "altura": 950,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "3_lugares"
+    },
+    {
+      "tipo": "poltrona",
+      "nome": "Poltrona",
+      "categoria": "sentar",
+      "simbolo": "assento",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": true,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (80 × 80)",
+          "largura": 800,
+          "profundidade": 800,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "cadeira",
+      "nome": "Cadeira",
+      "categoria": "sentar",
+      "simbolo": "cadeira",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (45 × 50)",
+          "largura": 450,
+          "profundidade": 500,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "escritorio",
+          "nome": "Escritório (65 × 65)",
+          "largura": 650,
+          "profundidade": 650,
+          "altura": 1100,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "banco",
+      "nome": "Banco / puff",
+      "categoria": "sentar",
+      "simbolo": "generico",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "puff",
+          "nome": "Puff (40 × 40)",
+          "largura": 400,
+          "profundidade": 400,
+          "altura": 450,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "peseira",
+          "nome": "Peseira (120 × 40)",
+          "largura": 1200,
+          "profundidade": 400,
+          "altura": 450,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "puff"
+    },
+    {
+      "tipo": "mesa",
+      "nome": "Mesa",
+      "categoria": "mesas",
+      "simbolo": "mesa",
+      "lados_uso": [
+        "frente",
+        "costas",
+        "esquerda",
+        "direita"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "4_lugares",
+          "nome": "Jantar 4 lugares",
+          "largura": 1200,
+          "profundidade": 800,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "6_lugares",
+          "nome": "Jantar 6 lugares",
+          "largura": 1600,
+          "profundidade": 900,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "centro",
+          "nome": "Centro",
+          "largura": 1000,
+          "profundidade": 600,
+          "altura": 400,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "4_lugares"
+    },
+    {
+      "tipo": "escrivaninha",
+      "nome": "Escrivaninha",
+      "categoria": "mesas",
+      "simbolo": "mesa",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (120 × 60)",
+          "largura": 1200,
+          "profundidade": 600,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "compacta",
+          "nome": "Compacta (90 × 45)",
+          "largura": 900,
+          "profundidade": 450,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "penteadeira",
+      "nome": "Penteadeira",
+      "categoria": "mesas",
+      "simbolo": "gavetas",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (100 × 45)",
+          "largura": 1000,
+          "profundidade": 450,
+          "altura": 780,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "tv",
+      "nome": "TV",
+      "categoria": "eletronicos",
+      "simbolo": "tela",
+      "lados_uso": [],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "32pol",
+          "nome": "32\"",
+          "largura": 730,
+          "profundidade": 80,
+          "altura": 430,
+          "elevacao": 1000,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 32
+        },
+        {
+          "id": "43pol",
+          "nome": "43\"",
+          "largura": 970,
+          "profundidade": 80,
+          "altura": 570,
+          "elevacao": 1000,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 43
+        },
+        {
+          "id": "50pol",
+          "nome": "50\"",
+          "largura": 1120,
+          "profundidade": 80,
+          "altura": 650,
+          "elevacao": 1000,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 50
+        },
+        {
+          "id": "55pol",
+          "nome": "55\"",
+          "largura": 1230,
+          "profundidade": 80,
+          "altura": 710,
+          "elevacao": 1000,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 55
+        },
+        {
+          "id": "65pol",
+          "nome": "65\"",
+          "largura": 1450,
+          "profundidade": 80,
+          "altura": 840,
+          "elevacao": 1000,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 65
+        }
+      ],
+      "modelo_padrao": "50pol"
+    },
+    {
+      "tipo": "rack",
+      "nome": "Rack / painel",
+      "categoria": "eletronicos",
+      "simbolo": "gavetas",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Padrão (180 × 40)",
+          "largura": 1800,
+          "profundidade": 400,
+          "altura": 500,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        },
+        {
+          "id": "pequeno",
+          "nome": "Pequeno (120 × 35)",
+          "largura": 1200,
+          "profundidade": 350,
+          "altura": 500,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
+    }
+  ]
+}

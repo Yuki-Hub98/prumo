@@ -85,7 +85,11 @@ def test_erros_de_leitura(copia: Path, tmp_path: Path) -> None:
 
 def test_exporta_schema(tmp_path: Path) -> None:
     gravados = schema.exportar(tmp_path / "schema")
-    assert {g.name for g in gravados} == {"projeto.schema.json", "comodo.schema.json"}
+    assert {g.name for g in gravados} == {
+        "projeto.schema.json",
+        "comodo.schema.json",
+        "catalogo.json",
+    }
     projeto = json.loads((tmp_path / "schema" / "projeto.schema.json").read_text(encoding="utf-8"))
     assert projeto["title"] == "Projeto"
     assert "Medida" in projeto["$defs"]

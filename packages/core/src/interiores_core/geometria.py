@@ -136,6 +136,46 @@ def giro_porta(pavimento: Pavimento, porta: Porta, passos: int = 12) -> Polygon 
     return Polygon([centro, *arco])
 
 
+_ROTACAO_PARA_FRENTE = {(0, 1): 0, (-1, 0): 90, (0, -1): 180, (1, 0): 270}
+
+
+def na_parede(
+    pavimento: Pavimento,
+    comodo_id: str,
+    parede_id: str,
+    distancia: int,
+    largura: int,
+    profundidade: int,
+) -> tuple[tuple[int, int], int]:
+    """Centro e rotação de um móvel com as costas na face da parede, virado para o cômodo.
+
+    ``distancia``: do início da parede até a borda do móvel, ao longo do eixo (a
+    mesma referência de ``distancia_inicio`` das portas e janelas). A largura do
+    móvel corre ao longo da parede.
+
+    Levanta ``KeyError`` se a parede não existir e ``ValueError`` se ela não
+    delimitar o cômodo ou não for horizontal/vertical (rotação só em 90°).
+    """
+    parede = pavimento.parede(parede_id)
+    if parede is None:
+        raise KeyError(f"parede '{parede_id}' não existe no pavimento '{pavimento.id}'")
+    if comodo_id not in (parede.lado_a, parede.lado_b):
+        raise ValueError(
+            f"a parede '{parede_id}' não delimita o cômodo '{comodo_id}' "
+            f"(lados: {parede.lado_a} | {parede.lado_b})"
+        )
+    u, n = direcao(parede)
+    lado = 1 if parede.lado_a == comodo_id else -1
+    frente = (round(n[0] * lado), round(n[1] * lado))
+    if frente not in _ROTACAO_PARA_FRENTE or abs(n[0] * lado - frente[0]) > 1e-9:
+        raise ValueError(f"a parede '{parede_id}' não é horizontal nem vertical")
+    ao_longo = distancia + largura / 2
+    afastado = parede.espessura.valor / 2 + profundidade / 2
+    x = parede.inicio[0] + u[0] * ao_longo + frente[0] * afastado
+    y = parede.inicio[1] + u[1] * ao_longo + frente[1] * afastado
+    return (round(x), round(y)), _ROTACAO_PARA_FRENTE[frente]
+
+
 _GIROS = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
 """cos e sen de cada rotação permitida (inteiros, sem erro de ponto flutuante)."""
 
