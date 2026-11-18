@@ -72,6 +72,18 @@ CASOS: list[tuple[str, Callable[[dict[str, Any]], Any]]] = [
         lambda d: item(pav(d)["instalacoes"], "chuveiro")["altura"].update(valor=3000),
     ),
     ("parede_inexistente", lambda d: item(pav(d)["instalacoes"], "chuveiro").update(parede="p99")),
+    (
+        "instalacao_lado_indefinido",
+        lambda d: item(pav(d)["instalacoes"], "agua-pia").pop("comodo"),
+    ),
+    (
+        "instalacao_comodo_invalido",
+        lambda d: item(pav(d)["instalacoes"], "agua-pia").update(comodo="cozinha"),
+    ),
+    (
+        "instalacao_comodo_invalido",
+        lambda d: item(pav(d)["instalacoes"], "chuveiro").update(comodo="quarto"),
+    ),
     ("sem_rodape", lambda d: pav(d).pop("rodape")),
 ]
 
