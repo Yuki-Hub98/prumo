@@ -1,0 +1,1793 @@
+[
+ {
+  "tipo": "HATCH",
+  "camada": "PAREDE",
+  "contornos": 1
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "PAREDE",
+  "pontos": [
+   [
+    3425,
+    -75
+   ],
+   [
+    3575,
+    -75
+   ],
+   [
+    3575,
+    0
+   ],
+   [
+    3575,
+    75
+   ],
+   [
+    3575,
+    4675
+   ],
+   [
+    3575,
+    4825
+   ],
+   [
+    3500,
+    4825
+   ],
+   [
+    3425,
+    4825
+   ],
+   [
+    3200,
+    4825
+   ],
+   [
+    3200,
+    4675
+   ],
+   [
+    3425,
+    4675
+   ],
+   [
+    3425,
+    75
+   ],
+   [
+    2500,
+    75
+   ],
+   [
+    2500,
+    -75
+   ]
+  ]
+ },
+ {
+  "tipo": "HATCH",
+  "camada": "PAREDE",
+  "contornos": 1
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "PAREDE",
+  "pontos": [
+   [
+    75,
+    -75
+   ],
+   [
+    1000,
+    -75
+   ],
+   [
+    1000,
+    75
+   ],
+   [
+    75,
+    75
+   ],
+   [
+    75,
+    2560
+   ],
+   [
+    75,
+    2575
+   ],
+   [
+    2035,
+    2575
+   ],
+   [
+    2155,
+    2575
+   ],
+   [
+    2155,
+    2635
+   ],
+   [
+    2155,
+    2695
+   ],
+   [
+    2155,
+    2935
+   ],
+   [
+    2035,
+    2935
+   ],
+   [
+    2035,
+    2695
+   ],
+   [
+    75,
+    2695
+   ],
+   [
+    75,
+    2710
+   ],
+   [
+    75,
+    4675
+   ],
+   [
+    745,
+    4675
+   ],
+   [
+    745,
+    4825
+   ],
+   [
+    75,
+    4825
+   ],
+   [
+    -75,
+    4825
+   ],
+   [
+    -75,
+    4750
+   ],
+   [
+    -75,
+    4675
+   ],
+   [
+    -75,
+    2710
+   ],
+   [
+    -75,
+    2635
+   ],
+   [
+    -75,
+    2560
+   ],
+   [
+    -75,
+    75
+   ],
+   [
+    -75,
+    -75
+   ],
+   [
+    0,
+    -75
+   ]
+  ]
+ },
+ {
+  "tipo": "HATCH",
+  "camada": "PAREDE",
+  "contornos": 1
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "PAREDE",
+  "pontos": [
+   [
+    2020,
+    4825
+   ],
+   [
+    1345,
+    4825
+   ],
+   [
+    1345,
+    4675
+   ],
+   [
+    2020,
+    4675
+   ],
+   [
+    2035,
+    4675
+   ],
+   [
+    2035,
+    3635
+   ],
+   [
+    2155,
+    3635
+   ],
+   [
+    2155,
+    4675
+   ],
+   [
+    2170,
+    4675
+   ],
+   [
+    2400,
+    4675
+   ],
+   [
+    2400,
+    4825
+   ],
+   [
+    2170,
+    4825
+   ],
+   [
+    2095,
+    4825
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    3200,
+    3875
+   ],
+   [
+    3200,
+    4675
+   ]
+  ]
+ },
+ {
+  "tipo": "ARC",
+  "camada": "ABERTURA",
+  "centro": [
+   3200,
+   4675
+  ],
+  "raio": 800
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    2400,
+    4825
+   ],
+   [
+    3200,
+    4825
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ABERTURA",
+  "texto": "porta-quarto 800×2100",
+  "ponto": [
+   2800,
+   4912
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    1335,
+    2935
+   ],
+   [
+    2035,
+    2935
+   ]
+  ]
+ },
+ {
+  "tipo": "ARC",
+  "camada": "ABERTURA",
+  "centro": [
+   2035,
+   2935
+  ],
+  "raio": 700
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    2155,
+    2935
+   ],
+   [
+    2155,
+    3635
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ABERTURA",
+  "texto": "porta-banheiro 700×2100",
+  "ponto": [
+   2242,
+   3285
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    1000,
+    -75
+   ],
+   [
+    2500,
+    -75
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    1000,
+    -20
+   ],
+   [
+    2500,
+    -20
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    1000,
+    20
+   ],
+   [
+    2500,
+    20
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    1000,
+    75
+   ],
+   [
+    2500,
+    75
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ABERTURA",
+  "texto": "janela-quarto 1500×1200 peit. 1000",
+  "ponto": [
+   1750,
+   -162
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    745,
+    4825
+   ],
+   [
+    1345,
+    4825
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    745,
+    4770
+   ],
+   [
+    1345,
+    4770
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    745,
+    4730
+   ],
+   [
+    1345,
+    4730
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ABERTURA",
+  "pontos": [
+   [
+    745,
+    4675
+   ],
+   [
+    1345,
+    4675
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ABERTURA",
+  "texto": "basculante-banheiro 600×600 peit. 1500",
+  "ponto": [
+   1045,
+   4912
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    3425,
+    635
+   ],
+   [
+    3425,
+    2015
+   ],
+   [
+    1545,
+    2015
+   ],
+   [
+    1545,
+    635
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    3365,
+    635
+   ],
+   [
+    3365,
+    2015
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    3305,
+    715
+   ],
+   [
+    3305,
+    1285
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    2985,
+    1285
+   ],
+   [
+    3305,
+    1285
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    2985,
+    715
+   ],
+   [
+    2985,
+    1285
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    2985,
+    715
+   ],
+   [
+    3305,
+    715
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    3305,
+    1365
+   ],
+   [
+    3305,
+    1935
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    2985,
+    1935
+   ],
+   [
+    3305,
+    1935
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    2985,
+    1365
+   ],
+   [
+    2985,
+    1935
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    2985,
+    1365
+   ],
+   [
+    3305,
+    1365
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "MOVEL",
+  "texto": "Cama de casal",
+  "ponto": [
+   2485,
+   1365
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "MOVEL",
+  "texto": "1380 × 1880",
+  "ponto": [
+   2485,
+   1285
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    75,
+    2225
+   ],
+   [
+    75,
+    425
+   ],
+   [
+    625,
+    425
+   ],
+   [
+    625,
+    2225
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    585,
+    425
+   ],
+   [
+    585,
+    2225
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "MOVEL",
+  "pontos": [
+   [
+    350,
+    485
+   ],
+   [
+    350,
+    2165
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "MOVEL",
+  "texto": "Guarda-roupa",
+  "ponto": [
+   350,
+   1365
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "MOVEL",
+  "texto": "1800 × 550",
+  "ponto": [
+   350,
+   1285
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "ELETRICA",
+  "pontos": [
+   [
+    3333,
+    400
+   ],
+   [
+    3393,
+    365
+   ],
+   [
+    3393,
+    435
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ELETRICA",
+  "texto": "T h300",
+  "ponto": [
+   3313,
+   400
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "ELETRICA",
+  "pontos": [
+   [
+    3333,
+    2250
+   ],
+   [
+    3393,
+    2215
+   ],
+   [
+    3393,
+    2285
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ELETRICA",
+  "texto": "T h300",
+  "ponto": [
+   3313,
+   2250
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "ELETRICA",
+  "centro": [
+   3350,
+   4623
+  ],
+  "raio": 40
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ELETRICA",
+  "texto": "S",
+  "ponto": [
+   3350,
+   4623
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ELETRICA",
+  "texto": "h1100",
+  "ponto": [
+   3350,
+   4563
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "ELETRICA",
+  "centro": [
+   1750,
+   1300
+  ],
+  "raio": 40
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ELETRICA",
+  "pontos": [
+   [
+    1722,
+    1272
+   ],
+   [
+    1778,
+    1328
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ELETRICA",
+  "pontos": [
+   [
+    1722,
+    1328
+   ],
+   [
+    1778,
+    1272
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ELETRICA",
+  "texto": "luz h2600",
+  "ponto": [
+   1750,
+   1245
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "ELETRICA",
+  "centro": [
+   1048,
+   3693
+  ],
+  "raio": 40
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ELETRICA",
+  "pontos": [
+   [
+    1020,
+    3665
+   ],
+   [
+    1076,
+    3721
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "ELETRICA",
+  "pontos": [
+   [
+    1020,
+    3721
+   ],
+   [
+    1076,
+    3665
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "ELETRICA",
+  "texto": "luz h2620",
+  "ponto": [
+   1048,
+   3638
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "HIDRAULICA",
+  "centro": [
+   1000,
+   2747
+  ],
+  "raio": 40
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "HIDRAULICA",
+  "texto": "AF h600",
+  "ponto": [
+   1000,
+   2807
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "HIDRAULICA",
+  "centro": [
+   1600,
+   4400
+  ],
+  "raio": 40
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "HIDRAULICA",
+  "centro": [
+   1600,
+   4400
+  ],
+  "raio": 20
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "HIDRAULICA",
+  "texto": "ES h0",
+  "ponto": [
+   1600,
+   4345
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "HIDRAULICA",
+  "pontos": [
+   [
+    485,
+    4185
+   ],
+   [
+    565,
+    4185
+   ],
+   [
+    565,
+    4265
+   ],
+   [
+    485,
+    4265
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "HIDRAULICA",
+  "centro": [
+   525,
+   4225
+  ],
+  "raio": 24
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "HIDRAULICA",
+  "texto": "ralo h0",
+  "ponto": [
+   525,
+   4170
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "HIDRAULICA",
+  "centro": [
+   127,
+   4225
+  ],
+  "raio": 40
+ },
+ {
+  "tipo": "LINE",
+  "camada": "HIDRAULICA",
+  "pontos": [
+   [
+    87,
+    4225
+   ],
+   [
+    167,
+    4225
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "HIDRAULICA",
+  "texto": "AQ h2100",
+  "ponto": [
+   187,
+   4225
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "Quarto (suíte)",
+  "ponto": [
+   2790,
+   3425
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "11,04 m² · pé-direito 2600",
+  "ponto": [
+   2790,
+   3302
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "Banheiro da suíte",
+  "ponto": [
+   645,
+   3322
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "3,88 m² · pé-direito 2620",
+  "ponto": [
+   645,
+   3200
+  ]
+ },
+ {
+  "tipo": "DIMENSION",
+  "camada": "COTA",
+  "medida": 2095,
+  "pontos": [
+   [
+    0,
+    -75
+   ],
+   [
+    2095,
+    -75
+   ]
+  ]
+ },
+ {
+  "tipo": "DIMENSION",
+  "camada": "COTA",
+  "medida": 1405,
+  "pontos": [
+   [
+    2095,
+    -75
+   ],
+   [
+    3500,
+    -75
+   ]
+  ]
+ },
+ {
+  "tipo": "DIMENSION",
+  "camada": "COTA",
+  "medida": 2635,
+  "pontos": [
+   [
+    -75,
+    0
+   ],
+   [
+    -75,
+    2635
+   ]
+  ]
+ },
+ {
+  "tipo": "DIMENSION",
+  "camada": "COTA",
+  "medida": 2115,
+  "pontos": [
+   [
+    -75,
+    2635
+   ],
+   [
+    -75,
+    4750
+   ]
+  ]
+ },
+ {
+  "tipo": "DIMENSION",
+  "camada": "COTA",
+  "medida": 3650,
+  "pontos": [
+   [
+    -75,
+    -75
+   ],
+   [
+    3575,
+    -75
+   ]
+  ]
+ },
+ {
+  "tipo": "DIMENSION",
+  "camada": "COTA",
+  "medida": 4900,
+  "pontos": [
+   [
+    -75,
+    -75
+   ],
+   [
+    -75,
+    4825
+   ]
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    -1688,
+    -1088
+   ],
+   [
+    8312,
+    -1088
+   ],
+   [
+    8312,
+    5838
+   ],
+   [
+    -1688,
+    5838
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    -1088
+   ],
+   [
+    5438,
+    5838
+   ]
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    -1088
+   ],
+   [
+    8312,
+    -1088
+   ],
+   [
+    8312,
+    -888
+   ],
+   [
+    5438,
+    -888
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "GERADOR",
+  "ponto": [
+   5512,
+   -952
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "interiores-cad 0.1.0 · planta v3",
+  "ponto": [
+   5512,
+   -1055
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    -888
+   ],
+   [
+    8312,
+    -888
+   ],
+   [
+    8312,
+    -688
+   ],
+   [
+    5438,
+    -688
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "HASH DO JSON",
+  "ponto": [
+   5512,
+   -752
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "8081f1cfa0",
+  "ponto": [
+   5512,
+   -855
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    -688
+   ],
+   [
+    8312,
+    -688
+   ],
+   [
+    8312,
+    -488
+   ],
+   [
+    5438,
+    -488
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "DATA",
+  "ponto": [
+   5512,
+   -552
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "2026-11-17",
+  "ponto": [
+   5512,
+   -655
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    -488
+   ],
+   [
+    8312,
+    -488
+   ],
+   [
+    8312,
+    -288
+   ],
+   [
+    5438,
+    -288
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "ESCALA · FOLHA",
+  "ponto": [
+   5512,
+   -352
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "1:25 · A3 · cotas em mm",
+  "ponto": [
+   5512,
+   -455
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    -288
+   ],
+   [
+    8312,
+    -288
+   ],
+   [
+    8312,
+    -88
+   ],
+   [
+    5438,
+    -88
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "ESCOPO",
+  "ponto": [
+   5512,
+   -152
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "pavimento terreo",
+  "ponto": [
+   5512,
+   -255
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    -88
+   ],
+   [
+    8312,
+    -88
+   ],
+   [
+    8312,
+    112
+   ],
+   [
+    5438,
+    112
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "PAVIMENTO",
+  "ponto": [
+   5512,
+   48
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "Térreo",
+  "ponto": [
+   5512,
+   -55
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    112
+   ],
+   [
+    8312,
+    112
+   ],
+   [
+    8312,
+    312
+   ],
+   [
+    5438,
+    312
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "PROJETO",
+  "ponto": [
+   5512,
+   248
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "casa (minha casa)",
+  "ponto": [
+   5512,
+   145
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    312
+   ],
+   [
+    8312,
+    312
+   ],
+   [
+    8312,
+    612
+   ],
+   [
+    5438,
+    612
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "Planta baixa — Térreo",
+  "ponto": [
+   5512,
+   412
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    612
+   ],
+   [
+    8312,
+    612
+   ],
+   [
+    8312,
+    960
+   ],
+   [
+    5438,
+    960
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "LEGENDA",
+  "ponto": [
+   5512,
+   867
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "T tomada · S interruptor · luz ponto de luz",
+  "ponto": [
+   5512,
+   799
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "AF água fria · AQ água quente · ES esgoto · ralo",
+  "ponto": [
+   5512,
+   731
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "h = altura do piso (mm)",
+  "ponto": [
+   5512,
+   663
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "AVISO",
+  "texto": "PRELIMINAR",
+  "ponto": [
+   5512,
+   5650
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "AVISO",
+  "texto": "NÃO USAR PARA OBRA",
+  "ponto": [
+   5512,
+   5488
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "AVISO",
+  "texto": "PRELIMINAR — NÃO USAR PARA OBRA",
+  "ponto": [
+   5512,
+   5338
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "40 medida(s) estimada(s) usada(s) neste desenho:",
+  "ponto": [
+   5512,
+   5238
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "terreo: pe_direito, rodape",
+  "ponto": [
+   5512,
+   5138
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p1: espessura",
+  "ponto": [
+   5512,
+   5072
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p2: espessura",
+  "ponto": [
+   5512,
+   5006
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p3: espessura",
+  "ponto": [
+   5512,
+   4940
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p4: espessura",
+  "ponto": [
+   5512,
+   4874
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p5: espessura",
+  "ponto": [
+   5512,
+   4808
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p6: espessura",
+  "ponto": [
+   5512,
+   4742
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p7: espessura",
+  "ponto": [
+   5512,
+   4676
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "p8: espessura",
+  "ponto": [
+   5512,
+   4611
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "porta-quarto: distancia_inicio, largura, altura",
+  "ponto": [
+   5512,
+   4545
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "porta-banheiro: distancia_inicio, largura, altura",
+  "ponto": [
+   5512,
+   4479
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "janela-quarto: distancia_inicio, largura, altura, peitoril",
+  "ponto": [
+   5512,
+   4413
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "basculante-banheiro: distancia_inicio, largura, altura, peitoril",
+  "ponto": [
+   5512,
+   4347
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "tomada-cama-esq: altura",
+  "ponto": [
+   5512,
+   4281
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "tomada-cama-dir: altura",
+  "ponto": [
+   5512,
+   4215
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "interruptor-quarto: altura",
+  "ponto": [
+   5512,
+   4149
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "luz-quarto: altura",
+  "ponto": [
+   5512,
+   4084
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "luz-banheiro: altura",
+  "ponto": [
+   5512,
+   4018
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "agua-pia: altura",
+  "ponto": [
+   5512,
+   3952
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "esgoto-vaso: altura",
+  "ponto": [
+   5512,
+   3886
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "ralo-box: altura",
+  "ponto": [
+   5512,
+   3820
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "chuveiro: altura",
+  "ponto": [
+   5512,
+   3754
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "banheiro: pe_direito",
+  "ponto": [
+   5512,
+   3688
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "cama: largura, profundidade, altura",
+  "ponto": [
+   5512,
+   3622
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "guarda-roupa: largura, profundidade, altura",
+  "ponto": [
+   5512,
+   3557
+  ]
+ }
+]
