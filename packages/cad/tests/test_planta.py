@@ -157,6 +157,29 @@ def test_instalacoes_eletrica_e_hidraulica(casa: ProjetoCarregado, copia: Path) 
     assert not any("gás" in t for t in _textos(doc))
 
 
+def test_checagens_na_planta(casa: ProjetoCarregado, copia: Path) -> None:
+    """Áreas com problema na camada RESTRICAO, numeradas como no painel."""
+    doc = desenhar_planta(casa, "terreo", "quarto", DATA).doc
+    msp = doc.modelspace()
+    assert len(msp.query('LWPOLYLINE[layer=="RESTRICAO"]')) == 3  # 2 laterais + passagem
+    assert {"1", "2", "3"} <= set(_textos(doc, "RESTRICAO"))
+    painel = [t for t in _textos(doc, "RESTRICAO") if t[:1].isdigit() and ". [" in t]
+    assert any("[aviso] lateral de 'Cama de casal'" in t for t in painel)
+    assert any(t.startswith("4. [info]") for t in painel)
+
+    # sem problema: painel diz que está tudo certo e nada na camada RESTRICAO
+    (copia / "regras.toml").write_text(
+        "[geral]\npassagem_livre = 500\n[quarto]\nlateral_cama = 500\n", encoding="utf-8"
+    )
+    arq = copia / "comodos" / "quarto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    d["moveis"][1]["portas"] = "correr"
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    doc = desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc
+    assert not doc.modelspace().query('*[layer=="RESTRICAO"]')
+    assert "Nenhum problema nas checagens de uso." in _textos(doc)
+
+
 def test_carimbo(casa: ProjetoCarregado) -> None:
     desenho = desenhar_planta(casa, "terreo", "quarto", DATA)
     textos = _textos(desenho.doc)

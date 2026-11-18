@@ -959,6 +959,138 @@
  },
  {
   "tipo": "LWPOLYLINE",
+  "camada": "RESTRICAO",
+  "pontos": [
+   [
+    625,
+    2225
+   ],
+   [
+    1325,
+    2225
+   ],
+   [
+    1325,
+    425
+   ],
+   [
+    625,
+    425
+   ],
+   [
+    625,
+    2225
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "RESTRICAO",
+  "centro": [
+   975,
+   1325
+  ],
+  "raio": 55
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "1",
+  "ponto": [
+   975,
+   1325
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "RESTRICAO",
+  "pontos": [
+   [
+    1545,
+    635
+   ],
+   [
+    3425,
+    635
+   ],
+   [
+    3425,
+    35
+   ],
+   [
+    1545,
+    35
+   ],
+   [
+    1545,
+    635
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "RESTRICAO",
+  "centro": [
+   2485,
+   335
+  ],
+  "raio": 55
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "2",
+  "ponto": [
+   2485,
+   335
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "RESTRICAO",
+  "pontos": [
+   [
+    3425,
+    2015
+   ],
+   [
+    1545,
+    2015
+   ],
+   [
+    1545,
+    2615
+   ],
+   [
+    3425,
+    2615
+   ],
+   [
+    3425,
+    2015
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "RESTRICAO",
+  "centro": [
+   2485,
+   2315
+  ],
+  "raio": 55
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "3",
+  "ponto": [
+   2485,
+   2315
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
   "camada": "TEXTO",
   "pontos": [
    [
@@ -1027,7 +1159,7 @@
  {
   "tipo": "TEXT",
   "camada": "TEXTO",
-  "texto": "interiores-cad 0.1.0 · planta v3",
+  "texto": "interiores-cad 0.1.0 · planta v4 · regras v1",
   "ponto": [
    5512,
    -1055
@@ -1360,6 +1492,91 @@
   "ponto": [
    5512,
    663
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    960
+   ],
+   [
+    8312,
+    960
+   ],
+   [
+    8312,
+    1496
+   ],
+   [
+    5438,
+    1496
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "CHECAGENS (números = marcas no desenho)",
+  "ponto": [
+   5512,
+   1403
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "1. [aviso] não há passagem de 700 mm da porta até o lado de uso (da frente) de",
+  "ponto": [
+   5512,
+   1337
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "    'Guarda-roupa'",
+  "ponto": [
+   5512,
+   1271
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "2. [aviso] lateral de 'Cama de casal' abaixo na planta tem 560 mm livres; mínimo 600",
+  "ponto": [
+   5512,
+   1205
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "3. [aviso] lateral de 'Cama de casal' acima na planta tem 560 mm livres; mínimo 600",
+  "ponto": [
+   5512,
+   1140
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "4. [info] tipo de porta de 'Guarda-roupa' não informado; considerado de abrir",
+  "ponto": [
+   5512,
+   1074
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "RESTRICAO",
+  "texto": "    (informe `portas`: abrir ou correr)",
+  "ponto": [
+   5512,
+   1008
   ]
  },
  {

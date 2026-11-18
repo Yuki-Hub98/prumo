@@ -24,6 +24,8 @@ ESCALAS = (20, 25, 50)
 MARGEM = 10.0
 LARGURA_PAINEL = 115.0
 """Coluna da direita: aviso, medidas estimadas e carimbo (mm de papel)."""
+LARGURA_LETRA = 0.75
+"""Largura média de um caractere em relação à altura do texto (para quebrar linhas)."""
 FOLGA_DESENHO = 32.0
 """Espaço reservado em volta das paredes para cotas e etiquetas (mm de papel)."""
 
@@ -145,6 +147,8 @@ class DadosCarimbo:
     estimadas: Sequence[tuple[str, Medida]]
     legenda: Sequence[str] = ()
     """Linhas da legenda de símbolos, logo acima do carimbo."""
+    checagens: Sequence[str] = ()
+    """Problemas das checagens de uso, já numerados como no desenho."""
 
 
 def _texto(
@@ -169,6 +173,30 @@ def _retangulo(
 ) -> None:
     pontos = [folha.modelo(x, y) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))]
     msp.add_lwpolyline(pontos, close=True, dxfattribs={"layer": camada})
+
+
+def _caixa_checagens(
+    msp: Modelspace, folha: Folha, checagens: Sequence[str], px0: float, px1: float, y: float
+) -> float:
+    """Caixa "CHECAGENS" a partir de ``y`` (de baixo para cima); devolve o novo topo."""
+    x = px0 + 3
+    largura_chars = int((px1 - px0 - 6) / (Texto.CARIMBO_PEQUENO * LARGURA_LETRA))
+    linhas: list[str] = []
+    for item in checagens or ["Nenhum problema nas checagens de uso."]:
+        linhas += textwrap.wrap(item, largura_chars, subsequent_indent="    ")
+    linhas = linhas[:24]
+    passo = Texto.CARIMBO_PEQUENO * 1.55
+    altura = passo * (len(linhas) + 1) + 3
+    _retangulo(msp, folha, px0, y, px1, y + altura, "TEXTO")
+    yl = y + altura - 2 - Texto.CARIMBO_PEQUENO
+    _texto(
+        msp, folha, "CHECAGENS (números = marcas no desenho)", x, yl, Texto.CARIMBO_PEQUENO * 0.8
+    )
+    for linha in linhas:
+        yl -= passo
+        camada = "RESTRICAO" if checagens else "TEXTO"
+        _texto(msp, folha, linha, x, yl, Texto.CARIMBO_PEQUENO, camada)
+    return y + altura
 
 
 def desenhar_folha(msp: Modelspace, folha: Folha, dados: DadosCarimbo) -> None:
@@ -212,6 +240,7 @@ def desenhar_folha(msp: Modelspace, folha: Folha, dados: DadosCarimbo) -> None:
             yl -= passo_leg
             _texto(msp, folha, linha, x, yl, Texto.CARIMBO_PEQUENO)
         y += altura_leg
+    y = _caixa_checagens(msp, folha, dados.checagens, px0, px1, y)
     y_topo_carimbo = y
 
     # aviso + estimadas (de cima para baixo)
@@ -233,7 +262,7 @@ def desenhar_folha(msp: Modelspace, folha: Folha, dados: DadosCarimbo) -> None:
             Texto.CARIMBO_PEQUENO,
         )
         y -= 4
-        largura_chars = int((LARGURA_PAINEL - 6) / (Texto.CARIMBO_PEQUENO * 0.62))
+        largura_chars = int((LARGURA_PAINEL - 6) / (Texto.CARIMBO_PEQUENO * LARGURA_LETRA))
         linhas_est: list[str] = []
         for grupo in agrupar_estimadas(dados.estimadas):
             linhas_est += textwrap.wrap(grupo, largura_chars, subsequent_indent="   ")
