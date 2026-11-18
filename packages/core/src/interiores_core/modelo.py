@@ -333,3 +333,36 @@ class DadosComodo(_Modelo):
     schema_version: Literal[1]
     comodo: Id
     moveis: list[Movel] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------- variacoes/<comodo>/*.json
+
+Cor = Annotated[
+    str, Field(pattern=r"^#[0-9a-fA-F]{6}$", description="Cor em hexadecimal: #RRGGBB.")
+]
+
+
+class CoresVariacao(_Modelo):
+    """Paleta de uma variação. Tudo opcional: o que faltar usa a cor padrão."""
+
+    parede: Cor | None = None
+    piso: Cor | None = None
+    teto: Cor | None = None
+    rodape: Cor | None = None
+    moveis: dict[str, Cor] = Field(
+        default_factory=dict,
+        description="Cor por id de móvel ou por tipo (o id tem prioridade).",
+    )
+
+
+class Variacao(_Modelo):
+    """Raiz de ``variacoes/<comodo>/<nome>.json``: uma alternativa de acabamento.
+
+    Variações nunca alteram o ``projeto.json`` base (CLAUDE.md §7).
+    """
+
+    schema_version: Literal[1]
+    comodo: Id
+    nome: str | None = Field(None, description="Nome para exibir; o id é o nome do arquivo.")
+    descricao: str | None = None
+    cores: CoresVariacao = Field(default_factory=CoresVariacao)

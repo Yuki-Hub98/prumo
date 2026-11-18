@@ -210,6 +210,25 @@ def poligono_movel(movel: Movel) -> Polygon:
     return Polygon(cantos_movel(movel))
 
 
+def paredes_da_face(
+    pavimento: Pavimento, comodo: Comodo, p: tuple[float, float], q: tuple[float, float]
+) -> list[Parede]:
+    """Paredes do cômodo cuja face coincide com o lado p→q da área útil."""
+    meio = Point((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
+    tam = math.dist(p, q)
+    u = ((q[0] - p[0]) / tam, (q[1] - p[1]) / tam)
+    achadas = []
+    for pid in comodo.paredes:
+        parede = pavimento.parede(pid)
+        if parede is None or comprimento(parede) == 0:
+            continue
+        pu, _ = direcao(parede)
+        paralela = abs(pu[0] * u[1] - pu[1] * u[0]) < 1e-6
+        if paralela and abs(eixo(parede).distance(meio) - parede.espessura.valor / 2) < 2:
+            achadas.append(parede)
+    return achadas
+
+
 def recorte_do_comodo(pavimento: Pavimento, comodo_id: str) -> Pavimento:
     """Cópia do pavimento só com o que pertence ao cômodo (para carimbo e desenho).
 

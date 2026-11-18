@@ -8,11 +8,12 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from interiores_core import catalogo
-from interiores_core.modelo import DadosComodo, Projeto
+from interiores_core.modelo import DadosComodo, Projeto, Variacao
 
 SCHEMAS: dict[str, type[BaseModel]] = {
     "projeto.schema.json": Projeto,
     "comodo.schema.json": DadosComodo,
+    "variacao.schema.json": Variacao,
 }
 
 
