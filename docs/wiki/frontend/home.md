@@ -48,9 +48,12 @@ Mudou alguma rota ou esquema da API? `make frontend-tipos` regera `openapi.json`
 
 ## Imagens 3D
 
-Com um cômodo selecionado, o painel "Imagens 3D" pede **rascunho** ou **final** da variação
-de cor ativa, mostra a estimativa antes, a barra de progresso enquanto roda ("imagem 1 de 2
-· 42% · faltam ~1 min") e as miniaturas quando fica pronto. Precisa do worker (`make worker`).
+Com um cômodo selecionado, o painel "Imagens 3D" mostra as **vistas** que fazem sentido no
+cômodo (perspectiva, da porta, de frente para a cama, cada canto livre, de cima): clique para
+ligar ou desligar; cada vista é uma imagem, e a escolha fica lembrada por cômodo neste
+navegador. Depois pede **rascunho** ou **final** da variação de cor ativa, mostra a estimativa
+(pelo número de vistas) antes, a barra de progresso enquanto roda ("imagem 1 de 2
+· 42% · faltam ~1 min") e as miniaturas, com o nome de cada vista, quando fica pronto. Precisa do worker (`make worker`).
 
 ## Visor 3D
 
