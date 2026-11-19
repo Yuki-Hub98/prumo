@@ -166,6 +166,18 @@ Saídas em `out/casa/terreo/quarto/<variação>/`:
 - `render-superior.png`: vista de cima, sem o teto;
 - `quarto.glb`: modelo 3D (abre no Blender, no `f3d` ou em visualizadores de glTF).
 
+### Pavimento inteiro (a casa)
+
+```bash
+make render P=casa                                     # todos os pavimentos (~10 s rascunho)
+make render P=casa A=terreo                            # só um pavimento
+```
+
+Todos os cômodos do pavimento juntos, cada parede uma vez só, com o **teto cortado**.
+Saídas em `out/casa/terreo/_geral/`: `render-perspectiva.png` (vista aérea),
+`render-superior.png` (de cima) e `terreo.glb`. Usa as cores padrão (as variações são por
+cômodo). Sai PRELIMINAR se qualquer cômodo do pavimento tiver medida estimada.
+
 ### Variações de cor
 
 Crie `projetos/casa/variacoes/quarto/<nome>.json`, por exemplo `escura.json`:

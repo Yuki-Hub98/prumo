@@ -63,6 +63,10 @@ luminária. O modelo só muda quando sai um render novo: se o projeto mudou depo
 avisa para pedir um rascunho. As texturas (madeira, tecido) aparecem só nas imagens; no 3D
 vão as cores lisas.
 
+Na lista, **Pavimento inteiro** mostra a casa toda (todos os cômodos, sem teto). O botão
+**gerar modelo da casa** (ou **atualizar**) põe um rascunho na fila e o visor abre quando fica
+pronto; as vistas de lado cortam a parede externa do lado da câmera.
+
 ## Editar planta
 
 No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagados):
