@@ -1,10 +1,21 @@
-import { useState } from "react";
-import { api, ou, type MovelTela, type Problema } from "../api/cliente";
+import { useCallback, useState } from "react";
+import { api, ou, type Cores, type MovelTela, type Problema } from "../api/cliente";
+import { PainelCores } from "./PainelCores";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade } from "../dados";
 import { AdicionarMovel, FaltaMedir, PainelMovel, PainelProblemas } from "./Paineis";
 import { Planta } from "./Planta";
 
-export function TelaProjeto({ codigo, aoVoltar }: { codigo: string; aoVoltar: () => void }) {
+export function TelaProjeto({
+  codigo,
+  comodoInicial,
+  variacaoInicial,
+  aoVoltar,
+}: {
+  codigo: string;
+  comodoInicial?: string;
+  variacaoInicial?: string;
+  aoVoltar: () => void;
+}) {
   const projeto = useProjeto(codigo);
   const pavimentos = projeto.data?.projeto.pavimentos ?? [];
   const [pav, setPav] = useState<string | null>(null);
@@ -15,6 +26,12 @@ export function TelaProjeto({ codigo, aoVoltar }: { codigo: string; aoVoltar: ()
   const editar = useEditar(codigo);
   const [selecionado, setSelecionado] = useState<string | null>(null);
   const [novos, setNovos] = useState<Problema[]>([]);
+  const [comodo, setComodo] = useState<string | null>(comodoInicial ?? null);
+  const [ativa, setAtiva] = useState<Record<string, string>>(
+    comodoInicial && variacaoInicial ? { [comodoInicial]: variacaoInicial } : {},
+  );
+  const [rascunho, setRascunho] = useState<Cores | null>(null);
+  const aoRascunho = useCallback((c: Cores | null) => setRascunho(c), []);
 
   const mover = (m: MovelTela, centro: [number, number]) =>
     editar.mutate(
@@ -60,6 +77,9 @@ export function TelaProjeto({ codigo, aoVoltar }: { codigo: string; aoVoltar: ()
               selecionado={selecionado}
               aoSelecionar={setSelecionado}
               aoMover={mover}
+              comodoSelecionado={comodo}
+              aoSelecionarComodo={setComodo}
+              cores={rascunho}
             />
           ) : (
             <p className="p-4 text-stone-500">{geometria.error?.message ?? "carregando…"}</p>
@@ -76,6 +96,22 @@ export function TelaProjeto({ codigo, aoVoltar }: { codigo: string; aoVoltar: ()
               unidade={unidade}
               aoRemovido={() => setSelecionado(null)}
             />
+          )}
+          {comodo && geometria.data && (
+            <PainelCores
+              key={comodo}
+              codigo={codigo}
+              comodo={comodo}
+              geometria={geometria.data}
+              ativa={ativa[comodo] ?? "base"}
+              aoAtivar={(nome) => setAtiva((a) => ({ ...a, [comodo]: nome }))}
+              aoRascunho={aoRascunho}
+            />
+          )}
+          {!comodo && (
+            <p className="border-b border-stone-200 p-3 text-sm text-stone-500">
+              Clique num cômodo para pintar paredes, piso e móveis.
+            </p>
           )}
           {geometria.data && <AdicionarMovel codigo={codigo} geometria={geometria.data} />}
           <PainelProblemas problemas={problemas} novos={novos} />

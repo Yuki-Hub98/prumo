@@ -86,3 +86,11 @@ export function useEditar(codigo: string) {
     },
   });
 }
+
+export function useVariacoes(codigo: string, comodo: string | null) {
+  return useQuery({
+    queryKey: [...chaves.projeto(codigo), "variacoes", comodo],
+    queryFn: () => buscar.variacoes(codigo, comodo!),
+    enabled: comodo !== null,
+  });
+}

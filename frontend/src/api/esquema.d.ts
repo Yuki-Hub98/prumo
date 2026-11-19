@@ -474,6 +474,47 @@ export interface paths {
         patch: operations["alterar_movel_projetos__codigo__comodos__comodo__moveis__id___patch"];
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/variacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Variacoes
+         * @description Variações de cor do cômodo, por nome (``base`` = cores padrão, não listada).
+         */
+        get: operations["listar_variacoes_projetos__codigo__comodos__comodo__variacoes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/comodos/{comodo}/variacoes/{nome}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Salvar Variacao
+         * @description Cria ou substitui a variação inteira (a tela manda a paleta completa).
+         */
+        put: operations["salvar_variacao_projetos__codigo__comodos__comodo__variacoes__nome__put"];
+        post?: never;
+        /** Remover Variacao */
+        delete: operations["remover_variacao_projetos__codigo__comodos__comodo__variacoes__nome__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/preferencias": {
         parameters: {
             query?: never;
@@ -666,6 +707,11 @@ export interface components {
                 number,
                 number
             ] | null;
+            /**
+             * Faces
+             * @default []
+             */
+            faces?: components["schemas"]["FaceTela"][];
         };
         /**
          * Construcao
@@ -694,6 +740,13 @@ export interface components {
         CoresVariacao: {
             /** Parede */
             parede?: string | null;
+            /**
+             * Paredes
+             * @description Cor por parede (id), que substitui a geral: parede de destaque. Vale para a face voltada para este cômodo (a outra face é de outro cômodo).
+             */
+            paredes?: {
+                [key: string]: string;
+            };
             /** Piso */
             piso?: string | null;
             /** Teto */
@@ -748,6 +801,21 @@ export interface components {
              */
             tipo: "gaveta" | "nicho" | "cabideiro";
             altura?: components["schemas"]["Medida"] | null;
+        };
+        /** FaceTela */
+        FaceTela: {
+            /** Parede */
+            parede: string;
+            /** De */
+            de: [
+                number,
+                number
+            ];
+            /** Ate */
+            ate: [
+                number,
+                number
+            ];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1007,6 +1075,22 @@ export interface components {
              * @description mm do início da parede (ponto)
              */
             distancia?: number | null;
+        };
+        /**
+         * NovaVariacao
+         * @description Paleta de um cômodo: ``cores.parede`` (geral), ``cores.paredes`` (por parede, a
+         *     face voltada para o cômodo), ``piso``, ``teto``, ``rodape`` e ``moveis`` (por id ou
+         *     tipo). O que faltar usa a cor padrão.
+         */
+        NovaVariacao: {
+            /**
+             * Nome
+             * @description Nome para exibir (ex.: Escura).
+             */
+            nome?: string | null;
+            /** Descricao */
+            descricao?: string | null;
+            cores?: components["schemas"]["CoresVariacao"];
         };
         /** NovoComodo */
         NovoComodo: {
@@ -2670,6 +2754,116 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_variacoes_projetos__codigo__comodos__comodo__variacoes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["Variacao"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    salvar_variacao_projetos__codigo__comodos__comodo__variacoes__nome__put: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                nome: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NovaVariacao"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remover_variacao_projetos__codigo__comodos__comodo__variacoes__nome__delete: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                nome: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
