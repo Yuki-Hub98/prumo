@@ -173,3 +173,23 @@ def test_janela_porta_e_luz(cena: dict[str, Any]) -> None:
     assert cena["materiais"]["luminaria"]["emissao"] > 0
     sol = next(lz for lz in cena["luzes"] if lz["tipo"] == "sol")
     assert sol["direcao"][2] < 0 and sol["direcao"][1] > 0  # janela na p1 (y=0): sol entra para +y
+
+
+def test_texturas(cena: dict[str, Any]) -> None:
+    from interiores_core.modelo import Comodo
+    from interiores_render.cena import textura_piso
+
+    mats = cena["materiais"]
+    assert mats["piso"]["textura"] == "madeira"  # quarto sem acabamento escrito
+    assert mats["parede"]["textura"] == "pintura" and mats["edredom"]["textura"] == "tecido"
+    assert mats["movel-cama"]["textura"] == "madeira"
+    assert "textura" not in mats["movel-guarda-roupa"]  # MDF branco liso
+
+    def comodo(tipo: str, piso: str | None = None) -> Comodo:
+        return Comodo(id="x", nome="X", tipo=tipo, paredes=["a", "b", "c"], piso=piso)  # type: ignore[arg-type]
+
+    assert textura_piso(comodo("banheiro")) == "porcelanato"
+    assert textura_piso(comodo("quarto", "Porcelanato 60x60")) == "porcelanato"
+    assert textura_piso(comodo("cozinha", "vinílico amadeirado")) == "madeira"
+    banheiro = montar_cena(carregar(DADOS), "banheiro")["materiais"]["piso"]
+    assert banheiro["textura"] == "porcelanato" and banheiro["cor"] == "#D6D1C8"

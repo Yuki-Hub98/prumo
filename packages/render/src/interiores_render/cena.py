@@ -39,7 +39,7 @@ from interiores_core.modelo import (
     Variacao,
 )
 
-VERSAO_CENA = 3
+VERSAO_CENA = 4
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -59,6 +59,7 @@ CORES_PADRAO = {
     "caixilho": "#ECECEA",
     "pedra": "#E3DDD2",
     "luminaria": "#FFF6E8",
+    "piso_frio": "#D6D1C8",
 }
 CORES_MOVEIS = {
     "cama": "#8B6B4F",
@@ -80,6 +81,32 @@ CORES_MOVEIS = {
     "berco": "#FFFFFF",
 }
 COR_MOVEL_GENERICO = "#B5B0A8"
+
+TEXTURA_MOVEL = {
+    "cama": "madeira",
+    "comoda": "madeira",
+    "criado_mudo": "madeira",
+    "estante": "madeira",
+    "mesa": "madeira",
+    "rack": "madeira",
+    "banco": "madeira",
+    "sofa": "tecido",
+    "poltrona": "tecido",
+}
+"""Textura procedural por tipo de móvel (o que não está aqui é MDF liso, ex.: guarda-roupa
+branco). A cor continua vindo da variação/catálogo."""
+PISO_FRIO = {"banheiro", "lavabo", "cozinha", "area_servico", "varanda", "garagem"}
+
+
+def textura_piso(comodo: Comodo) -> str:
+    """Pelo acabamento escrito no cômodo (``piso``) ou, sem ele, pelo tipo do cômodo."""
+    texto = (comodo.piso or "").lower()
+    if any(p in texto for p in ("porcel", "cerâm", "ceram", "pedra", "granito", "mármore")):
+        return "porcelanato"
+    if any(p in texto for p in ("madeira", "laminado", "taco", "vinílico", "vinilico", "tacos")):
+        return "madeira"
+    return "porcelanato" if comodo.tipo in PISO_FRIO else "madeira"
+
 
 LUZ_W_M2 = 3.0
 """Luz de área no teto, por m² do cômodo (com ``view_transform`` Standard)."""
@@ -118,6 +145,9 @@ class _Cena:
         self.cores = dict(CORES_PADRAO)
         self.cores_moveis: dict[str, str] = {}
         self.cores_paredes: dict[str, str] = {}
+        self.textura_piso = textura_piso(comodo)
+        if self.textura_piso == "porcelanato":  # padrão do piso frio (madeira seria marrom)
+            self.cores["piso"] = CORES_PADRAO["piso_frio"]
         if variacao is not None:
             c = variacao.cores
             for chave in ("parede", "piso", "teto", "rodape"):
@@ -189,7 +219,11 @@ class _Cena:
 
     def piso_teto(self) -> None:
         self.prisma(
-            "piso", self.util, -20, 0, self.material("piso", self.cores["piso"], rugosidade=0.45)
+            "piso",
+            self.util,
+            -20,
+            0,
+            self.material("piso", self.cores["piso"], rugosidade=0.45, textura=self.textura_piso),
         )
         self.prisma(
             "teto",
@@ -201,7 +235,7 @@ class _Cena:
         )
 
     def paredes(self) -> None:
-        geral = self.material("parede", self.cores["parede"], rugosidade=0.85)
+        geral = self.material("parede", self.cores["parede"], rugosidade=0.85, textura="pintura")
         mat_vidro = self.material("vidro", CORES_PADRAO["vidro"], vidro=True)
         ocupado: BaseGeometry = Polygon()
         for pid in self.comodo.paredes:
@@ -210,7 +244,11 @@ class _Cena:
                 continue
             altura = float(parede.altura.valor) if parede.altura else float(self.pe)
             cor = self.cores_paredes.get(pid)  # parede de destaque
-            mat = self.material(f"parede-{pid}", cor, rugosidade=0.85) if cor else geral
+            mat = (
+                self.material(f"parede-{pid}", cor, rugosidade=0.85, textura="pintura")
+                if cor
+                else geral
+            )
             # cada parede perde o que as anteriores já ocupam: sem faces sobrepostas nas
             # quinas (no render elas brigam e saem pretas)
             inteiro = geometria.corpo(parede)
@@ -393,7 +431,8 @@ class _Cena:
 
     def moveis_(self) -> None:
         for m in self.moveis:
-            mat = self.material(f"movel-{m.id}", self.cor_movel(m), rugosidade=0.55)
+            textura = {"textura": TEXTURA_MOVEL[m.tipo]} if m.tipo in TEXTURA_MOVEL else {}
+            mat = self.material(f"movel-{m.id}", self.cor_movel(m), rugosidade=0.55, **textura)
             for peca in self.pecas_movel(m, mat):
                 x0, y0, z0, x1, y1, z1 = peca.caixa
                 cx, cy = geometria.girar_movel(m, (x0 + x1) / 2, (y0 + y1) / 2)
@@ -577,9 +616,9 @@ class _Feitio:
 
     def cama(self) -> None:
         w, d, base, topo = self.w, self.d, self.base, self.topo
-        colchao = self._mat("colchao", rugosidade=0.9)
-        edredom = self._mat("edredom", rugosidade=0.95)
-        trav = self._mat("travesseiro", rugosidade=0.95)
+        colchao = self._mat("colchao", rugosidade=0.9, textura="tecido")
+        edredom = self._mat("edredom", rugosidade=0.95, textura="tecido")
+        trav = self._mat("travesseiro", rugosidade=0.95, textura="tecido")
         self.p("rodape", -w + 60, -d + 120, base, w - 60, d - 60, base + 100, self.sombra)
         self.p("base", -w, -d + 60, base + 100, w, d, topo - 250, chanfro=15)
         self.p("colchao", -w + 15, -d + 75, topo - 250, w - 15, d - 15, topo - 30, colchao, 50)
