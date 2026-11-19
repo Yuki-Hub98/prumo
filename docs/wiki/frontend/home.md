@@ -52,6 +52,17 @@ Com um cômodo selecionado, o painel "Imagens 3D" pede **rascunho** ou **final**
 de cor ativa, mostra a estimativa antes, a barra de progresso enquanto roda ("imagem 1 de 2
 · 42% · faltam ~1 min") e as miniaturas quando fica pronto. Precisa do worker (`make worker`).
 
+## Visor 3D
+
+No topo, **Planta | 3D** troca a área principal para o modelo 3D do cômodo (o `.glb` do
+render pronto mais recente; troque o cômodo na lista). Arraste para girar, roda para zoom,
+botão direito para mover. Vistas prontas: **De cima** (sem teto, como maquete),
+**Perspectiva**, **Frente**, **Fundo**, **Esquerda** e **Direita** — nas de lado a parede do
+lado da câmera é **cortada** para ver o cômodo por dentro. A caixa **teto** mostra o teto e a
+luminária. O modelo só muda quando sai um render novo: se o projeto mudou depois, a tela
+avisa para pedir um rascunho. As texturas (madeira, tecido) aparecem só nas imagens; no 3D
+vão as cores lisas.
+
 ## Editar planta
 
 No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagados):
@@ -69,5 +80,5 @@ No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagad
 
 ## Ainda não
 
-- Visor 3D interativo (`.glb`), comparador de variações, construção de planejados.
+- Comparador de variações, construção de planejados.
 - Login e perfis (planejado).
