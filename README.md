@@ -292,6 +292,9 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
         com caixilho, vidro e peitoril padrão; tamanhos comerciais (ex.: 120 × 100, 150 × 120)
 - [ ] Cozinha (hidráulica, gás, triângulo de trabalho)
 - [ ] Planta geral do pavimento e 3D da casa
+- [ ] Referência por foto (pedido do usuário, 2026-11-19): subir uma foto (Pinterest, um
+      quarto parecido) pela tela; o sistema tira a paleta dela e cria uma variação de cor
+      parecida, para comparar com o render
 - [ ] Perfis e login (pedido do usuário, 2026-11-18): cada pessoa com conta, seus projetos
       (vários por pessoa) e suas preferências (ex.: unidade cm/m/mm); projetos podem ser
       compartilhados. O banco já guarda vários projetos; falta o dono de cada um
