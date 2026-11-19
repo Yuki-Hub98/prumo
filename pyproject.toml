@@ -10,6 +10,7 @@ dependencies = [
     "interiores-render",
     "interiores-relatorios",
     "interiores-cli",
+    "interiores-banco",
 ]
 
 [tool.uv]
@@ -24,6 +25,7 @@ interiores-cad = { workspace = true }
 interiores-render = { workspace = true }
 interiores-relatorios = { workspace = true }
 interiores-cli = { workspace = true }
+interiores-banco = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -33,6 +35,7 @@ dev = [
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.17.5",
+    "testcontainers[postgres]>=4.15.0",
     "types-shapely>=2.2.0.20261117",
 ]
 
@@ -58,7 +61,7 @@ allowed-confusables = ["×"]
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
 strict = true
-files = ["packages/core/src", "packages/cad/src"]
+files = ["packages/core/src", "packages/cad/src", "packages/banco/src"]
 
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
