@@ -311,7 +311,10 @@ class _Cena:
         """Caixilho (marco + montante nas janelas largas) e peitoril de pedra por dentro."""
         mat = self.material("caixilho", CORES_PADRAO["caixilho"], rugosidade=0.35)
         pedra = self.material("pedra", CORES_PADRAO["pedra"], rugosidade=0.4)
-        d0, larg = janela.distancia_inicio.valor, janela.largura.valor
+        # 2 mm para dentro das faces do vão: encostado nelas, as faces ficam no mesmo plano
+        # e saem pretas no render
+        d0, larg = janela.distancia_inicio.valor + 2, janela.largura.valor - 4
+        pe, topo = pe + 2, topo - 2
         meio, e, f = d0 + larg / 2, 50.0, 60.0
         alt = topo - pe
         self._no_vao(parede, meio, 0, pe + e / 2, (larg, f, e), f"caixilho-{janela.id}-b", mat)
