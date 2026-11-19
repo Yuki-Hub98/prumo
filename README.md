@@ -131,6 +131,7 @@ git clone https://github.com/Yuki-Hub98/interiores.git
 cd interiores
 cp .env.example .env
 make setup        # uv sync + pre-commit install
+make dev          # TUDO de uma vez: infra + migrações + API + worker + tela (Ctrl+C para)
 make wiki         # documentação completa em http://localhost:3000 (Wiki.js)
 ```
 

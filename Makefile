@@ -1,6 +1,6 @@
 # Atalhos do projeto — ver CLAUDE.md §12.
 .DEFAULT_GOAL := help
-.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem wiki banco importar exportar api frontend frontend-tipos worker up down logs
+.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem wiki banco importar exportar api frontend frontend-tipos worker dev up down logs
 
 help: ## Lista os comandos
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -82,6 +82,9 @@ frontend-tipos: ## Regera o OpenAPI e os tipos TypeScript do frontend
 
 frontend: ## Frontend em http://localhost:5173 (precisa da API: make api)
 	cd frontend && npm run dev
+
+dev: ## Tudo de uma vez: infra + migrações + API + worker + frontend (Ctrl+C para)
+	./scripts/dev.sh
 
 up: ## Sobe a infra (docker compose)
 	docker compose up -d
