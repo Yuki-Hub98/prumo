@@ -652,6 +652,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/vistas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vistas
+         * @description Câmeras disponíveis no cômodo (perspectiva, porta, cama, canto-N, superior).
+         */
+        get: operations["vistas_projetos__codigo__comodos__comodo__vistas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/renders/{id_}": {
         parameters: {
             query?: never;
@@ -1013,6 +1033,8 @@ export interface components {
             variacao: string;
             /** Qualidade */
             qualidade: string;
+            /** Vistas */
+            vistas: string[];
             /**
              * Status
              * @enum {string}
@@ -1527,6 +1549,11 @@ export interface components {
              * @enum {string}
              */
             qualidade?: "rascunho" | "final";
+            /**
+             * Vistas
+             * @description Câmeras (ver GET .../vistas): perspectiva, porta, cama, canto-N, superior.
+             */
+            vistas?: string[];
         };
         /** Pilar */
         Pilar: {
@@ -1885,6 +1912,13 @@ export interface components {
             largura: components["schemas"]["Medida"];
             /** @description Quanto a viga desce abaixo da laje. */
             altura: components["schemas"]["Medida"];
+        };
+        /** Vista */
+        Vista: {
+            /** Nome */
+            nome: string;
+            /** Titulo */
+            titulo: string;
         };
     };
     responses: never;
@@ -3381,7 +3415,10 @@ export interface operations {
     };
     estimativas_renders_estimativas_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Quantas vistas. */
+                imagens?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3397,6 +3434,47 @@ export interface operations {
                     "application/json": {
                         [key: string]: number;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vistas_projetos__codigo__comodos__comodo__vistas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Vista"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
