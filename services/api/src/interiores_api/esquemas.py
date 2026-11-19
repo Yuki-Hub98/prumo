@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from interiores_core.medidas import Medida, Origem
 from interiores_core.modelo import (
     Comodo,
+    CoresVariacao,
     DadosComodo,
     Id,
     Janela,
@@ -76,6 +77,16 @@ class Preferencias(_Esquema):
     unidade: Literal["mm", "cm", "m"] = Field(
         "cm", description="Unidade em que a tela mostra e recebe medidas (a API é sempre mm)."
     )
+
+
+class NovaVariacao(_Esquema):
+    """Paleta de um cômodo: ``cores.parede`` (geral), ``cores.paredes`` (por parede, a
+    face voltada para o cômodo), ``piso``, ``teto``, ``rodape`` e ``moveis`` (por id ou
+    tipo). O que faltar usa a cor padrão."""
+
+    nome: str | None = Field(None, description="Nome para exibir (ex.: Escura).")
+    descricao: str | None = None
+    cores: CoresVariacao = Field(default_factory=CoresVariacao)
 
 
 class ProjetoCompleto(_Esquema):
@@ -212,6 +223,7 @@ __all__ = [
     "Mudanca",
     "NovaAbertura",
     "NovaInstalacao",
+    "NovaVariacao",
     "NovoComodo",
     "NovoMovel",
     "NovoPavimento",

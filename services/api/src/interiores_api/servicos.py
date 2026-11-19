@@ -34,7 +34,8 @@ from interiores_banco import tabelas as t
 from interiores_banco.mapear import Conteudo
 from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
-from interiores_core.modelo import DadosComodo, Projeto
+from interiores_core.edicao_variacoes import validar_variacao
+from interiores_core.modelo import DadosComodo, Projeto, Variacao
 from interiores_core.regras import checar
 from interiores_core.tela import PavimentoTela, pavimento_para_tela
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
@@ -244,6 +245,42 @@ class Servico:
             alteracoes=_mudancas(ed.alteracoes),
             novos=ed.novos,
             problemas=ed.problemas,
+        )
+
+    # ------------------------------------------------------------ variações
+
+    def variacoes(self, codigo: str, comodo: str) -> dict[str, Variacao]:
+        c, _ = repositorio.ler(self.sessao, codigo)
+        if c.projeto.pavimento_do_comodo(comodo) is None:
+            raise KeyError(f"cômodo '{comodo}' não existe no projeto")
+        return dict(sorted(c.variacoes.get(comodo, {}).items()))
+
+    def salvar_variacao(
+        self, codigo: str, versao: int, comodo: str, nome: str, dados: dict[str, object] | None
+    ) -> ResultadoEdicao:
+        """Cria/substitui (``dados``) ou apaga (``None``) a variação ``nome`` do cômodo."""
+        atual, na_base = repositorio.ler(self.sessao, codigo)
+        if versao != na_base:
+            raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)
+        do_comodo = dict(atual.variacoes.get(comodo, {}))
+        if dados is None:
+            if nome not in do_comodo:
+                raise KeyError(f"variação '{nome}' não existe em '{comodo}'")
+            del do_comodo[nome]
+        else:
+            do_comodo[nome] = validar_variacao(atual.projeto, comodo, nome, dados)
+        variacoes = {k: v for k, v in atual.variacoes.items() if k != comodo}
+        if do_comodo:
+            variacoes[comodo] = do_comodo
+        novo = Conteudo(atual.projeto, atual.comodos, variacoes, atual.regras_toml)
+        operacao = "remover_variacao" if dados is None else "salvar_variacao"
+        nova_versao = self._gravar(novo, operacao, versao)
+        hist = self.historico(codigo, versao)
+        return ResultadoEdicao(
+            versao=nova_versao,
+            alteracoes=[Mudanca(caminho=h.caminho, antes=h.antes, depois=h.depois) for h in hist],
+            novos=[],
+            problemas=[],
         )
 
     # ------------------------------------------------------------ projeto inteiro
