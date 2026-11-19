@@ -54,6 +54,22 @@ class NovoProjeto(_Esquema):
     pavimento: NovoPavimento
 
 
+class AdicionarPavimento(_Esquema):
+    pavimento: NovoPavimento
+    depois_de: str | None = Field(None, description="Id do pavimento anterior (padrão: no fim).")
+
+
+class Renomear(_Esquema):
+    codigo: Id
+
+
+class Apagado(_Esquema):
+    codigo: str
+    pasta_movida_para: str | None = Field(
+        description="A pasta não é apagada: vai para projetos/_apagados/ (fotos, croquis)."
+    )
+
+
 class ProjetoCompleto(_Esquema):
     versao: int
     projeto: Projeto
@@ -142,25 +158,59 @@ class NovoComodo(_Esquema):
     ajustar_lados: bool = True
 
 
+class NovoMovel(_Esquema):
+    """Móvel do catálogo. Posição: ``centro`` (+ ``rotacao``) **ou** ``parede`` (+ ``distancia``).
+
+    Medidas do catálogo entram como ``estimada``; as de ``medidas`` substituem com
+    a origem que a pessoa escolheu.
+    """
+
+    tipo: str
+    modelo: str | None = None
+    id: Id | None = None
+    nome: str | None = None
+    centro: tuple[int, int] | None = None
+    rotacao: Literal[0, 90, 180, 270] | None = None
+    parede: str | None = None
+    distancia: int = Field(0, ge=0, description="mm do início da parede até a borda do móvel")
+    medidas: dict[str, Medida] = Field(
+        default_factory=dict, description="largura, profundidade, altura, elevacao, largura_porta"
+    )
+
+
+class MoverMovel(_Esquema):
+    """Arrastar (``centro``), girar (``rotacao``) ou prender numa ``parede``."""
+
+    centro: tuple[int, int] | None = None
+    rotacao: Literal[0, 90, 180, 270] | None = None
+    parede: str | None = None
+    distancia: int = Field(0, ge=0)
+
+
 NovaAbertura = Porta | Janela
 
 __all__ = [
+    "AdicionarPavimento",
     "AlterarComodo",
     "AlterarInstalacao",
     "AlterarParede",
+    "Apagado",
     "Campos",
     "DividirParede",
     "ItemHistorico",
     "MedidaEstimada",
+    "MoverMovel",
     "MoverVertice",
     "Mudanca",
     "NovaAbertura",
     "NovaInstalacao",
     "NovoComodo",
+    "NovoMovel",
     "NovoPavimento",
     "NovoProjeto",
     "Parede",
     "ProjetoCompleto",
+    "Renomear",
     "ResultadoEdicao",
     "ResumoProjeto",
 ]

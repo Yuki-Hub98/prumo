@@ -17,7 +17,7 @@ from sqlalchemy import Engine
 
 from interiores_api import __version__
 from interiores_api.config import Config
-from interiores_api.rotas import planta, projetos
+from interiores_api.rotas import geral, moveis, planta, projetos
 from interiores_banco.arquivos import ConflitoDeSincronizacaoError
 from interiores_banco.conexao import criar_engine
 from interiores_banco.repositorio import ConflitoDeVersaoError, ProjetoInexistenteError
@@ -56,6 +56,8 @@ def criar_app(config: Config | None = None, engine: Engine | None = None) -> Fas
     )
     app.include_router(projetos)
     app.include_router(planta)
+    app.include_router(moveis)
+    app.include_router(geral)
 
     @app.get("/saude", tags=["infra"])
     def saude() -> dict[str, str]:

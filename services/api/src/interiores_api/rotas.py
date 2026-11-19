@@ -12,25 +12,31 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 
 from interiores_api.esquemas import (
+    AdicionarPavimento,
     AlterarComodo,
     AlterarInstalacao,
     AlterarParede,
+    Apagado,
     Campos,
     DividirParede,
     ItemHistorico,
     MedidaEstimada,
+    MoverMovel,
     MoverVertice,
     NovaAbertura,
     NovaInstalacao,
     NovoComodo,
+    NovoMovel,
     NovoProjeto,
     ProjetoCompleto,
+    Renomear,
     ResultadoEdicao,
     ResumoProjeto,
 )
 from interiores_api.servicos import Servico
 from interiores_banco.conexao import sessao as abrir_sessao
-from interiores_core import edicao
+from interiores_core import catalogo, edicao
+from interiores_core import edicao_moveis as em
 from interiores_core.modelo import Parede
 from interiores_core.validacao import Problema
 
@@ -46,6 +52,14 @@ Versao = Annotated[int, Query(ge=0, description="Versão do projeto que a tela e
 
 projetos = APIRouter(prefix="/projetos", tags=["projetos"])
 planta = APIRouter(prefix="/projetos/{codigo}/pavimentos/{pavimento}", tags=["planta"])
+moveis = APIRouter(prefix="/projetos/{codigo}/comodos/{comodo}/moveis", tags=["móveis"])
+geral = APIRouter(tags=["catálogo"])
+
+
+@geral.get("/catalogo")
+def ver_catalogo() -> dict[str, object]:
+    """Tipos de móvel, modelos com medidas padrão, lados de uso e símbolo na planta."""
+    return catalogo.exportar()
 
 
 # ---------------------------------------------------------------- projetos
@@ -87,6 +101,54 @@ def historico(svc: Svc, codigo: str, desde: int = 0) -> list[ItemHistorico]:
 @projetos.get("/{codigo}/versoes/{versao}")
 def versao(svc: Svc, codigo: str, versao: int) -> ProjetoCompleto:
     return svc.versao(codigo, versao)
+
+
+@projetos.patch("/{codigo}/imovel")
+def alterar_imovel(svc: Svc, codigo: str, versao: Versao, campos: Campos) -> ResultadoEdicao:
+    """Tipo do imóvel (casa | apartamento) e apelido (``endereco_apelido``)."""
+    return svc.editar(codigo, versao, "alterar_imovel", lambda p: edicao.alterar_imovel(p, campos))
+
+
+@projetos.post("/{codigo}/renomear")
+def renomear(svc: Svc, codigo: str, versao: Versao, pedido: Renomear) -> ResultadoEdicao:
+    """Troca o código do projeto (e o nome da pasta em projetos/)."""
+    return svc.renomear(codigo, versao, pedido.codigo)
+
+
+@projetos.delete("/{codigo}")
+def apagar(
+    svc: Svc,
+    codigo: str,
+    versao: Versao,
+    confirmar: Annotated[str, Query(description="Repita o código do projeto para confirmar.")],
+) -> Apagado:
+    """Apaga do banco (com histórico). A pasta vai para projetos/_apagados/."""
+    return Apagado(codigo=codigo, pasta_movida_para=svc.apagar(codigo, versao, confirmar))
+
+
+@projetos.post("/{codigo}/pavimentos")
+def adicionar_pavimento(
+    svc: Svc, codigo: str, versao: Versao, pedido: AdicionarPavimento
+) -> ResultadoEdicao:
+    """Novo pavimento (ex.: superior), vazio."""
+    dados = pedido.pavimento.model_dump(mode="json", exclude_none=True)
+    return svc.editar(
+        codigo, versao, "adicionar_pavimento",
+        lambda p: edicao.adicionar_pavimento(p, dados, pedido.depois_de),
+    )  # fmt: skip
+
+
+@projetos.delete("/{codigo}/pavimentos/{pavimento}")
+def remover_pavimento(
+    svc: Svc, codigo: str, pavimento: str, versao: Versao, cascata: bool = False
+) -> ResultadoEdicao:
+    """Com paredes ou cômodos, só com ``cascata=true`` (vai tudo, inclusive os móveis)."""
+    comodos = edicao.comodos_do_pavimento(svc.ler(codigo).projeto, pavimento)
+    return svc.editar(
+        codigo, versao, "remover_pavimento",
+        lambda p: edicao.remover_pavimento(p, pavimento, cascata),
+        remover_comodos=comodos,
+    )  # fmt: skip
 
 
 # ---------------------------------------------------------------- planta
@@ -217,7 +279,7 @@ def remover_comodo(
     return svc.editar(
         codigo, versao, "remover_comodo",
         lambda p: edicao.remover_comodo(p, pavimento, id_),
-        remover_comodo=id_,
+        remover_comodos=[id_],
     )  # fmt: skip
 
 
@@ -249,4 +311,54 @@ def remover_instalacao(
     return svc.editar(
         codigo, versao, "remover_instalacao",
         lambda p: edicao.remover_instalacao(p, pavimento, id_),
+    )  # fmt: skip
+
+
+# ---------------------------------------------------------------- móveis
+
+
+@moveis.post("")
+def adicionar_movel(
+    svc: Svc, codigo: str, comodo: str, versao: Versao, pedido: NovoMovel
+) -> ResultadoEdicao:
+    """Do catálogo; pelo centro ou preso numa parede (virado para o cômodo)."""
+    return svc.editar_moveis(
+        codigo, versao, comodo, "adicionar_movel",
+        lambda p, d, r: em.adicionar_movel(
+            p, comodo, d, pedido.tipo, modelo=pedido.modelo, id_=pedido.id, nome=pedido.nome,
+            centro=pedido.centro, rotacao=pedido.rotacao, parede=pedido.parede,
+            distancia=pedido.distancia, medidas=pedido.medidas, regras=r,
+        ),
+    )  # fmt: skip
+
+
+@moveis.post("/{id_}/mover")
+def mover_movel(
+    svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao, pedido: MoverMovel
+) -> ResultadoEdicao:
+    return svc.editar_moveis(
+        codigo, versao, comodo, "mover_movel",
+        lambda p, d, r: em.mover_movel(
+            p, comodo, d, id_, centro=pedido.centro, rotacao=pedido.rotacao,
+            parede=pedido.parede, distancia=pedido.distancia, regras=r,
+        ),
+    )  # fmt: skip
+
+
+@moveis.patch("/{id_}")
+def alterar_movel(
+    svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao, campos: Campos
+) -> ResultadoEdicao:
+    """Medidas (com origem), nome, modelo, portas, polegadas."""
+    return svc.editar_moveis(
+        codigo, versao, comodo, "alterar_movel",
+        lambda p, d, r: em.alterar_movel(p, comodo, d, id_, campos, r),
+    )  # fmt: skip
+
+
+@moveis.delete("/{id_}")
+def remover_movel(svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao) -> ResultadoEdicao:
+    return svc.editar_moveis(
+        codigo, versao, comodo, "remover_movel",
+        lambda p, d, r: em.remover_movel(p, comodo, d, id_, r),
     )  # fmt: skip

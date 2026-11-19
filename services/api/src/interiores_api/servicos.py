@@ -12,6 +12,7 @@ from __future__ import annotations
 import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 import structlog
 from sqlalchemy import select
@@ -30,14 +31,16 @@ from interiores_api.esquemas import (
 from interiores_banco import arquivos, repositorio
 from interiores_banco import tabelas as t
 from interiores_banco.mapear import Conteudo
-from interiores_core.edicao import Alteracao, Edicao
-from interiores_core.modelo import Projeto
+from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
+from interiores_core.edicao_moveis import EdicaoMoveis
+from interiores_core.modelo import DadosComodo, Projeto
 from interiores_core.regras import checar
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
 
 log = structlog.get_logger("interiores.api")
 
 Operacao = Callable[[Projeto], Edicao]
+OperacaoMoveis = Callable[[Projeto, DadosComodo | None, dict[str, object]], EdicaoMoveis]
 
 
 def _completo(conteudo: Conteudo, versao: int) -> ProjetoCompleto:
@@ -179,24 +182,24 @@ class Servico:
         versao: int,
         nome: str,
         operacao: Operacao,
-        remover_comodo: str | None = None,
+        remover_comodos: list[str] | None = None,
     ) -> ResultadoEdicao:
         """Aplica uma edição do core em cima da ``versao`` que o pedido viu.
 
-        ``remover_comodo`` tira também o mobiliário e as variações do cômodo, que
-        não fazem parte do ``Projeto`` (orquestração, não regra).
+        ``remover_comodos`` tira também o mobiliário e as variações desses cômodos,
+        que não fazem parte do ``Projeto`` (orquestração, não regra).
         """
         atual, na_base = repositorio.ler(self.sessao, codigo)
         if versao != na_base:
             raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)
         ed = operacao(atual.projeto)
         comodos, variacoes = dict(atual.comodos), dict(atual.variacoes)
-        if remover_comodo:
-            comodos.pop(remover_comodo, None)
-            variacoes.pop(remover_comodo, None)
+        for c in remover_comodos or []:
+            comodos.pop(c, None)
+            variacoes.pop(c, None)
         novo = Conteudo(ed.projeto, comodos, variacoes, atual.regras_toml)
         # removendo cômodo o mobiliário também muda: a diferença é recalculada inteira
-        alteracoes = None if remover_comodo else repositorio.do_projeto(ed.alteracoes)
+        alteracoes = None if remover_comodos else repositorio.do_projeto(ed.alteracoes)
         nova_versao = self._gravar(novo, nome, versao, alteracoes)
         return ResultadoEdicao(
             versao=nova_versao,
@@ -204,3 +207,60 @@ class Servico:
             novos=ed.novos,
             problemas=ed.problemas,
         )
+
+    def editar_moveis(
+        self, codigo: str, versao: int, comodo: str, nome: str, operacao: OperacaoMoveis
+    ) -> ResultadoEdicao:
+        """Edição do mobiliário de ``comodo`` (``comodos/<id>.json``) sobre a ``versao``."""
+        atual, na_base = repositorio.ler(self.sessao, codigo)
+        if versao != na_base:
+            raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)
+        regras = tomllib.loads(atual.regras_toml) if atual.regras_toml else {}
+        ed = operacao(atual.projeto, atual.comodos.get(comodo), regras)
+        comodos = {**atual.comodos, comodo: ed.dados}
+        novo = Conteudo(atual.projeto, comodos, atual.variacoes, atual.regras_toml)
+        nova_versao = self._gravar(novo, nome, versao, ed.alteracoes)
+        return ResultadoEdicao(
+            versao=nova_versao,
+            alteracoes=_mudancas(ed.alteracoes),
+            novos=ed.novos,
+            problemas=ed.problemas,
+        )
+
+    # ------------------------------------------------------------ projeto inteiro
+
+    def renomear(self, codigo: str, versao: int, novo: str) -> ResultadoEdicao:
+        """Troca o código; a pasta ``projetos/<codigo>`` (com as referências) vai junto."""
+        atual, na_base = repositorio.ler(self.sessao, codigo)
+        if versao != na_base:
+            raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)
+        ed = renomear_projeto(atual.projeto, novo)
+        conteudo = Conteudo(ed.projeto, atual.comodos, atual.variacoes, atual.regras_toml)
+        alteracoes = repositorio.do_projeto(ed.alteracoes)
+        gravado = repositorio.renomear(self.sessao, codigo, conteudo, versao, alteracoes)
+        velha, nova = self.config.pasta_projetos / codigo, self.config.pasta_projetos / novo
+        if self.config.exportar:
+            if velha.is_dir() and not nova.exists():
+                velha.rename(nova)
+            arquivos.exportar(self.sessao, novo, nova)
+        log.info("projeto renomeado", de=codigo, para=novo, versao=gravado.versao)
+        return ResultadoEdicao(
+            versao=gravado.versao, alteracoes=_mudancas(alteracoes), novos=ed.novos,
+            problemas=ed.problemas,
+        )  # fmt: skip
+
+    def apagar(self, codigo: str, versao: int, confirmar: str) -> str | None:
+        """Apaga do banco. A pasta não é apagada: vai para ``projetos/_apagados/``
+        (pode ter fotos e croquis que não estão no banco). Devolve o novo caminho."""
+        if confirmar != codigo:
+            raise ValueError(f"para apagar, confirme repetindo o código: confirmar={codigo}")
+        repositorio.apagar(self.sessao, codigo, versao)
+        pasta = self.config.pasta_projetos / codigo
+        destino = None
+        if pasta.is_dir():
+            carimbo = datetime.now().strftime("%Y%m%d-%H%M%S")
+            destino = self.config.pasta_projetos / "_apagados" / f"{codigo}-{carimbo}"
+            destino.parent.mkdir(parents=True, exist_ok=True)
+            pasta.rename(destino)
+        log.info("projeto apagado", projeto=codigo, pasta_movida_para=str(destino))
+        return str(destino) if destino else None
