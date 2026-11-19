@@ -18,6 +18,16 @@
           "default": null,
           "title": "Parede"
         },
+        "paredes": {
+          "additionalProperties": {
+            "description": "Cor em hexadecimal: #RRGGBB.",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "type": "string"
+          },
+          "description": "Cor por parede (id), que substitui a geral: parede de destaque. Vale para a face voltada para este cômodo (a outra face é de outro cômodo).",
+          "title": "Paredes",
+          "type": "object"
+        },
         "piso": {
           "anyOf": [
             {

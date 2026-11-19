@@ -19,6 +19,9 @@ def test_casa_na_tela() -> None:
     assert janela.giro is None and len(janela.vao) == 4
     quarto = next(x for x in tela.comodos if x.id == "quarto")
     assert quarto.area_m2 == 11.04 and quarto.poligono and quarto.centro
+    assert {f.parede for f in quarto.faces} == {"p1", "p2", "p3", "p6", "p7", "p8"}
+    banheiro = next(x for x in tela.comodos if x.id == "banheiro")
+    assert {f.parede for f in banheiro.faces} == {"p4", "p5", "p7", "p8"}
     cama = next(m for m in tela.moveis if m.id == "cama")
     assert cama.comodo == "quarto" and len(cama.cantos) == 4 and not cama.elevado
     assert tela.limites == ((-75, -75), (3575, 4825))
