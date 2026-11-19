@@ -1,6 +1,6 @@
 <!--
 title: Frontend
-description: Planejado: editor de planta, móveis e visor 3D
+description: Planta 2D com edição de móveis, problemas e "falta medir"
 published: true
 date: 2026-11-18T00:00:00.000Z
 tags: frontend
@@ -8,27 +8,44 @@ editor: markdown
 dateCreated: 2026-11-18T00:00:00.000Z
 -->
 
-# Frontend (planejado)
+# Frontend
 
-Esta seção vai receber o passo a passo do frontend quando ele existir.
+**React + Vite + TypeScript**, **Tailwind CSS v4**, **TanStack Query**; tipos gerados do
+OpenAPI da API (`openapi-typescript` + `openapi-fetch`), então a tela nunca diverge da API.
 
-Stack prevista: **React + Vite + TypeScript**, **react-three-fiber** (visor 3D do `.glb`),
-**TanStack Query**, **Tailwind**, tipos gerados do OpenAPI da API (FastAPI).
+## Rodar
 
-## O que está previsto
+```bash
+make banco                # Postgres + migrações
+make api                  # http://localhost:8010
+cd frontend && npm install   # só na primeira vez
+make frontend             # http://localhost:5173
+```
 
-- **Criar casa do zero (editor de planta):** desenhar paredes com as medidas, portas,
-  janelas, cômodos e instalações, com as checagens na hora.
-- **Editor de móveis:** escolher do catálogo (`schema/catalogo.json`), arrastar, girar,
-  "grudar na parede", redimensionar, montar planejados.
-- **Visor 3D:** o `.glb` gerado pelo render.
-- **Comparador e variações:** cores lado a lado.
-- **Painel de problemas:** as checagens por severidade.
+Mudou alguma rota ou esquema da API? `make frontend-tipos` regera `openapi.json` e
+`esquema.d.ts`.
 
-## O que já está pronto para ele
+## O que já faz
 
-- JSON Schema do modelo e da variação em `schema/`, e o catálogo de móveis em
-  `schema/catalogo.json`.
-- Edição de móveis no core (`core/editar.py`): adicionar, mover, prender na parede,
-  remover e definir a construção do planejado, que a API vai expor.
-- Saídas com cache por hash, prontas para virar jobs do worker.
+- **Projetos:** lista, cria (código, casa/apartamento, pé-direito) e abre (`#/p/<código>`).
+- **Unidade:** mm, cm ou m (salva no banco, em `/preferencias`); a API é sempre mm.
+- **Planta 2D (SVG):** paredes, vãos, giro das portas, janelas, cômodos com área,
+  móveis (seta = frente; tracejado = elevado), instalações (T, S, L, AF, AQ, ES, R, G),
+  marcas de problema e escala. A geometria vem pronta da API (`.../geometria`): a tela
+  não recalcula nada.
+- **Móveis:** clicar seleciona; **arrastar move** (de 1 em 1 cm); girar 90°; encostar numa
+  parede; editar largura/profundidade/altura/elevação; remover; adicionar do catálogo no
+  centro do cômodo.
+- **Medidas:** ao editar, a tela **sempre pergunta a origem** ("Medi", "Quero assim",
+  "Chute") e mostra um selo colorido em cada valor.
+- **Problemas** (com "novo" nos que a última edição criou) e **falta medir** (enquanto
+  houver chute, os desenhos saem PRELIMINAR).
+- **Versão:** toda edição vai com a versão que a tela tem; se outra aba gravou antes, a
+  tela recarrega e avisa.
+
+## Ainda não
+
+- Editor de planta (desenhar paredes, portas, janelas, cômodos, instalações) — a API já
+  tem as rotas.
+- Visor 3D (`.glb`), comparador de variações, construção de planejados.
+- Login e perfis (planejado).

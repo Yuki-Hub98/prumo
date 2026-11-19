@@ -147,6 +147,13 @@ make api                          # API em http://localhost:8010/docs
 make exportar P=casa              # banco → arquivos (a API já faz isso a cada edição)
 ```
 
+Frontend (planta 2D com edição de móveis; precisa da API):
+
+```bash
+cd frontend && npm install   # só na primeira vez
+make frontend                # http://localhost:5173
+```
+
 Editou o JSON à mão (ou pela CLI)? Rode `make importar`. Se o banco e os arquivos mudaram
 desde a última sincronização, importar e exportar recusam e avisam (`F=1` escolhe um lado).
 Toda edição pela API exige `?versao=` (a versão que a tela estava vendo): se alguém gravou
