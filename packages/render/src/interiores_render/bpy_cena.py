@@ -37,6 +37,11 @@ def materiais(defs):
         bsdf = mat.node_tree.nodes["Principled BSDF"]
         bsdf.inputs["Base Color"].default_value = _cor(d["cor"])
         bsdf.inputs["Roughness"].default_value = d.get("rugosidade", 0.6)
+        if d.get("emissao"):  # luminária acesa
+            bsdf.inputs["Emission Color"].default_value = _cor(d["cor"])
+            bsdf.inputs["Emission Strength"].default_value = d["emissao"]
+        if d.get("metal"):
+            bsdf.inputs["Metallic"].default_value = 1.0
         if d.get("vidro"):
             bsdf.inputs["Transmission Weight"].default_value = 1.0
             bsdf.inputs["Roughness"].default_value = 0.02
@@ -73,6 +78,14 @@ def caixa(c, mats):
     obj = _objeto(c["nome"], verts, faces, mats[c["material"]])
     obj.location = [v * MM for v in c["centro"]]
     obj.rotation_euler = (0, 0, math.radians(c["rotacao"]))
+    if c.get("chanfro"):  # quinas arredondadas: o que mais tira o "aspecto de caixa"
+        mod = obj.modifiers.new("chanfro", "BEVEL")
+        mod.width = min(c["chanfro"] * MM, min(sx, sy, sz) * 0.9)
+        mod.segments = 3
+        mod.limit_method = "ANGLE"
+        for poli in obj.data.polygons:
+            poli.use_smooth = True
+        obj.modifiers.new("normais", "WEIGHTED_NORMAL")
     return obj
 
 
@@ -187,7 +200,7 @@ def main():
     limpar()
     mats = materiais(cena["materiais"])
     objetos = [(prisma(p, mats), p.get("oculto_em", [])) for p in cena["prismas"]]
-    objetos += [(caixa(c, mats), []) for c in cena["caixas"]]
+    objetos += [(caixa(c, mats), c.get("oculto_em", [])) for c in cena["caixas"]]
     cameras = [camera(c) for c in cena["cameras"]]
     luzes(cena["luzes"])
     configurar_render(cena["saida"])
@@ -218,6 +231,7 @@ def main():
         export_format="GLB",
         export_cameras=False,
         export_lights=False,
+        export_apply=True,  # leva o chanfro (modificador) para o .glb
     )
 
 

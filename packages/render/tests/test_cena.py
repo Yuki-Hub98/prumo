@@ -147,3 +147,29 @@ def test_parede_de_destaque(copia: Path) -> None:
 def test_erros() -> None:
     with pytest.raises(KeyError):
         montar_cena(carregar(DADOS), "cozinha")
+
+
+def test_moveis_com_detalhe(cena: dict[str, Any]) -> None:
+    nomes = _nomes(cena["caixas"])
+    assert {"cama-edredom", "cama-dobra", "cama-cabeceira", "cama-rodape"} <= nomes
+    assert any(n.startswith("guarda-roupa-puxador") for n in nomes)
+    assert any(n.startswith("guarda-roupa-folha") for n in nomes)
+    edredom = next(c for c in cena["caixas"] if c["nome"] == "cama-edredom")
+    assert edredom["chanfro"] > 0 and edredom["material"] == "edredom"
+    assert cena["materiais"]["metal"].get("metal") is True
+
+
+def test_janela_porta_e_luz(cena: dict[str, Any]) -> None:
+    nomes = _nomes(cena["caixas"])
+    assert {
+        "caixilho-janela-quarto-b",
+        "caixilho-janela-quarto-m",
+        "soleira-janela-quarto",
+    } <= nomes
+    assert {"batente-porta-quarto-e", "batente-porta-quarto-t"} <= nomes
+    assert any(n.startswith("macaneta-porta-quarto") for n in nomes)
+    luz = next(c for c in cena["caixas"] if c["nome"].startswith("luminaria-"))
+    assert luz["oculto_em"] == ["superior"]
+    assert cena["materiais"]["luminaria"]["emissao"] > 0
+    sol = next(lz for lz in cena["luzes"] if lz["tipo"] == "sol")
+    assert sol["direcao"][2] < 0 and sol["direcao"][1] > 0  # janela na p1 (y=0): sol entra para +y
