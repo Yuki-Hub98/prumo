@@ -8,6 +8,7 @@ O Blender roda do jeito que estiver disponível:
 
 Saídas em ``out/<projeto>/<pavimento>/<cômodo>/<variação>/``: ``render-perspectiva.png``,
 ``render-superior.png``, ``<cômodo>.glb``, ``cena.json`` e ``render.json`` (cache).
+O pavimento inteiro vai para ``out/<projeto>/<pavimento>/_geral/`` com ``<pavimento>.glb``.
 """
 
 from __future__ import annotations
@@ -23,10 +24,17 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from interiores_core.carregar import ProjetoCarregado
 from interiores_render import __version__
-from interiores_render.cena import VERSAO_CENA, montar_cena
+from interiores_render.cena import (
+    ARQUIVO_PAVIMENTO,
+    VERSAO_CENA,
+    VISTAS_PAVIMENTO,
+    montar_cena,
+    montar_cena_pavimento,
+)
 
 log = logging.getLogger(__name__)
 
@@ -225,7 +233,55 @@ def renderizar(
     pasta = saida / carregado.projeto.projeto / pav.id / comodo / variacao
     if subpasta:
         pasta = pasta / subpasta
-    esperados = (*(pasta / f"render-{v}.png" for v in vistas), pasta / f"{comodo}.glb")
+    return _gerar(
+        carregado, cena, pasta, comodo, vistas, variacao, f"{comodo}/{variacao}", forcar,
+        largura, altura, amostras, progresso,
+    )  # fmt: skip
+
+
+def renderizar_pavimento(
+    carregado: ProjetoCarregado,
+    saida: Path,
+    pavimento: str,
+    forcar: bool = False,
+    largura: int = 1600,
+    altura: int = 1000,
+    amostras: int = 96,
+    progresso: Callable[[Progresso], None] | None = None,
+    subpasta: str | None = None,
+    vistas: tuple[str, ...] = VISTAS_PAVIMENTO,
+) -> ResultadoRender:
+    """Modelo 3D e imagens do pavimento inteiro, com corte no teto.
+
+    Saídas em ``out/<projeto>/<pavimento>/_geral/`` (CLAUDE.md §5.5):
+    ``render-perspectiva.png``, ``render-superior.png`` e ``<pavimento>.glb``.
+    """
+    cena = montar_cena_pavimento(carregado, pavimento, largura, altura, amostras, tuple(vistas))
+    pasta = saida / carregado.projeto.projeto / pavimento / ARQUIVO_PAVIMENTO
+    if subpasta:
+        pasta = pasta / subpasta
+    return _gerar(
+        carregado, cena, pasta, pavimento, vistas, VARIACAO_BASE, f"{pavimento} (pavimento)",
+        forcar, largura, altura, amostras, progresso,
+    )  # fmt: skip
+
+
+def _gerar(
+    carregado: ProjetoCarregado,
+    cena: dict[str, Any],
+    pasta: Path,
+    modelo: str,
+    vistas: tuple[str, ...],
+    variacao: str,
+    rotulo: str,
+    forcar: bool,
+    largura: int,
+    altura: int,
+    amostras: int,
+    progresso: Callable[[Progresso], None] | None,
+) -> ResultadoRender:
+    """Grava a cena, chama o Blender (se a chave mudou) e confere as saídas."""
+    esperados = (*(pasta / f"render-{v}.png" for v in vistas), pasta / f"{modelo}.glb")
     texto_cena = json.dumps(cena, ensure_ascii=False, sort_keys=True, indent=1)
     # o próprio script do Blender entra na chave: mudou o script, regera
     chave = hashlib.sha256(
@@ -248,7 +304,7 @@ def renderizar(
     for velho in esperados:
         velho.unlink(missing_ok=True)
     cmd = comando_blender(arquivo_cena, pasta)
-    log.info("renderizando %s/%s com %s", comodo, variacao, cmd[0])
+    log.info("renderizando %s com %s", rotulo, cmd[0])
     inicio = time.monotonic()
     codigo, saida_blender = _rodar(cmd, amostras, len(vistas), progresso)
     duracao = round(time.monotonic() - inicio, 1)
@@ -275,5 +331,5 @@ def renderizar(
         + "\n",
         encoding="utf-8",
     )
-    log.info("render %s/%s em %.1f s", comodo, variacao, duracao)
+    log.info("render %s em %.1f s", rotulo, duracao)
     return ResultadoRender(variacao, True, esperados, preliminar, duracao)

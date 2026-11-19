@@ -482,11 +482,17 @@ def _resumo_planejado(pasta: Path, comodo: str, id_: str) -> None:
 @app.command("render")
 def cmd_render(
     projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
-    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    comodo: Annotated[
+        str | None, typer.Argument(help="Id do cômodo; sem ele, o pavimento inteiro.")
+    ] = None,
     variacao: Annotated[
         str,
         typer.Option(help="Variação (arquivo em variacoes/<cômodo>/), 'base' ou 'todas'."),
     ] = "base",
+    pavimento: Annotated[
+        str | None,
+        typer.Option(help="Sem cômodo: só este pavimento (padrão: todos)."),
+    ] = None,
     projetos: PastaProjetos = Path("projetos"),
     saida: Annotated[Path, typer.Option(help="Pasta das saídas geradas.")] = Path("out"),
     forcar: Annotated[
@@ -494,8 +500,15 @@ def cmd_render(
     ] = False,
     amostras: Annotated[int, typer.Option(help="Amostras do Cycles (qualidade × tempo).")] = 96,
 ) -> None:
-    """Render 3D do cômodo no Blender: perspectiva, vista de cima e modelo .glb."""
+    """Render 3D no Blender: perspectiva, vista de cima e modelo .glb.
+
+    Com cômodo, as variações dele; sem cômodo, o pavimento inteiro (casa com corte
+    no teto) em ``out/<projeto>/<pavimento>/_geral/``.
+    """
     carregado = _carregar(projetos / projeto)
+    if comodo is None:
+        _render_pavimentos(carregado, saida, pavimento, forcar, amostras)
+        return
     if carregado.projeto.pavimento_do_comodo(comodo) is None:
         print(f"erro: cômodo '{comodo}' não existe")
         raise typer.Exit(2)
@@ -512,6 +525,27 @@ def cmd_render(
         marca = "gerado    " if r.gerado else "inalterado"
         aviso = "  PRELIMINAR" if r.preliminar else ""
         print(f"  {comodo}/{nome:<18} {marca}{aviso}")
+        if r.gerado:
+            for arq in r.arquivos:
+                print(f"      {arq}")
+
+
+def _render_pavimentos(
+    carregado: ProjetoCarregado, saida: Path, pavimento: str | None, forcar: bool, amostras: int
+) -> None:
+    ids = [pavimento] if pavimento else [p.id for p in carregado.projeto.pavimentos]
+    for pav in ids:
+        try:
+            r = render.renderizar_pavimento(carregado, saida, pav, forcar, amostras=amostras)
+        except (KeyError, ValueError) as e:
+            print(f"erro: {e.args[0]}")
+            raise typer.Exit(2) from e
+        except (render.BlenderIndisponivelError, render.RenderFalhouError) as e:
+            print(f"erro: {e}")
+            raise typer.Exit(1) from e
+        marca = "gerado    " if r.gerado else "inalterado"
+        aviso = "  PRELIMINAR" if r.preliminar else ""
+        print(f"  {pav:<25} {marca}{aviso}")
         if r.gerado:
             for arq in r.arquivos:
                 print(f"      {arq}")

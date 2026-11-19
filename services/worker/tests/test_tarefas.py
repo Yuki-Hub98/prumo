@@ -78,3 +78,31 @@ def test_render_da_versao_pedida(banco: Engine, tmp_path: Path) -> None:
 
     tarefas.executar_render(banco, rid, tmp_path, falso)
     assert nomes == ["Quarto (suíte)"]
+
+
+def test_render_do_pavimento(banco: Engine, tmp_path: Path) -> None:
+    with sessao(banco) as s:
+        r, _ = renders.pedir(
+            s, "casa", "terreo", "base", "rascunho", (800, 500, 16),
+            ["perspectiva", "superior"], escopo="pavimento",
+        )  # fmt: skip
+        rid = r.id
+    chamados: list[str] = []
+
+    def comodo(*_: Any, **__: Any) -> Any:
+        raise AssertionError("pavimento não é cômodo")
+
+    def pavimento(carregado: Any, saida: Path, pav: str, **kw: Any) -> Any:
+        chamados.append(pav)
+        assert kw["subpasta"] == "rascunho" and kw["vistas"] == ("perspectiva", "superior")
+        pasta = saida / "casa" / pav / "_geral" / "rascunho"
+        pasta.mkdir(parents=True)
+        arqs = tuple(pasta / n for n in ("render-perspectiva.png", "terreo.glb"))
+        for a in arqs:
+            a.write_bytes(b"x")
+        return gerar.ResultadoRender("base", True, arqs, True, 1.0)
+
+    assert tarefas.executar_render(banco, rid, tmp_path, comodo, pavimento) == "pronto"
+    assert chamados == ["terreo"]
+    with sessao(banco) as s:
+        assert renders.obter(s, rid).arquivos == ["render-perspectiva.png", "terreo.glb"]

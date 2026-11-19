@@ -27,6 +27,7 @@ from interiores_api.esquemas import (
     Mudanca,
     NovoProjeto,
     PedidoRender,
+    PedidoRenderPavimento,
     Preferencias,
     ProjetoCompleto,
     ResultadoEdicao,
@@ -48,7 +49,7 @@ from interiores_core.modelo import DadosComodo, Projeto, Variacao
 from interiores_core.regras import checar
 from interiores_core.tela import PavimentoTela, pavimento_para_tela
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
-from interiores_render.cena import vistas_do_comodo
+from interiores_render.cena import VISTAS_PAVIMENTO, vistas_do_comodo
 from interiores_render.gerar import IMAGENS_POR_RENDER, QUALIDADES
 
 log = structlog.get_logger("interiores.api")
@@ -86,6 +87,7 @@ def _info(r: t.Render) -> InfoRender:
     nomes = [n for n in (r.arquivos or []) if n.endswith(".png")] if r.status == "pronto" else []
     return InfoRender(
         id=r.id,
+        escopo="pavimento" if r.escopo == "pavimento" else "comodo",
         comodo=r.comodo,
         variacao=r.variacao,
         qualidade=r.qualidade,
@@ -394,6 +396,35 @@ class Servico:
             log.info("render na fila", render=r.id, projeto=codigo, comodo=comodo)
         return _info(r)
 
+    def pedir_render_pavimento(
+        self, codigo: str, pavimento: str, pedido: PedidoRenderPavimento
+    ) -> InfoRender:
+        """Põe na fila o modelo 3D do pavimento inteiro (casa com corte no teto)."""
+        c, _ = repositorio.ler(self.sessao, codigo)
+        pav = next((p for p in c.projeto.pavimentos if p.id == pavimento), None)
+        if pav is None:
+            raise KeyError(f"pavimento '{pavimento}' não existe no projeto")
+        if not pav.comodos:
+            raise ValueError(f"pavimento '{pavimento}' não tem cômodos")
+        fora = [v for v in pedido.vistas if v not in VISTAS_PAVIMENTO]
+        if fora:
+            raise ValueError(
+                f"vista(s) {', '.join(fora)} não existem no pavimento "
+                f"({', '.join(VISTAS_PAVIMENTO)})"
+            )
+        if self.fila is None:
+            raise RuntimeError("fila de render não configurada")
+        vistas = list(dict.fromkeys(pedido.vistas))
+        r, novo = renders.pedir(
+            self.sessao, codigo, pavimento, "base", pedido.qualidade,
+            QUALIDADES[pedido.qualidade], vistas, escopo="pavimento",
+        )  # fmt: skip
+        if novo:
+            self.sessao.commit()
+            self.fila.enfileirar(r.id)
+            log.info("render na fila", render=r.id, projeto=codigo, pavimento=pavimento)
+        return _info(r)
+
     def estimativas(self, imagens: int = IMAGENS_POR_RENDER) -> dict[str, float]:
         """Segundos estimados por qualidade, pelo histórico desta máquina."""
         return {
@@ -415,9 +446,11 @@ class Servico:
             raise KeyError(f"cômodo '{comodo}' não existe no projeto")
         return self._vistas(c, comodo)
 
-    def renders(self, codigo: str, comodo: str | None) -> list[InfoRender]:
+    def renders(
+        self, codigo: str, comodo: str | None, pavimento: str | None = None
+    ) -> list[InfoRender]:
         self._id(codigo)
-        return [_info(r) for r in renders.listar(self.sessao, codigo, comodo)]
+        return [_info(r) for r in renders.listar(self.sessao, codigo, comodo, pavimento)]
 
     def render(self, id_: int) -> InfoRender:
         return _info(renders.obter(self.sessao, id_))
@@ -434,7 +467,7 @@ class Servico:
         return arq
 
     def modelo_render(self, id_: int) -> Path:
-        """O .glb (modelo 3D) de um render pronto, para o visor da tela."""
+        """O .glb (modelo 3D do cômodo ou do pavimento) de um render pronto, para o visor."""
         r = renders.obter(self.sessao, id_)
         nome = _modelo(r)
         if nome is None or r.pasta is None:

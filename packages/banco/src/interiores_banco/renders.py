@@ -69,10 +69,12 @@ def pedir(
     qualidade: str,
     tamanho: tuple[int, int, int],
     vistas: list[str],
+    escopo: str = "comodo",
 ) -> tuple[t.Render, bool]:
     """Cria o pedido (``na_fila``) ou devolve o que já está na fila/rodando igual.
 
     Cada vista é uma imagem (perspectiva, porta, cama, canto-N, superior).
+    ``escopo="pavimento"``: o pavimento inteiro, com o id dele em ``comodo``.
 
     Devolve ``(pedido, novo)``: só os novos vão para a fila.
     """
@@ -82,6 +84,7 @@ def pedir(
     igual = sessao.scalars(
         select(t.Render).where(
             t.Render.projeto_id == projeto.id,
+            t.Render.escopo == escopo,
             t.Render.comodo == comodo,
             t.Render.variacao == variacao,
             t.Render.qualidade == qualidade,
@@ -96,6 +99,7 @@ def pedir(
     imagens = len(vistas)
     pedido = t.Render(
         projeto_id=projeto.id,
+        escopo=escopo,
         comodo=comodo,
         variacao=variacao,
         qualidade=qualidade,
@@ -122,7 +126,10 @@ def obter(sessao: Session, id_: int) -> t.Render:
     return r
 
 
-def listar(sessao: Session, codigo: str, comodo: str | None = None) -> list[t.Render]:
+def listar(
+    sessao: Session, codigo: str, comodo: str | None = None, pavimento: str | None = None
+) -> list[t.Render]:
+    """Os pedidos mais recentes do projeto; só de um cômodo ou só de um pavimento inteiro."""
     consulta = (
         select(t.Render)
         .join(t.Projeto)
@@ -131,7 +138,9 @@ def listar(sessao: Session, codigo: str, comodo: str | None = None) -> list[t.Re
         .limit(50)
     )
     if comodo is not None:
-        consulta = consulta.where(t.Render.comodo == comodo)
+        consulta = consulta.where(t.Render.escopo == "comodo", t.Render.comodo == comodo)
+    if pavimento is not None:
+        consulta = consulta.where(t.Render.escopo == "pavimento", t.Render.comodo == pavimento)
     return list(sessao.scalars(consulta))
 
 

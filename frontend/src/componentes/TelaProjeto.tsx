@@ -150,6 +150,7 @@ export function TelaProjeto({
           {ver3d ? (
             <Tela3D
               codigo={codigo}
+              pavimento={pavimento}
               comodo={comodo}
               comodos={pavimentos.find((p) => p.id === pavimento)?.comodos ?? []}
               versaoProjeto={projeto.data?.versao}

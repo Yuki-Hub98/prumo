@@ -25,5 +25,6 @@ dateCreated: 2026-11-18T00:00:00.000Z
 6. **Checagens:** aparecem no terminal e desenhadas na planta (camada RESTRICAO).
 7. **Cortes e elevações:** saem junto com `make cad ... C=<cômodo>`.
 8. **Render:** `make render P=<projeto> C=<cômodo>`; cores em `variacoes/<cômodo>/*.json`.
+   Sem `C`, o pavimento inteiro (a casa com o teto cortado) em `out/<projeto>/<pavimento>/_geral/`.
 
 Exemplo real: o projeto `casa` (quarto com banheiro, medidas aproximadas).

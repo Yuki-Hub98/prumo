@@ -88,10 +88,11 @@ O esquema completo (para gerar os tipos do frontend) está em `/openapi.json`.
 |---|---|---|
 | GET | `/renders/estimativas` | segundos estimados por qualidade (histórico desta máquina) |
 | POST | `/projetos/{p}/comodos/{c}/renders` | pedir (`variacao`, `qualidade`: rascunho \| final) → 202 |
-| GET | `/projetos/{p}/renders?comodo=` | pedidos recentes |
+| POST | `/projetos/{p}/pavimentos/{a}/renders` | modelo 3D do pavimento inteiro (`qualidade`) → 202; `escopo: pavimento` |
+| GET | `/projetos/{p}/renders?comodo=` / `?pavimento=` | pedidos recentes (de um cômodo / do pavimento inteiro) |
 | GET | `/renders/{id}` | status, progresso, imagem atual, tempo restante, duração |
 | GET | `/renders/{id}/imagens/{nome}` | PNG pronto (`render-<vista>.png`) |
-| GET | `/renders/{id}/modelo` | modelo 3D do cômodo (`.glb`), para o visor; `modelo_url` no render |
+| GET | `/renders/{id}/modelo` | modelo 3D do cômodo ou do pavimento (`.glb`), para o visor; `modelo_url` no render |
 
 - **Qualidades:** rascunho 800×500, 16 amostras (segundos); final 1600×1000, 96 amostras
   (~2 min). O rascunho grava em `<variação>/rascunho/` e nunca sobrescreve o final.

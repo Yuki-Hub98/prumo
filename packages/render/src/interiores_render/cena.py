@@ -137,10 +137,18 @@ def _poligonos(geom: BaseGeometry) -> list[Polygon]:
 
 class _Cena:
     def __init__(
-        self, carregado: ProjetoCarregado, pav: Pavimento, comodo: Comodo, variacao: Variacao | None
+        self,
+        carregado: ProjetoCarregado,
+        pav: Pavimento,
+        comodo: Comodo,
+        variacao: Variacao | None,
+        no_pavimento: bool = False,
     ) -> None:
+        """``no_pavimento``: o cômodo é parte da cena do pavimento inteiro — nomes de
+        piso, teto, rodapé e móveis levam o id do cômodo (não colidem com os vizinhos)."""
         self.pav = pav
         self.comodo = comodo
+        self.no_pavimento = no_pavimento
         self.pe = (comodo.pe_direito or pav.pe_direito).valor
         util = geometria.poligono_util(pav, comodo)
         alvo = max(_poligonos(util), key=lambda g: g.area) if util is not None else None
@@ -166,6 +174,13 @@ class _Cena:
         self.prismas: list[dict[str, Any]] = []
         self.caixas: list[dict[str, Any]] = []
         self.materiais: dict[str, dict[str, Any]] = {}
+        self.ocupado: BaseGeometry = Polygon()
+        """Corpo das paredes já construídas (sem faces sobrepostas nas quinas)."""
+        self.paredes_feitas: set[str] = set()
+        """Paredes já construídas: no pavimento, a parede entre dois cômodos sai uma vez."""
+
+    def _n(self, nome: str) -> str:
+        return f"{nome}-{self.comodo.id}" if self.no_pavimento else nome
 
     # -- materiais
 
@@ -225,30 +240,29 @@ class _Cena:
     # -- arquitetura
 
     def piso_teto(self) -> None:
-        self.prisma(
-            "piso",
-            self.util,
-            -20,
-            0,
-            self.material("piso", self.cores["piso"], rugosidade=0.45, textura=self.textura_piso),
+        piso = self.material(
+            self._n("piso"), self.cores["piso"], rugosidade=0.45, textura=self.textura_piso
         )
-        self.prisma(
-            "teto",
-            self.util,
-            self.pe,
-            self.pe + 20,
-            self.material("teto", self.cores["teto"]),
-            oculto_em=["superior"],
-        )
+        self.prisma(self._n("piso"), self.util, -20, 0, piso)
+        # no pavimento as duas vistas são de fora, por cima: o teto sai das duas
+        oculto = ["superior", "perspectiva"] if self.no_pavimento else ["superior"]
+        teto = self.material("teto", self.cores["teto"])
+        self.prisma(self._n("teto"), self.util, self.pe, self.pe + 20, teto, oculto_em=oculto)
 
-    def paredes(self) -> None:
+    def paredes(self, ids: list[str] | None = None) -> None:
+        """Paredes do cômodo (ou as ``ids`` pedidas) com os vãos, caixilhos e portas."""
         geral = self.material("parede", self.cores["parede"], rugosidade=0.85, textura="pintura")
         mat_vidro = self.material("vidro", CORES_PADRAO["vidro"], vidro=True)
-        ocupado: BaseGeometry = Polygon()
-        for pid in self.comodo.paredes:
+        for pid in self.comodo.paredes if ids is None else ids:
             parede = self.pav.parede(pid)
             if parede is None or geometria.comprimento(parede) == 0:
                 continue
+            if pid in self.paredes_feitas:  # já saiu pelo cômodo vizinho: só a folha da porta
+                for ab in self.pav.aberturas:
+                    if ab.parede == pid and isinstance(ab, Porta):
+                        self.porta(ab, parede)
+                continue
+            self.paredes_feitas.add(pid)
             altura = float(parede.altura.valor) if parede.altura else float(self.pe)
             cor = self.cores_paredes.get(pid)  # parede de destaque
             mat = (
@@ -259,8 +273,8 @@ class _Cena:
             # cada parede perde o que as anteriores já ocupam: sem faces sobrepostas nas
             # quinas (no render elas brigam e saem pretas)
             inteiro = geometria.corpo(parede)
-            corpo = inteiro.difference(ocupado)
-            ocupado = ocupado.union(inteiro)
+            corpo = inteiro.difference(self.ocupado)
+            self.ocupado = self.ocupado.union(inteiro)
             u, n = geometria.direcao(parede)
             meia = parede.espessura.valor / 2 + 1
             vaos: list[tuple[Polygon, Porta | Janela]] = []
@@ -385,9 +399,8 @@ class _Cena:
             if no_teto and self.util.contains(Point(i.posicao)):  # type: ignore[union-attr]
                 x, y = i.posicao
                 tamanho = (380.0, 380.0, 70.0)
-                self.caixa(
-                    f"luminaria-{i.id}", (x, y, self.pe - 35), tamanho, 0.0, mat, 30, ["superior"]
-                )
+                oculto = ["superior", "perspectiva"] if self.no_pavimento else ["superior"]
+                self.caixa(f"luminaria-{i.id}", (x, y, self.pe - 35), tamanho, 0.0, mat, 30, oculto)
 
     def porta(self, porta: Porta, parede: Any) -> None:
         """Folha aberta a 90° para dentro do cômodo (portas que abrem para fora não aparecem)."""
@@ -435,7 +448,7 @@ class _Cena:
         if portas:
             faixa = faixa.difference(unary_union(portas))
         for i, pol in enumerate(_poligonos(faixa)):
-            self.prisma(f"rodape-{i}", pol, 0, h, mat)
+            self.prisma(self._n(f"rodape-{i}"), pol, 0, h, mat)
 
     # -- móveis
 
@@ -447,7 +460,7 @@ class _Cena:
                 x0, y0, z0, x1, y1, z1 = peca.caixa
                 cx, cy = geometria.girar_movel(m, (x0 + x1) / 2, (y0 + y1) / 2)
                 self.caixa(
-                    f"{m.id}-{peca.nome}",
+                    self._n(f"{m.id}-{peca.nome}"),
                     (cx, cy, (z0 + z1) / 2),
                     (x1 - x0, y1 - y0, z1 - z0),
                     float(m.rotacao),
@@ -918,3 +931,120 @@ def vistas_do_comodo(carregado: ProjetoCarregado, comodo: str) -> list[dict[str,
     """Vistas disponíveis (nome e título) para a tela oferecer."""
     disponiveis = _cena_do_comodo(carregado, comodo).cameras_disponiveis()
     return [{"nome": n, "titulo": v["titulo"]} for n, v in disponiveis.items()]
+
+
+# ---------------------------------------------------------------- pavimento inteiro
+
+VISTAS_PAVIMENTO: tuple[str, ...] = ("perspectiva", "superior")
+"""Vistas do pavimento: de cima (planta 3D) e em perspectiva aérea, as duas sem teto."""
+ARQUIVO_PAVIMENTO = "_geral"
+"""Pasta das saídas do pavimento (CLAUDE.md §5.5): ``out/<projeto>/<pavimento>/_geral/``."""
+
+
+def _pavimento(carregado: ProjetoCarregado, pavimento: str) -> Pavimento:
+    pav = next((p for p in carregado.projeto.pavimentos if p.id == pavimento), None)
+    if pav is None:
+        disponiveis = ", ".join(p.id for p in carregado.projeto.pavimentos) or "nenhum"
+        raise KeyError(f"pavimento '{pavimento}' não existe no projeto ({disponiveis})")
+    return pav
+
+
+def _cameras_pavimento(contorno: BaseGeometry, proporcao: float) -> dict[str, dict[str, Any]]:
+    """``proporcao``: largura / altura do quadro (a escala ortográfica vale na largura)."""
+    x0, y0, x1, y1 = contorno.bounds
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    maior = max(x1 - x0, y1 - y0)
+    # cabe na largura e na altura, com folga para a faixa do aviso no rodapé
+    escala = max((x1 - x0) * 1.12, (y1 - y0) * 1.25 * proporcao)
+    return {
+        # vista aérea pelo canto de baixo à esquerda da planta, como uma maquete na mesa
+        "perspectiva": {
+            "nome": "perspectiva",
+            "titulo": "Perspectiva aérea",
+            "tipo": "perspectiva",
+            "posicao": [
+                round(cx - maior * 0.6, 1),
+                round(cy - maior * 1.1, 1),
+                round(maior * 1.2, 1),
+            ],
+            "alvo": [round(cx, 1), round(cy, 1), 0],
+            "lente": 24,
+        },
+        "superior": {
+            "nome": "superior",
+            "titulo": "De cima",
+            "tipo": "ortografica",
+            "posicao": [round(cx, 1), round(cy - 1, 1), round(maior * 2.2, 1)],
+            "alvo": [round(cx, 1), round(cy, 1), 0],
+            "escala": round(escala, 1),
+        },
+    }
+
+
+def montar_cena_pavimento(
+    carregado: ProjetoCarregado,
+    pavimento: str,
+    largura: int = 1600,
+    altura: int = 1000,
+    amostras: int = 96,
+    vistas: tuple[str, ...] = VISTAS_PAVIMENTO,
+) -> dict[str, Any]:
+    """Cena do pavimento inteiro em JSON, pronta para o ``bpy_cena.py``.
+
+    Todos os cômodos com piso, rodapé, móveis e luminárias; cada parede sai uma vez
+    só (a do vizinho não se repete); teto e luminárias somem nas duas vistas (corte
+    no teto, CLAUDE.md §5.6) e vão marcados no .glb para o visor esconder. Cores
+    padrão: as variações são por cômodo.
+    """
+    pav = _pavimento(carregado, pavimento)
+    if not pav.comodos:
+        raise ValueError(f"pavimento '{pavimento}' não tem cômodos")
+    prismas: list[dict[str, Any]] = []
+    caixas: list[dict[str, Any]] = []
+    materiais: dict[str, dict[str, Any]] = {}
+    ocupado: BaseGeometry = Polygon()
+    feitas: set[str] = set()
+    luzes: list[dict[str, Any]] = []
+    cenas: list[_Cena] = []
+    for comodo in pav.comodos:
+        cena = _Cena(carregado, pav, comodo, None, no_pavimento=True)
+        # tudo no mesmo acervo: listas, materiais e paredes já feitas
+        cena.prismas, cena.caixas, cena.materiais = prismas, caixas, materiais
+        cena.ocupado, cena.paredes_feitas = ocupado, feitas
+        cena.piso_teto()
+        cena.paredes()
+        ocupado = cena.ocupado
+        cena.rodape()
+        cena.moveis_()
+        cena.luminarias()
+        luzes.append(cena.luzes()[0])  # a luz de teto de cada cômodo
+        cenas.append(cena)
+    soltas = [p.id for p in pav.paredes if p.id not in feitas]
+    if soltas:  # paredes que nenhum cômodo usa (muro, mureta): saem também
+        cenas[0].ocupado = ocupado
+        cenas[0].paredes(soltas)
+    luzes.append({"tipo": "sol", "direcao": [0.45, 0.35, -0.82], "energia": 2.5})
+    disponiveis = _cameras_pavimento(
+        unary_union([geometria.corpo(p) for p in pav.paredes if geometria.comprimento(p) > 0]),
+        largura / altura,
+    )
+    fora = [v for v in vistas if v not in disponiveis]
+    if fora:
+        raise KeyError(
+            f"vista(s) {', '.join(fora)} não existem no pavimento ({', '.join(disponiveis)})"
+        )
+    estimadas = carregado.estimadas_pavimento(pavimento)
+    return {
+        "versao": VERSAO_CENA,
+        "comodo": ARQUIVO_PAVIMENTO,
+        "pavimento": pavimento,
+        "modelo": pavimento,
+        "variacao": "base",
+        "prismas": prismas,
+        "caixas": caixas,
+        "materiais": materiais,
+        "cameras": [disponiveis[v] for v in vistas],
+        "luzes": luzes,
+        "aviso": f"{AVISO_OBRA} · {len(estimadas)} medida(s) estimada(s)" if estimadas else None,
+        "saida": {"largura": largura, "altura": altura, "amostras": amostras},
+    }

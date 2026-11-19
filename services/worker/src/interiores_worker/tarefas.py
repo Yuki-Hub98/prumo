@@ -35,6 +35,7 @@ def executar_render(
     render_id: int,
     saida: Path,
     renderizar: Renderizador = gerar.renderizar,
+    renderizar_pavimento: Renderizador = gerar.renderizar_pavimento,
 ) -> str:
     """Faz o render ``render_id``. Devolve o status final (``pronto`` | ``erro``)."""
     with abrir_sessao(engine) as s:
@@ -43,7 +44,7 @@ def executar_render(
             return r.status  # cancelado ou já feito
         codigo = renders.codigo_do_projeto(s, r)
         conteudo = repositorio.snapshot(s, codigo, r.versao_projeto)
-        comodo, variacao = r.comodo, r.variacao
+        escopo, comodo, variacao = r.escopo, r.comodo, r.variacao
         tamanho = (r.largura, r.altura, r.amostras)
         # o rascunho não pode sobrescrever o render final da mesma variação
         subpasta = None if r.qualidade == "final" else r.qualidade
@@ -66,12 +67,14 @@ def executar_render(
             pasta = Path(tmp) / codigo
             arquivos.escrever(conteudo, pasta)
             largura, altura, amostras = tamanho
-            resultado = renderizar(
-                carregar(pasta), saida, comodo, variacao,
-                largura=largura, altura=altura, amostras=amostras, progresso=progresso,
-                subpasta=subpasta,
-                vistas=vistas,
-            )  # fmt: skip
+            comum: dict[str, Any] = {
+                "largura": largura, "altura": altura, "amostras": amostras,
+                "progresso": progresso, "subpasta": subpasta, "vistas": vistas,
+            }  # fmt: skip
+            if escopo == "pavimento":  # ``comodo`` guarda o id do pavimento
+                resultado = renderizar_pavimento(carregar(pasta), saida, comodo, **comum)
+            else:
+                resultado = renderizar(carregar(pasta), saida, comodo, variacao, **comum)
     except Exception as e:  # o pedido fica com o erro para a tela mostrar
         log.exception("render %s falhou", render_id)
         with abrir_sessao(engine) as s:

@@ -29,6 +29,8 @@ export const buscar = {
     ),
   renders: (codigo: string, comodo: string) =>
     ou(api.GET("/projetos/{codigo}/renders", { params: { path: { codigo }, query: { comodo } } })),
+  rendersPavimento: (codigo: string, pavimento: string) =>
+    ou(api.GET("/projetos/{codigo}/renders", { params: { path: { codigo }, query: { pavimento } } })),
   moverMovel: (codigo: string, comodo: string, id_: string, versao: number, body: object) =>
     ou(
       api.POST("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover", {
