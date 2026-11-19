@@ -1,6 +1,6 @@
 # Atalhos do projeto — ver CLAUDE.md §12.
 .DEFAULT_GOAL := help
-.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem wiki up down logs
+.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem wiki banco importar exportar api up down logs
 
 help: ## Lista os comandos
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -56,6 +56,21 @@ render: ## Renders 3D: make render P=casa C=quarto [V=variação|todas] [F=1]
 
 wiki: ## Sobe só a wiki de documentação (http://localhost:3000)
 	docker compose up -d wiki
+
+banco: ## Sobe o Postgres e aplica as migrações
+	docker compose up -d --wait db
+	uv run interiores banco atualizar
+
+importar: ## Arquivos → banco: make importar P=casa [F=1 fica com os arquivos]
+	@test -n "$(P)" || { echo "informe o projeto: make importar P=<projeto>"; exit 2; }
+	uv run interiores importar $(P) $(if $(F),--forcar)
+
+exportar: ## Banco → arquivos: make exportar P=casa [F=1 sobrescreve]
+	@test -n "$(P)" || { echo "informe o projeto: make exportar P=<projeto>"; exit 2; }
+	uv run interiores exportar $(P) $(if $(F),--forcar)
+
+api: ## Sobe a API (http://localhost:8010/docs); precisa do banco (make banco)
+	uv run interiores-api
 
 up: ## Sobe a infra (docker compose)
 	docker compose up -d

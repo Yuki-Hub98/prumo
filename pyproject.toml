@@ -10,13 +10,15 @@ dependencies = [
     "interiores-render",
     "interiores-relatorios",
     "interiores-cli",
+    "interiores-banco",
+    "interiores-api",
 ]
 
 [tool.uv]
 package = false
 
 [tool.uv.workspace]
-members = ["packages/*"]
+members = ["packages/*", "services/*"]
 
 [tool.uv.sources]
 interiores-core = { workspace = true }
@@ -24,15 +26,19 @@ interiores-cad = { workspace = true }
 interiores-render = { workspace = true }
 interiores-relatorios = { workspace = true }
 interiores-cli = { workspace = true }
+interiores-banco = { workspace = true }
+interiores-api = { workspace = true }
 
 [dependency-groups]
 dev = [
     "commitizen>=4.19.3",
+    "httpx>=0.28.1",
     "mypy>=2.4.1",
     "pre-commit>=4.7.0",
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.17.5",
+    "testcontainers[postgres]>=4.15.0",
     "types-shapely>=2.2.0.20261117",
 ]
 
@@ -40,7 +46,7 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["packages/*/src", "tests"]
+src = ["packages/*/src", "services/*/src", "tests"]
 extend-exclude = ["out", ".relatorios"]
 
 [tool.ruff.lint]
@@ -58,11 +64,11 @@ allowed-confusables = ["×"]
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
 strict = true
-files = ["packages/core/src", "packages/cad/src"]
+files = ["packages/core/src", "packages/cad/src", "packages/banco/src", "services/api/src"]
 
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
-testpaths = ["tests", "packages"]
+testpaths = ["tests", "packages", "services"]
 pythonpath = ["packages/core/tests"]
 addopts = "-ra --strict-markers --import-mode=importlib"
 markers = ["blender: usa o Blender de verdade (lento; rode com PRUMO_TESTAR_BLENDER=1)"]

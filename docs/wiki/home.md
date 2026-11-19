@@ -28,7 +28,7 @@ lista de corte) e renders 3D.
 
 ## Regras que valem sempre
 
-- **O JSON é a fonte da verdade** das medidas (`projetos/<projeto>/`).
+- **O banco (PostgreSQL) é a fonte da verdade**; `projetos/<projeto>/` é a exportação dele, versionada no git (edição direta no JSON entra com `interiores importar`).
 - Toda medida tem **origem**: `trena` (medido), `estimada` (chute) ou `projeto` (decidido).
 - Havendo medida `estimada`, desenhos e renders saem com **PRELIMINAR — NÃO USAR PARA OBRA**.
 - O sistema **aponta** restrições; não substitui arquiteto, engenheiro ou eletricista.

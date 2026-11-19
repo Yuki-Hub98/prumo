@@ -14,6 +14,34 @@ Nada é desenhado à mão. Tudo é gerado a partir de arquivos JSON de medidas: 
 
 ---
 
+## ⚠️ Dependência obrigatória: `uv`
+
+> [!IMPORTANT]
+> **Sem o [uv](https://docs.astral.sh/uv/) instalado, o projeto não funciona.**
+> Ele instala o Python 3.12 e todas as bibliotecas, roda a CLI (`uv run interiores ...`),
+> os testes, o `make` e os hooks de commit (pre-commit e commitizen chamam `uv run`).
+> Dependências novas entram com `uv add`; nunca com `pip`.
+
+**Instalar** (Linux/macOS, sem `sudo`; vai para `~/.local/bin`):
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+
+**Conferir** (abra um terminal novo antes, para o `PATH` atualizar):
+
+```bash
+uv --version
+uv sync --all-packages   # cria o .venv com tudo
+```
+
+Se aparecer `uv: comando não encontrado`, adicione `~/.local/bin` ao `PATH`
+(`export PATH="$HOME/.local/bin:$PATH"` no `~/.bashrc`) e abra outro terminal.
+
+---
+
 ## Por que existe
 
 Reformar sem projeto costuma terminar em guarda-roupa que não abre por causa da cama, tomada atrás do móvel ou furo no lugar do cano. Este projeto existe para:
@@ -36,13 +64,15 @@ Reformar sem projeto costuma terminar em guarda-roupa que não abre por causa da
 ## Como funciona
 
 ```
-fotos + croqui com trena
+fotos + croqui com trena          frontend (editor)
+        │                                │
+        ▼                                ▼
+projetos/<projeto>/*.json  ◄──────►  API (FastAPI) ──► PostgreSQL ← fonte da verdade
+  (exportação versionada;      importar/                (medidas em mm + origem,
+   CLI e Claude editam aqui)   exportar                  histórico e versões)
         │
         ▼
-projetos/<projeto>/projeto.json   ← fonte da verdade (medidas em mm + origem)
-        │
-        ▼
-core: valida, monta a geometria e roda as checagens
+core: valida, edita, monta a geometria e roda as checagens
         │
         ├──► cad        → plantas e cortes DXF/PDF
         ├──► render     → cenas e imagens no Blender
@@ -74,9 +104,10 @@ Unidade interna: **milímetros**. Origens possíveis: `trena`, `estimada`, `proj
 
 ```
 .
-├── projetos/        # medidas e variações (fonte da verdade)
+├── projetos/        # exportação do banco (medidas e variações), versionada
 ├── packages/
-│   ├── core/        # modelo, validação, regras, tipos de cômodo
+│   ├── core/        # modelo, validação, regras, edição da planta, tipos de cômodo
+│   ├── banco/       # PostgreSQL: tabelas, migrações, importar/exportar
 │   ├── cad/         # plantas e cortes
 │   ├── render/      # scripts do Blender
 │   ├── relatorios/  # comparações, tinta
@@ -93,7 +124,7 @@ Unidade interna: **milímetros**. Origens possíveis: `trena`, `estimada`, `proj
 
 > ⚠️ O projeto está no início. Os comandos abaixo descrevem o fluxo planejado.
 
-Pré-requisitos: [uv](https://docs.astral.sh/uv/), Docker e Docker Compose. O Blender só é necessário fora do Docker.
+Pré-requisitos: **[uv](https://docs.astral.sh/uv/) (obrigatório — veja a seção "Dependência obrigatória: `uv`" no topo)**, Docker e Docker Compose. O Blender só é necessário fora do Docker.
 
 ```bash
 git clone https://github.com/Yuki-Hub98/interiores.git
@@ -106,6 +137,20 @@ make wiki         # documentação completa em http://localhost:3000 (Wiki.js)
 A documentação (uso, arquitetura, modelo de dados, desenvolvimento) fica em `docs/wiki/`
 e é servida pela Wiki.js; na primeira vez, siga "Como esta wiki funciona" em
 `docs/wiki/home.md`.
+
+Banco e API (o banco é a fonte da verdade; `projetos/` é a exportação dele):
+
+```bash
+make banco                        # sobe o Postgres e aplica as migrações
+make importar P=casa              # arquivos → banco (nova versão)
+make api                          # API em http://localhost:8010/docs
+make exportar P=casa              # banco → arquivos (a API já faz isso a cada edição)
+```
+
+Editou o JSON à mão (ou pela CLI)? Rode `make importar`. Se o banco e os arquivos mudaram
+desde a última sincronização, importar e exportar recusam e avisam (`F=1` escolhe um lado).
+Toda edição pela API exige `?versao=` (a versão que a tela estava vendo): se alguém gravou
+antes, a resposta é 409 e a tela recarrega em vez de atropelar.
 
 Sem Docker (core, CAD e CLI):
 
@@ -230,6 +275,9 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
         com caixilho, vidro e peitoril padrão; tamanhos comerciais (ex.: 120 × 100, 150 × 120)
 - [ ] Cozinha (hidráulica, gás, triângulo de trabalho)
 - [ ] Planta geral do pavimento e 3D da casa
+- [ ] Perfis e login (pedido do usuário, 2026-11-18): cada pessoa com conta, seus projetos
+      (vários por pessoa) e suas preferências (ex.: unidade cm/m/mm); projetos podem ser
+      compartilhados. O banco já guarda vários projetos; falta o dono de cada um
 - [ ] Deploy
 
 ## Contribuindo / commits

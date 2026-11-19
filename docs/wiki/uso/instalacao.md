@@ -10,8 +10,24 @@ dateCreated: 2026-11-18T00:00:00.000Z
 
 # Instalação
 
-Pré-requisitos: [uv](https://docs.astral.sh/uv/), Docker e Docker Compose. Python 3.12 é
-instalado pelo uv.
+## ⚠️ Primeiro: instale o `uv` (obrigatório)
+
+> **Sem o [uv](https://docs.astral.sh/uv/) o projeto não funciona.** Ele instala o Python
+> 3.12 e as bibliotecas, roda a CLI, os testes, o `make` e os hooks de commit
+> (`uv run ...`). Dependências novas entram com `uv add`, nunca com `pip`.
+{.is-warning}
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh   # Linux/macOS, sem sudo (~/.local/bin)
+uv --version                                     # num terminal novo
+```
+
+Se der `uv: comando não encontrado`, ponha `export PATH="$HOME/.local/bin:$PATH"` no
+`~/.bashrc` e abra outro terminal.
+
+## Depois
+
+Também são necessários Docker e Docker Compose.
 
 ```bash
 git clone https://github.com/Yuki-Hub98/interiores.git
