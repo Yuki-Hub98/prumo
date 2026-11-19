@@ -2911,6 +2911,42 @@
         }
       }
     },
+    "/renders/{id_}/modelo": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Modelo Render",
+        "description": "Modelo 3D do cômodo (.glb) do render pronto, para o visor da tela.",
+        "operationId": "modelo_render_renders__id___modelo_get",
+        "parameters": [
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id "
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/preferencias": {
       "get": {
         "tags": [
@@ -3820,6 +3856,18 @@
             "type": "array",
             "title": "Imagens Url",
             "description": "Caminhos das imagens (pronto)."
+          },
+          "modelo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo Url",
+            "description": "Modelo 3D do cômodo (.glb), se pronto."
           }
         },
         "additionalProperties": false,
