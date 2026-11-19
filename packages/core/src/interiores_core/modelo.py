@@ -346,6 +346,14 @@ class CoresVariacao(_Modelo):
     """Paleta de uma variação. Tudo opcional: o que faltar usa a cor padrão."""
 
     parede: Cor | None = None
+    """Cor geral das paredes do cômodo."""
+    paredes: dict[str, Cor] = Field(
+        default_factory=dict,
+        description=(
+            "Cor por parede (id), que substitui a geral: parede de destaque. Vale para a "
+            "face voltada para este cômodo (a outra face é de outro cômodo)."
+        ),
+    )
     piso: Cor | None = None
     teto: Cor | None = None
     rodape: Cor | None = None

@@ -2167,6 +2167,215 @@
         }
       }
     },
+    "/projetos/{codigo}/comodos/{comodo}/variacoes": {
+      "get": {
+        "tags": [
+          "cores"
+        ],
+        "summary": "Listar Variacoes",
+        "description": "Variações de cor do cômodo, por nome (``base`` = cores padrão, não listada).",
+        "operationId": "listar_variacoes_projetos__codigo__comodos__comodo__variacoes_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/Variacao"
+                  },
+                  "title": "Response Listar Variacoes Projetos  Codigo  Comodos  Comodo  Variacoes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/comodos/{comodo}/variacoes/{nome}": {
+      "put": {
+        "tags": [
+          "cores"
+        ],
+        "summary": "Salvar Variacao",
+        "description": "Cria ou substitui a variação inteira (a tela manda a paleta completa).",
+        "operationId": "salvar_variacao_projetos__codigo__comodos__comodo__variacoes__nome__put",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "nome",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Nome"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NovaVariacao"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "cores"
+        ],
+        "summary": "Remover Variacao",
+        "operationId": "remover_variacao_projetos__codigo__comodos__comodo__variacoes__nome__delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "nome",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Nome"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/preferencias": {
       "get": {
         "tags": [
@@ -2630,6 +2839,14 @@
               }
             ],
             "title": "Centro"
+          },
+          "faces": {
+            "items": {
+              "$ref": "#/components/schemas/FaceTela"
+            },
+            "type": "array",
+            "title": "Faces",
+            "default": []
           }
         },
         "type": "object",
@@ -2696,6 +2913,16 @@
               }
             ],
             "title": "Parede"
+          },
+          "paredes": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Cor em hexadecimal: #RRGGBB."
+            },
+            "type": "object",
+            "title": "Paredes",
+            "description": "Cor por parede (id), que substitui a geral: parede de destaque. Vale para a face voltada para este cômodo (a outra face é de outro cômodo)."
           },
           "piso": {
             "anyOf": [
@@ -2840,6 +3067,49 @@
         ],
         "title": "Espaco",
         "description": "Espaço dentro de um vão, de baixo para cima.\n\nEntre dois espaços seguidos entra uma prateleira, exceto entre duas gavetas\n(que ficam empilhadas). ``altura`` é a altura livre do espaço (na gaveta, a\naltura da frente); se faltar, divide igualmente o que sobra no vão."
+      },
+      "FaceTela": {
+        "properties": {
+          "parede": {
+            "type": "string",
+            "title": "Parede"
+          },
+          "de": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "De"
+          },
+          "ate": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Ate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parede",
+          "de",
+          "ate"
+        ],
+        "title": "FaceTela"
       },
       "HTTPValidationError": {
         "properties": {
@@ -3575,6 +3845,40 @@
           "instalacao"
         ],
         "title": "NovaInstalacao"
+      },
+      "NovaVariacao": {
+        "properties": {
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nome",
+            "description": "Nome para exibir (ex.: Escura)."
+          },
+          "descricao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descricao"
+          },
+          "cores": {
+            "$ref": "#/components/schemas/CoresVariacao"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NovaVariacao",
+        "description": "Paleta de um cômodo: ``cores.parede`` (geral), ``cores.paredes`` (por parede, a\nface voltada para o cômodo), ``piso``, ``teto``, ``rodape`` e ``moveis`` (por id ou\ntipo). O que faltar usa a cor padrão."
       },
       "NovoComodo": {
         "properties": {

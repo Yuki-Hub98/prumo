@@ -130,6 +130,20 @@ def test_variacao(copia: Path) -> None:
         montar_cena(carregar(copia), "quarto", "clara")
 
 
+def test_parede_de_destaque(copia: Path) -> None:
+    pasta = copia / "variacoes" / "quarto"
+    pasta.mkdir(parents=True)
+    var = {"schema_version": 1, "comodo": "quarto",
+           "cores": {"parede": "#EEEEEE", "paredes": {"p2": "#C46B4F"}}}  # fmt: skip
+    (pasta / "destaque.json").write_text(json.dumps(var), "utf-8")
+    cena = montar_cena(carregar(copia), "quarto", "destaque")
+    mats = cena["materiais"]
+    assert mats["parede-p2"]["cor"] == "#C46B4F" and mats["parede"]["cor"] == "#EEEEEE"
+    por_nome = {p["nome"]: p["material"] for p in cena["prismas"]}
+    assert all(m == "parede-p2" for n, m in por_nome.items() if n.startswith("parede-p2-"))
+    assert all(m == "parede" for n, m in por_nome.items() if n.startswith("parede-p1-"))
+
+
 def test_erros() -> None:
     with pytest.raises(KeyError):
         montar_cena(carregar(DADOS), "cozinha")

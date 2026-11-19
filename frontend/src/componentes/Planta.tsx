@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import type { MovelTela, PavimentoTela, Problema } from "../api/cliente";
+import type { Cores, MovelTela, PavimentoTela, Problema } from "../api/cliente";
+import { PADRAO } from "./PainelCores";
 import { formatar, type Unidade } from "../unidades";
 
 type Pt = [number, number];
@@ -36,7 +37,14 @@ export function Planta({
   selecionado,
   aoSelecionar,
   aoMover,
+  comodoSelecionado,
+  aoSelecionarComodo,
+  cores,
 }: {
+  comodoSelecionado: string | null;
+  aoSelecionarComodo: (id: string) => void;
+  /** Cores (rascunho da variação) do cômodo selecionado; os outros ficam no padrão. */
+  cores: Cores | null;
   geometria: PavimentoTela;
   unidade: Unidade;
   problemas: Problema[];
@@ -85,12 +93,26 @@ export function Planta({
       }}
     >
       {/* cômodos */}
-      {geometria.comodos.map(
-        (c) =>
+      {geometria.comodos.map((c) => {
+        const pintado = c.id === comodoSelecionado && cores;
+        return (
           c.poligono && (
-            <polygon key={c.id} points={pontos(c.poligono)} fill="#f5f1ea" stroke="none" />
-          ),
-      )}
+            <polygon
+              key={c.id}
+              points={pontos(c.poligono)}
+              fill={pintado && cores.piso ? cores.piso : "#f5f1ea"}
+              stroke={c.id === comodoSelecionado ? "#0369a1" : "none"}
+              strokeWidth={20}
+              className="cursor-pointer"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                aoSelecionar(null);
+                aoSelecionarComodo(c.id);
+              }}
+            />
+          )
+        );
+      })}
 
       {/* paredes, com os vãos abertos por cima */}
       {geometria.paredes.map((p) => (
@@ -110,6 +132,24 @@ export function Planta({
           )}
         </g>
       ))}
+
+      {/* cor de cada parede: faixa na face voltada para o cômodo pintado */}
+      {cores &&
+        geometria.comodos
+          .filter((c) => c.id === comodoSelecionado)
+          .flatMap((c) => c.faces ?? [])
+          .map((f, i) => (
+            <line
+              key={i}
+              x1={f.de[0]}
+              y1={-f.de[1]}
+              x2={f.ate[0]}
+              y2={-f.ate[1]}
+              stroke={cores.paredes?.[f.parede] ?? cores.parede ?? PADRAO.parede}
+              strokeWidth={70}
+              pointerEvents="none"
+            />
+          ))}
 
       {/* instalações */}
       {geometria.instalacoes.map(
@@ -150,7 +190,11 @@ export function Planta({
           >
             <polygon
               points={pontos(m.cantos)}
-              fill={COR_MOVEL[m.tipo] ?? "#d6d3d1"}
+              fill={
+                (m.comodo === comodoSelecionado && (cores?.moveis?.[m.id] ?? cores?.moveis?.[m.tipo])) ||
+                COR_MOVEL[m.tipo] ||
+                "#d6d3d1"
+              }
               fillOpacity={m.elevado ? 0.5 : 0.9}
               stroke={sel ? "#0369a1" : "#57534e"}
               strokeWidth={sel ? 30 : 12}
@@ -182,7 +226,11 @@ export function Planta({
               y={-c.centro[1] - 320}
               fontSize={130}
               textAnchor="middle"
-              fill="#78716c"
+              fill="#57534e"
+              stroke="#ffffff"
+              strokeWidth={12}
+              strokeOpacity={0.85}
+              paintOrder="stroke"
               pointerEvents="none"
             >
               {c.nome}

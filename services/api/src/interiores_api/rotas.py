@@ -25,6 +25,7 @@ from interiores_api.esquemas import (
     MoverVertice,
     NovaAbertura,
     NovaInstalacao,
+    NovaVariacao,
     NovoComodo,
     NovoMovel,
     NovoProjeto,
@@ -38,7 +39,7 @@ from interiores_api.servicos import Servico
 from interiores_banco.conexao import sessao as abrir_sessao
 from interiores_core import catalogo, edicao
 from interiores_core import edicao_moveis as em
-from interiores_core.modelo import Parede
+from interiores_core.modelo import Parede, Variacao
 from interiores_core.tela import PavimentoTela
 from interiores_core.validacao import Problema
 
@@ -55,6 +56,7 @@ Versao = Annotated[int, Query(ge=0, description="Versão do projeto que a tela e
 projetos = APIRouter(prefix="/projetos", tags=["projetos"])
 planta = APIRouter(prefix="/projetos/{codigo}/pavimentos/{pavimento}", tags=["planta"])
 moveis = APIRouter(prefix="/projetos/{codigo}/comodos/{comodo}/moveis", tags=["móveis"])
+variacoes = APIRouter(prefix="/projetos/{codigo}/comodos/{comodo}/variacoes", tags=["cores"])
 geral = APIRouter(tags=["catálogo"])
 
 
@@ -381,3 +383,28 @@ def remover_movel(svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao) 
         codigo, versao, comodo, "remover_movel",
         lambda p, d, r: em.remover_movel(p, comodo, d, id_, r),
     )  # fmt: skip
+
+
+# ---------------------------------------------------------------- cores (variações)
+
+
+@variacoes.get("")
+def listar_variacoes(svc: Svc, codigo: str, comodo: str) -> dict[str, Variacao]:
+    """Variações de cor do cômodo, por nome (``base`` = cores padrão, não listada)."""
+    return svc.variacoes(codigo, comodo)
+
+
+@variacoes.put("/{nome}")
+def salvar_variacao(
+    svc: Svc, codigo: str, comodo: str, nome: str, versao: Versao, pedido: NovaVariacao
+) -> ResultadoEdicao:
+    """Cria ou substitui a variação inteira (a tela manda a paleta completa)."""
+    dados = pedido.model_dump(mode="json", exclude_none=True)
+    return svc.salvar_variacao(codigo, versao, comodo, nome, dados)
+
+
+@variacoes.delete("/{nome}")
+def remover_variacao(
+    svc: Svc, codigo: str, comodo: str, nome: str, versao: Versao
+) -> ResultadoEdicao:
+    return svc.salvar_variacao(codigo, versao, comodo, nome, None)

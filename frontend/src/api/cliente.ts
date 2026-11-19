@@ -21,6 +21,12 @@ export const buscar = {
     ou(api.GET("/projetos/{codigo}/problemas", { params: { path: { codigo } } })),
   projeto: (codigo: string) =>
     ou(api.GET("/projetos/{codigo}", { params: { path: { codigo } } })),
+  variacoes: (codigo: string, comodo: string) =>
+    ou(
+      api.GET("/projetos/{codigo}/comodos/{comodo}/variacoes", {
+        params: { path: { codigo, comodo } },
+      }),
+    ),
   moverMovel: (codigo: string, comodo: string, id_: string, versao: number, body: object) =>
     ou(
       api.POST("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover", {
@@ -35,6 +41,8 @@ export type MovelTela = PavimentoTela["moveis"][number];
 export type Problema = Awaited<ReturnType<typeof buscar.problemas>>[number];
 export type ProjetoCompleto = Awaited<ReturnType<typeof buscar.projeto>>;
 export type ResultadoEdicao = Awaited<ReturnType<typeof buscar.moverMovel>>;
+export type Variacao = Awaited<ReturnType<typeof buscar.variacoes>>[string];
+export type Cores = Esquemas["CoresVariacao"];
 
 /** Erro da API num texto para mostrar (409 de versão, 422 de edição inválida...). */
 export class ErroApi extends Error {

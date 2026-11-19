@@ -9,6 +9,7 @@ igual para CAD, render e tela.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from itertools import pairwise
 
 from pydantic import BaseModel, ConfigDict
 from shapely import Polygon
@@ -51,6 +52,13 @@ class AberturaTela(_Tela):
     largura: int
 
 
+class FaceTela(_Tela):
+    parede: str
+    de: Pt
+    ate: Pt
+    """Lado da área útil do cômodo que é a face desta parede (para pintar)."""
+
+
 class ComodoTela(_Tela):
     id: str
     nome: str
@@ -60,6 +68,8 @@ class ComodoTela(_Tela):
     area_m2: float | None
     centro: Pt | None
     """Ponto para o rótulo (sempre dentro do polígono)."""
+    faces: list[FaceTela] = []
+    """Faces das paredes voltadas para o cômodo (cor por parede)."""
 
 
 class MovelTela(_Tela):
@@ -165,6 +175,12 @@ def pavimento_para_tela(
         util = geometria.poligono_util(pav, c)
         alvo = _maior(util) if util is not None else None
         rotulo = alvo.representative_point() if alvo is not None else None
+        faces = []
+        if alvo is not None:
+            anel: list[Pt] = [(x, y) for x, y in alvo.exterior.coords]
+            for p0, p1 in pairwise(anel):
+                for w in geometria.paredes_da_face(pav, c, p0, p1):
+                    faces.append(FaceTela(parede=w.id, de=_pts([p0])[0], ate=_pts([p1])[0]))
         comodos.append(
             ComodoTela(
                 id=c.id,
@@ -173,6 +189,7 @@ def pavimento_para_tela(
                 poligono=_pts(alvo.exterior.coords[:-1]) if alvo is not None else None,
                 area_m2=geometria.area_util_m2(pav, c),
                 centro=(round(rotulo.x, 1), round(rotulo.y, 1)) if rotulo is not None else None,
+                faces=faces,
             )
         )
     moveis = [

@@ -30,7 +30,7 @@ from interiores_core.carregar import ProjetoCarregado
 from interiores_core.catalogo import Simbolo
 from interiores_core.modelo import Comodo, Janela, Movel, Pavimento, Porta, Variacao
 
-VERSAO_CENA = 1
+VERSAO_CENA = 2
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -64,6 +64,9 @@ CORES_MOVEIS = {
     "berco": "#FFFFFF",
 }
 COR_MOVEL_GENERICO = "#B5B0A8"
+
+LUZ_W_M2 = 3.0
+"""Luz de área no teto, por m² do cômodo (com ``view_transform`` Standard)."""
 ALTURA_OLHO = 1600
 FOLGA_CAMERA = 400
 """Distância mínima (mm) da câmera da perspectiva até paredes, móveis e giro de porta."""
@@ -98,6 +101,7 @@ class _Cena:
         self.moveis: list[Movel] = list(dados.moveis) if dados else []
         self.cores = dict(CORES_PADRAO)
         self.cores_moveis: dict[str, str] = {}
+        self.cores_paredes: dict[str, str] = {}
         if variacao is not None:
             c = variacao.cores
             for chave in ("parede", "piso", "teto", "rodape"):
@@ -105,6 +109,7 @@ class _Cena:
                 if valor:
                     self.cores[chave] = valor
             self.cores_moveis = dict(c.moveis)
+            self.cores_paredes = dict(c.paredes)
         self.prismas: list[dict[str, Any]] = []
         self.caixas: list[dict[str, Any]] = []
         self.materiais: dict[str, dict[str, Any]] = {}
@@ -176,7 +181,7 @@ class _Cena:
         )
 
     def paredes(self) -> None:
-        mat = self.material("parede", self.cores["parede"], rugosidade=0.85)
+        geral = self.material("parede", self.cores["parede"], rugosidade=0.85)
         mat_vidro = self.material("vidro", CORES_PADRAO["vidro"], vidro=True)
         ocupado: BaseGeometry = Polygon()
         for pid in self.comodo.paredes:
@@ -184,6 +189,8 @@ class _Cena:
             if parede is None or geometria.comprimento(parede) == 0:
                 continue
             altura = float(parede.altura.valor) if parede.altura else float(self.pe)
+            cor = self.cores_paredes.get(pid)  # parede de destaque
+            mat = self.material(f"parede-{pid}", cor, rugosidade=0.85) if cor else geral
             # cada parede perde o que as anteriores já ocupam: sem faces sobrepostas nas
             # quinas (no render elas brigam e saem pretas)
             inteiro = geometria.corpo(parede)
@@ -429,7 +436,9 @@ class _Cena:
                 "tipo": "area",
                 "posicao": [c.x, c.y, self.pe - 30],
                 "tamanho": [(x1 - x0) * 0.6, (y1 - y0) * 0.6],
-                "energia": 30 * area_m2,
+                # calibrado para a cor escolhida aparecer na imagem (piso #9a7451 sai
+                # ~7% mais claro); 30 W/m² "lavava" tudo para tons pastel
+                "energia": LUZ_W_M2 * area_m2,
             },
             {"tipo": "sol", "direcao": [0.45, 0.35, -0.82], "energia": 2.0},
         ]
