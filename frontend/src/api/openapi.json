@@ -2655,12 +2655,75 @@
         }
       }
     },
+    "/projetos/{codigo}/pavimentos/{pavimento}/renders": {
+      "post": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Pedir Render Pavimento",
+        "description": "Modelo 3D do pavimento inteiro (todos os cômodos, teto cortado) na fila.",
+        "operationId": "pedir_render_pavimento_projetos__codigo__pavimentos__pavimento__renders_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoRenderPavimento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfoRender"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/renders": {
       "get": {
         "tags": [
           "render"
         ],
         "summary": "Listar Renders",
+        "description": "Pedidos recentes; ``comodo`` filtra um cômodo, ``pavimento`` os do pavimento inteiro.",
         "operationId": "listar_renders_projetos__codigo__renders_get",
         "parameters": [
           {
@@ -2686,6 +2749,22 @@
                 }
               ],
               "title": "Comodo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pavimento"
             }
           }
         ],
@@ -2917,7 +2996,7 @@
           "render"
         ],
         "summary": "Modelo Render",
-        "description": "Modelo 3D do cômodo (.glb) do render pronto, para o visor da tela.",
+        "description": "Modelo 3D (.glb) do cômodo ou do pavimento do render pronto, para o visor da tela.",
         "operationId": "modelo_render_renders__id___modelo_get",
         "parameters": [
           {
@@ -3730,9 +3809,20 @@
             "type": "integer",
             "title": "Id"
           },
+          "escopo": {
+            "type": "string",
+            "enum": [
+              "comodo",
+              "pavimento"
+            ],
+            "title": "Escopo",
+            "description": "pavimento: a casa inteira do pavimento (id em ``comodo``).",
+            "default": "comodo"
+          },
           "comodo": {
             "type": "string",
-            "title": "Comodo"
+            "title": "Comodo",
+            "description": "Id do cômodo (ou do pavimento, no escopo pavimento)."
           },
           "variacao": {
             "type": "string",
@@ -3867,7 +3957,7 @@
               }
             ],
             "title": "Modelo Url",
-            "description": "Modelo 3D do cômodo (.glb), se pronto."
+            "description": "Modelo 3D do cômodo ou do pavimento (.glb), se pronto."
           }
         },
         "additionalProperties": false,
@@ -5246,6 +5336,32 @@
         "additionalProperties": false,
         "type": "object",
         "title": "PedidoRender"
+      },
+      "PedidoRenderPavimento": {
+        "properties": {
+          "qualidade": {
+            "type": "string",
+            "enum": [
+              "rascunho",
+              "final"
+            ],
+            "title": "Qualidade",
+            "description": "rascunho: segundos, para conferir; final: alguns minutos.",
+            "default": "rascunho"
+          },
+          "vistas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Vistas",
+            "description": "Câmeras: perspectiva (aérea) e superior (de cima), as duas sem teto."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PedidoRenderPavimento"
       },
       "Pilar": {
         "properties": {

@@ -128,6 +128,31 @@ export function useRenders(codigo: string, comodo: string) {
   });
 }
 
+/** Renders do pavimento inteiro (modelo 3D da casa com o teto cortado). */
+export function useRendersPavimento(codigo: string, pavimento: string, ativo = true) {
+  return useQuery({
+    queryKey: [...chaves.projeto(codigo), "renders-pavimento", pavimento],
+    queryFn: () => buscar.rendersPavimento(codigo, pavimento),
+    enabled: ativo,
+    refetchInterval: (q) => (q.state.data?.some((r) => ATIVO.has(r.status)) ? 1000 : false),
+  });
+}
+
+export function usePedirRenderPavimento(codigo: string, pavimento: string) {
+  const qc = useQueryClient();
+  return useMutation<unknown, ErroApi, { qualidade: "rascunho" | "final" }>({
+    mutationFn: (corpo) =>
+      ou(
+        api.POST("/projetos/{codigo}/pavimentos/{pavimento}/renders", {
+          params: { path: { codigo, pavimento } },
+          body: corpo,
+        }),
+      ),
+    onSettled: () =>
+      qc.invalidateQueries({ queryKey: [...chaves.projeto(codigo), "renders-pavimento", pavimento] }),
+  });
+}
+
 export function useEstimativas() {
   return useQuery({
     queryKey: ["estimativas"],

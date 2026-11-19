@@ -615,6 +615,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/pavimentos/{pavimento}/renders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pedir Render Pavimento
+         * @description Modelo 3D do pavimento inteiro (todos os cômodos, teto cortado) na fila.
+         */
+        post: operations["pedir_render_pavimento_projetos__codigo__pavimentos__pavimento__renders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/renders": {
         parameters: {
             query?: never;
@@ -622,7 +642,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Listar Renders */
+        /**
+         * Listar Renders
+         * @description Pedidos recentes; ``comodo`` filtra um cômodo, ``pavimento`` os do pavimento inteiro.
+         */
         get: operations["listar_renders_projetos__codigo__renders_get"];
         put?: never;
         post?: never;
@@ -715,7 +738,7 @@ export interface paths {
         };
         /**
          * Modelo Render
-         * @description Modelo 3D do cômodo (.glb) do render pronto, para o visor da tela.
+         * @description Modelo 3D (.glb) do cômodo ou do pavimento do render pronto, para o visor da tela.
          */
         get: operations["modelo_render_renders__id___modelo_get"];
         put?: never;
@@ -1047,7 +1070,17 @@ export interface components {
         InfoRender: {
             /** Id */
             id: number;
-            /** Comodo */
+            /**
+             * Escopo
+             * @description pavimento: a casa inteira do pavimento (id em ``comodo``).
+             * @default comodo
+             * @enum {string}
+             */
+            escopo?: "comodo" | "pavimento";
+            /**
+             * Comodo
+             * @description Id do cômodo (ou do pavimento, no escopo pavimento).
+             */
             comodo: string;
             /** Variacao */
             variacao: string;
@@ -1101,7 +1134,7 @@ export interface components {
             imagens_url: string[];
             /**
              * Modelo Url
-             * @description Modelo 3D do cômodo (.glb), se pronto.
+             * @description Modelo 3D do cômodo ou do pavimento (.glb), se pronto.
              */
             modelo_url?: string | null;
         };
@@ -1577,6 +1610,21 @@ export interface components {
             /**
              * Vistas
              * @description Câmeras (ver GET .../vistas): perspectiva, porta, cama, canto-N, superior.
+             */
+            vistas?: string[];
+        };
+        /** PedidoRenderPavimento */
+        PedidoRenderPavimento: {
+            /**
+             * Qualidade
+             * @description rascunho: segundos, para conferir; final: alguns minutos.
+             * @default rascunho
+             * @enum {string}
+             */
+            qualidade?: "rascunho" | "final";
+            /**
+             * Vistas
+             * @description Câmeras: perspectiva (aérea) e superior (de cima), as duas sem teto.
              */
             vistas?: string[];
         };
@@ -3405,10 +3453,47 @@ export interface operations {
             };
         };
     };
+    pedir_render_pavimento_projetos__codigo__pavimentos__pavimento__renders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                pavimento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedidoRenderPavimento"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InfoRender"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listar_renders_projetos__codigo__renders_get: {
         parameters: {
             query?: {
                 comodo?: string | null;
+                pavimento?: string | null;
             };
             header?: never;
             path: {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Caixa, ehTeto, enquadrar } from "./enquadrar";
+import { type Caixa, ehPiso, ehTeto, enquadrar } from "./enquadrar";
 
 // quarto de 4,6 × 3,35 m (piso) com paredes de 15 cm, pé-direito 2,7 m
 const piso: Caixa = { min: [0, -0.02, -3.35], max: [4.6, 0, 0] };
@@ -40,5 +40,14 @@ describe("enquadrar", () => {
     expect(ehTeto("teto", undefined)).toBe(true);
     expect(ehTeto("cama", undefined)).toBe(false);
     expect(ehTeto("teto", { oculto_em: "porta" })).toBe(false);
+  });
+});
+
+describe("ehPiso", () => {
+  it("acha o piso do cômodo e os do pavimento", () => {
+    expect(ehPiso("piso")).toBe(true);
+    expect(ehPiso("piso-quarto")).toBe(true);
+    expect(ehPiso("teto-quarto")).toBe(false);
+    expect(ehPiso("pisoteado")).toBe(false);
   });
 });

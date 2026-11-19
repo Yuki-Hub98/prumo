@@ -73,6 +73,12 @@ export function enquadrar(vista: Vista3D, modelo: Caixa, piso: Caixa): Enquadram
   }
 }
 
+/** Piso de um cômodo: ``piso`` no modelo do cômodo, ``piso-<cômodo>`` no do pavimento.
+ * A caixa dos pisos é o vão livre usado para cortar a parede do lado da câmera. */
+export function ehPiso(nome: string): boolean {
+  return nome === "piso" || nome.startsWith("piso-");
+}
+
 /** Some na vista de cima (teto, luminária)? Vem do .glb (``extras.oculto_em``); modelos
  * antigos, sem extras, só têm o nome ``teto``. */
 export function ehTeto(nome: string, extras: Record<string, unknown> | undefined): boolean {

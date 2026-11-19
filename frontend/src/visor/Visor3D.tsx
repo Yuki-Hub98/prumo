@@ -2,7 +2,7 @@ import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { Box3, Plane, Vector3, type Object3D } from "three";
-import { type Caixa, ehTeto, enquadrar, VISTAS_3D, type Vista3D } from "./enquadrar";
+import { type Caixa, ehPiso, ehTeto, enquadrar, VISTAS_3D, type Vista3D } from "./enquadrar";
 
 type Controles = { target: Vector3; update: () => void };
 
@@ -16,11 +16,14 @@ function Modelo({ url, vista, teto }: { url: string; vista: Vista3D; teto: boole
 
   const [todo, piso] = useMemo(() => {
     const t = new Box3().setFromObject(scene);
-    let p: Object3D | undefined;
+    // no pavimento são vários pisos (um por cômodo): a caixa junta todos
+    const pisos: Object3D[] = [];
     scene.traverse((o) => {
-      if (o.name === "piso") p = o;
+      if (ehPiso(o.name)) pisos.push(o);
     });
-    return [caixa(t), p ? caixa(new Box3().setFromObject(p)) : caixa(t)];
+    const p = new Box3();
+    for (const o of pisos) p.expandByObject(o);
+    return [caixa(t), pisos.length ? caixa(p) : caixa(t)];
   }, [scene]);
 
   // teto e luminárias: escondidos por padrão, para ver o cômodo por dentro de cima
@@ -47,7 +50,7 @@ function Modelo({ url, vista, teto }: { url: string; vista: Vista3D; teto: boole
 const botao = (ativo: boolean) =>
   `rounded border px-2 py-0.5 text-sm ${ativo ? "border-stone-800 bg-stone-800 text-white" : "border-stone-300 bg-white hover:bg-stone-100"}`;
 
-/** Visor do .glb do cômodo: girar (arrastar), zoom (roda), mover (botão direito),
+/** Visor do .glb do cômodo ou do pavimento: girar (arrastar), zoom (roda), mover (botão direito),
  * vistas prontas com corte da parede do lado da câmera e teto liga/desliga. */
 export default function Visor3D({ url }: { url: string }) {
   const [vista, setVista] = useState<Vista3D>("cima");
