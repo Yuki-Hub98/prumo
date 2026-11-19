@@ -49,9 +49,22 @@ Com um cômodo selecionado, o painel "Imagens 3D" pede **rascunho** ou **final**
 de cor ativa, mostra a estimativa antes, a barra de progresso enquanto roda ("imagem 1 de 2
 · 42% · faltam ~1 min") e as miniaturas quando fica pronto. Precisa do worker (`make worker`).
 
+## Editar planta
+
+No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagados):
+
+- **Desenhar paredes:** escolha a espessura (e a origem), clique canto a canto; o ponto gruda
+  nos cantos existentes e alinha na horizontal/vertical. Botão direito termina a sequência.
+- **Cantos:** arraste os círculos azuis; as paredes que se encontram no canto vão junto.
+- **Clique para editar:** parede (espessura, dividir, + porta, + janela, + tomada/ponto,
+  remover), porta/janela (medidas, para onde abre, dobradiça), tomada/ponto (altura, posição),
+  cômodo (nome, tipo, pé-direito, remover).
+- **Novo cômodo:** "escolher as paredes…", clique nas paredes em volta, dê nome e tipo.
+- Toda medida nova pergunta a origem ("Medi", "Quero assim", "Chute"). As edições vão em fila,
+  uma de cada vez, para desenhar rápido sem conflito de versão.
+- Link direto: `#/p/<projeto>?modo=planta&sel=parede:p2`.
+
 ## Ainda não
 
-- Editor de planta (desenhar paredes, portas, janelas, cômodos, instalações) — a API já
-  tem as rotas.
 - Visor 3D interativo (`.glb`), comparador de variações, construção de planejados.
 - Login e perfis (planejado).
