@@ -462,6 +462,7 @@ name = "interiores-cli"
 version = "0.1.0"
 source = { editable = "packages/cli" }
 dependencies = [
+    { name = "interiores-banco" },
     { name = "interiores-cad" },
     { name = "interiores-core" },
     { name = "interiores-relatorios" },
@@ -472,6 +473,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "interiores-banco", editable = "packages/banco" },
     { name = "interiores-cad", editable = "packages/cad" },
     { name = "interiores-core", editable = "packages/core" },
     { name = "interiores-relatorios", editable = "packages/relatorios" },

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 from pydantic import ValidationError
@@ -16,6 +16,9 @@ from interiores_core.regras import checar
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, Severidade, validar
 from interiores_relatorios.lista_corte import gerar_lista
 from interiores_render import gerar as render
+
+if TYPE_CHECKING:
+    from sqlalchemy import Engine
 
 app = typer.Typer(help="Projeto de interiores a partir de medidas reais.", no_args_is_help=True)
 
@@ -512,3 +515,74 @@ def cmd_render(
         if r.gerado:
             for arq in r.arquivos:
                 print(f"      {arq}")
+
+
+# ---------------------------------------------------------------- banco
+
+banco_app = typer.Typer(help="Banco de dados (PostgreSQL, fonte da verdade): migrações.")
+app.add_typer(banco_app, name="banco")
+
+
+def _engine() -> Engine:
+    from interiores_banco.conexao import criar_engine
+
+    try:
+        return criar_engine()
+    except RuntimeError as e:
+        print(f"erro: {e}")
+        raise typer.Exit(2) from e
+
+
+@banco_app.command("atualizar")
+def cmd_banco_atualizar() -> None:
+    """Aplica as migrações pendentes (cria as tabelas na primeira vez)."""
+    from interiores_banco.migrar import atualizar
+
+    atualizar(_engine())
+    print("banco atualizado")
+
+
+@app.command("importar")
+def cmd_importar(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    projetos: PastaProjetos = Path("projetos"),
+    forcar: Annotated[
+        bool, typer.Option("--forcar", help="Fica com os arquivos mesmo se o banco mudou.")
+    ] = False,
+) -> None:
+    """Traz para o banco o que foi editado direto nos arquivos de projetos/."""
+    from interiores_banco import arquivos
+    from interiores_banco.conexao import sessao
+
+    _carregar(projetos / projeto)  # mensagens de erro de formato iguais às do validar
+    try:
+        with sessao(_engine()) as s:
+            r = arquivos.importar(s, projetos / projeto, forcar)
+    except arquivos.ConflitoDeSincronizacaoError as e:
+        print(f"erro: {e}")
+        raise typer.Exit(1) from e
+    print(f"{r.codigo}: versão {r.versao}" + ("" if r.mudou else " (nada mudou)"))
+
+
+@app.command("exportar")
+def cmd_exportar(
+    projeto: Annotated[str, typer.Argument(help="Código do projeto no banco.")],
+    projetos: PastaProjetos = Path("projetos"),
+    forcar: Annotated[
+        bool, typer.Option("--forcar", help="Sobrescreve arquivos editados fora do banco.")
+    ] = False,
+) -> None:
+    """Grava projetos/<projeto>/ a partir do banco."""
+    from interiores_banco import arquivos, repositorio
+    from interiores_banco.conexao import sessao
+
+    try:
+        with sessao(_engine()) as s:
+            r = arquivos.exportar(s, projeto, projetos / projeto, forcar)
+    except repositorio.ProjetoInexistenteError as e:
+        print(f"erro: {e}")
+        raise typer.Exit(2) from e
+    except arquivos.ConflitoDeSincronizacaoError as e:
+        print(f"erro: {e}")
+        raise typer.Exit(1) from e
+    print(f"{r.codigo}: versão {r.versao}" + (" exportada" if r.mudou else " (já estava igual)"))
