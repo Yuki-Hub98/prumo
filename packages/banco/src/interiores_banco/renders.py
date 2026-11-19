@@ -68,9 +68,11 @@ def pedir(
     variacao: str,
     qualidade: str,
     tamanho: tuple[int, int, int],
-    imagens: int,
+    vistas: list[str],
 ) -> tuple[t.Render, bool]:
     """Cria o pedido (``na_fila``) ou devolve o que já está na fila/rodando igual.
+
+    Cada vista é uma imagem (perspectiva, porta, cama, canto-N, superior).
 
     Devolve ``(pedido, novo)``: só os novos vão para a fila.
     """
@@ -85,11 +87,13 @@ def pedir(
             t.Render.qualidade == qualidade,
             t.Render.versao_projeto == projeto.versao,
             t.Render.status.in_(ATIVOS),
+            t.Render.vistas == vistas,
         )
     ).first()
     if igual is not None:
         return igual, False
     largura, altura, amostras = tamanho
+    imagens = len(vistas)
     pedido = t.Render(
         projeto_id=projeto.id,
         comodo=comodo,
@@ -99,6 +103,7 @@ def pedir(
         altura=altura,
         amostras=amostras,
         imagens=imagens,
+        vistas=vistas,
         status="na_fila",
         versao_projeto=projeto.versao,
         estimativa_s=estimar_s(sessao, largura, altura, amostras, imagens),

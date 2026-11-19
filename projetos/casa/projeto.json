@@ -155,13 +155,7 @@
       "aberturas": [
         {
           "id": "porta-quarto",
-          "tipo": "porta",
           "parede": "p1",
-          "de": "externo",
-          "para": "quarto",
-          "folha": "giro",
-          "abre_para": "quarto",
-          "dobradica": "fim",
           "distancia_inicio": {
             "valor": 3775,
             "origem": "estimada",
@@ -176,17 +170,17 @@
             "valor": 2100,
             "origem": "estimada",
             "obs": "estimada: porta padrão 2,10 m"
-          }
+          },
+          "tipo": "porta",
+          "de": "externo",
+          "para": "quarto",
+          "folha": "giro",
+          "abre_para": "quarto",
+          "dobradica": "fim"
         },
         {
           "id": "porta-banheiro",
-          "tipo": "porta",
           "parede": "p7",
-          "de": "quarto",
-          "para": "banheiro",
-          "folha": "giro",
-          "abre_para": "banheiro",
-          "dobradica": "inicio",
           "distancia_inicio": {
             "valor": 225,
             "origem": "estimada",
@@ -201,11 +195,16 @@
             "valor": 2100,
             "origem": "estimada",
             "obs": "estimada: porta padrão 2,10 m"
-          }
+          },
+          "tipo": "porta",
+          "de": "quarto",
+          "para": "banheiro",
+          "folha": "giro",
+          "abre_para": "banheiro",
+          "dobradica": "inicio"
         },
         {
           "id": "janela-quarto",
-          "tipo": "janela",
           "parede": "p1",
           "distancia_inicio": {
             "valor": 1100,
@@ -222,6 +221,7 @@
             "origem": "estimada",
             "obs": "estimada"
           },
+          "tipo": "janela",
           "peitoril": {
             "valor": 1000,
             "origem": "estimada",
