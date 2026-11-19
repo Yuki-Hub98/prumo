@@ -5,6 +5,7 @@ import { PainelPlanta } from "../editor/PainelPlanta";
 import { BotoesDesfazer, PainelHistorico } from "./Desfazer";
 import { PainelCores } from "./PainelCores";
 import { PainelImagens } from "./PainelImagens";
+import { Tela3D } from "./Tela3D";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade } from "../dados";
 import { AdicionarMovel, FaltaMedir, PainelMovel, PainelProblemas } from "./Paineis";
 import { Planta, type Item } from "./Planta";
@@ -40,6 +41,7 @@ export function TelaProjeto({
     comodoInicial && variacaoInicial ? { [comodoInicial]: variacaoInicial } : {},
   );
   const [historico, setHistorico] = useState(false);
+  const [ver3d, setVer3d] = useState(false);
   const [rascunho, setRascunho] = useState<Cores | null>(null);
   const aoRascunho = useCallback((c: Cores | null) => setRascunho(c), []);
 
@@ -128,13 +130,32 @@ export function TelaProjeto({
             </button>
           ))}
         </div>
+        <div className="flex overflow-hidden rounded border border-stone-300 text-sm">
+          {([false, true] as const).map((v) => (
+            <button
+              key={String(v)}
+              className={`px-3 py-0.5 ${ver3d === v ? "bg-stone-800 text-white" : "hover:bg-stone-100"}`}
+              onClick={() => setVer3d(v)}
+            >
+              {v ? "3D" : "Planta"}
+            </button>
+          ))}
+        </div>
         <BotoesDesfazer codigo={codigo} aoProblemas={setNovos} aoHistorico={() => setHistorico((h) => !h)} />
         {editar.isPending && <span className="text-xs text-stone-500">gravando…</span>}
         {editar.error && <span className="text-sm text-red-700">{editar.error.message}</span>}
       </header>
       <div className="flex min-h-0 flex-1">
         <main className="min-w-0 flex-1">
-          {geometria.data ? (
+          {ver3d ? (
+            <Tela3D
+              codigo={codigo}
+              comodo={comodo}
+              comodos={pavimentos.find((p) => p.id === pavimento)?.comodos ?? []}
+              versaoProjeto={projeto.data?.versao}
+              aoComodo={setComodo}
+            />
+          ) : geometria.data ? (
             <Planta
               geometria={geometria.data}
               unidade={unidade}

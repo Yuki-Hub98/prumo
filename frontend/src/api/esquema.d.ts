@@ -706,6 +706,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/renders/{id_}/modelo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Modelo Render
+         * @description Modelo 3D do cômodo (.glb) do render pronto, para o visor da tela.
+         */
+        get: operations["modelo_render_renders__id___modelo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/preferencias": {
         parameters: {
             query?: never;
@@ -1079,6 +1099,11 @@ export interface components {
              * @description Caminhos das imagens (pronto).
              */
             imagens_url: string[];
+            /**
+             * Modelo Url
+             * @description Modelo 3D do cômodo (.glb), se pronto.
+             */
+            modelo_url?: string | null;
         };
         /** InstalacaoTela */
         InstalacaoTela: {
@@ -3517,6 +3542,35 @@ export interface operations {
             path: {
                 id_: number;
                 nome: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    modelo_render_renders__id___modelo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id_: number;
             };
             cookie?: never;
         };

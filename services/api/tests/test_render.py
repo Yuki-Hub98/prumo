@@ -33,11 +33,16 @@ def test_pedir_acompanhar_e_baixar(api: TestClient, fila: Any, engine: Any, tmp_
 
     png = tmp_path / "render-perspectiva.png"
     png.write_bytes(b"\x89PNG")
+    (tmp_path / "q.glb").write_bytes(b"glTF")
     with sessao(engine) as s:
         renders.concluir(s, renders.obter(s, rid), str(tmp_path), [png.name, "q.glb"], 9.5, False)
     pronto = api.get(f"/renders/{rid}").json()
     assert pronto["status"] == "pronto" and pronto["duracao_s"] == 9.5
     assert pronto["imagens_url"] == [f"/renders/{rid}/imagens/render-perspectiva.png"]
+    assert pronto["modelo_url"] == f"/renders/{rid}/modelo"
+    glb = api.get(pronto["modelo_url"])
+    assert glb.status_code == 200 and glb.headers["content-type"] == "model/gltf-binary"
+    assert rodando["modelo_url"] is None  # só depois de pronto
     img = api.get(pronto["imagens_url"][0])
     assert img.status_code == 200 and img.headers["content-type"] == "image/png"
     assert api.get(f"/renders/{rid}/imagens/..%2F..%2Fsegredo").status_code == 404
@@ -50,6 +55,7 @@ def test_recusas(api: TestClient) -> None:
     assert api.post(URL, json={"qualidade": "ultra"}).status_code == 422
     assert api.post("/projetos/casa/comodos/cozinha/renders", json={}).status_code == 404
     assert api.get("/renders/999").status_code == 404
+    assert api.get("/renders/999/modelo").status_code == 404
 
 
 def test_estimativas(api: TestClient) -> None:

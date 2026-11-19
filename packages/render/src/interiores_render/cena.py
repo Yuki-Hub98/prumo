@@ -39,7 +39,7 @@ from interiores_core.modelo import (
     Variacao,
 )
 
-VERSAO_CENA = 5
+VERSAO_CENA = 7
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
