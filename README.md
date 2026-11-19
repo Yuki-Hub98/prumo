@@ -14,6 +14,34 @@ Nada é desenhado à mão. Tudo é gerado a partir de arquivos JSON de medidas: 
 
 ---
 
+## ⚠️ Dependência obrigatória: `uv`
+
+> [!IMPORTANT]
+> **Sem o [uv](https://docs.astral.sh/uv/) instalado, o projeto não funciona.**
+> Ele instala o Python 3.12 e todas as bibliotecas, roda a CLI (`uv run interiores ...`),
+> os testes, o `make` e os hooks de commit (pre-commit e commitizen chamam `uv run`).
+> Dependências novas entram com `uv add`; nunca com `pip`.
+
+**Instalar** (Linux/macOS, sem `sudo`; vai para `~/.local/bin`):
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+
+**Conferir** (abra um terminal novo antes, para o `PATH` atualizar):
+
+```bash
+uv --version
+uv sync --all-packages   # cria o .venv com tudo
+```
+
+Se aparecer `uv: comando não encontrado`, adicione `~/.local/bin` ao `PATH`
+(`export PATH="$HOME/.local/bin:$PATH"` no `~/.bashrc`) e abra outro terminal.
+
+---
+
 ## Por que existe
 
 Reformar sem projeto costuma terminar em guarda-roupa que não abre por causa da cama, tomada atrás do móvel ou furo no lugar do cano. Este projeto existe para:
@@ -93,7 +121,7 @@ Unidade interna: **milímetros**. Origens possíveis: `trena`, `estimada`, `proj
 
 > ⚠️ O projeto está no início. Os comandos abaixo descrevem o fluxo planejado.
 
-Pré-requisitos: [uv](https://docs.astral.sh/uv/), Docker e Docker Compose. O Blender só é necessário fora do Docker.
+Pré-requisitos: **[uv](https://docs.astral.sh/uv/) (obrigatório — veja a seção "Dependência obrigatória: `uv`" no topo)**, Docker e Docker Compose. O Blender só é necessário fora do Docker.
 
 ```bash
 git clone https://github.com/Yuki-Hub98/interiores.git
