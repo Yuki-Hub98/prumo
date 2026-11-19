@@ -37,6 +37,7 @@ from interiores_api.esquemas import (
     Renomear,
     ResultadoEdicao,
     ResumoProjeto,
+    Versoes,
 )
 from interiores_api.servicos import Servico
 from interiores_banco.conexao import sessao as abrir_sessao
@@ -114,6 +115,30 @@ def estimadas(svc: Svc, codigo: str) -> list[MedidaEstimada]:
 @projetos.get("/{codigo}/historico")
 def historico(svc: Svc, codigo: str, desde: int = 0) -> list[ItemHistorico]:
     return svc.historico(codigo, desde)
+
+
+@projetos.get("/{codigo}/versoes")
+def versoes(svc: Svc, codigo: str) -> Versoes:
+    """Versões (da mais nova) e para onde o desfazer/refazer levariam agora."""
+    return svc.versoes(codigo)
+
+
+@projetos.post("/{codigo}/desfazer")
+def desfazer(svc: Svc, codigo: str, versao: Versao) -> ResultadoEdicao:
+    """Volta ao estado de antes da última edição (grava como versão nova)."""
+    return svc.voltar(codigo, versao, "desfazer")
+
+
+@projetos.post("/{codigo}/refazer")
+def refazer(svc: Svc, codigo: str, versao: Versao) -> ResultadoEdicao:
+    """Refaz o último desfazer (só logo depois de desfazer)."""
+    return svc.voltar(codigo, versao, "refazer")
+
+
+@projetos.post("/{codigo}/versoes/{para}/restaurar")
+def restaurar(svc: Svc, codigo: str, para: int, versao: Versao) -> ResultadoEdicao:
+    """Volta o projeto para o conteúdo da versão ``para`` (grava como versão nova)."""
+    return svc.voltar(codigo, versao, "reverter", para)
 
 
 @projetos.get("/{codigo}/versoes/{versao}")

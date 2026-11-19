@@ -136,6 +136,23 @@ class ItemHistorico(Mudanca):
     operacao: str | None = None
 
 
+class ResumoVersao(_Esquema):
+    versao: int
+    quando: str
+    operacao: str | None = None
+    tipo: str | None = Field(None, description="desfazer | refazer | reverter, se for uma volta.")
+    para: int | None = Field(None, description="Versão cujo conteúdo foi restaurado.")
+    alteracoes: int = Field(description="Quantas alterações a versão gravou.")
+    caminhos: list[str] = Field(description="Até 5 caminhos alterados (resumo).")
+
+
+class Versoes(_Esquema):
+    atual: int
+    desfazer: int | None = Field(description="Versão que o desfazer restaura (None: nada).")
+    refazer: int | None = Field(description="Versão que o refazer restaura (None: nada).")
+    versoes: list[ResumoVersao] = Field(description="Da mais nova para a mais velha.")
+
+
 class MedidaEstimada(_Esquema):
     caminho: str
     pavimento: str | None
@@ -263,4 +280,6 @@ __all__ = [
     "Renomear",
     "ResultadoEdicao",
     "ResumoProjeto",
+    "ResumoVersao",
+    "Versoes",
 ]

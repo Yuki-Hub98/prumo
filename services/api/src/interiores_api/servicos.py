@@ -31,10 +31,13 @@ from interiores_api.esquemas import (
     ProjetoCompleto,
     ResultadoEdicao,
     ResumoProjeto,
+    ResumoVersao,
+    Versoes,
 )
 from interiores_api.fila import Fila
 from interiores_banco import arquivos, renders, repositorio
 from interiores_banco import tabelas as t
+from interiores_banco import versoes as volta
 from interiores_banco.mapear import Conteudo
 from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
@@ -125,6 +128,32 @@ class Servico:
 
     def versao(self, codigo: str, versao: int) -> ProjetoCompleto:
         return _completo(repositorio.snapshot(self.sessao, codigo, versao), versao)
+
+    def versoes(self, codigo: str) -> Versoes:
+        """Lista de versões e para onde o desfazer e o refazer levariam agora."""
+        lista = repositorio.versoes(self.sessao, codigo)
+        ops = {v.versao: v.operacao for v in lista}
+        atual = lista[0].versao
+        resumos = []
+        for v in lista:
+            lida = volta.ler_operacao(v.operacao)
+            resumos.append(
+                ResumoVersao(
+                    versao=v.versao,
+                    quando=v.quando.isoformat(),
+                    operacao=v.operacao,
+                    tipo=lida[0] if lida else None,
+                    para=lida[1] if lida else None,
+                    alteracoes=v.alteracoes,
+                    caminhos=v.caminhos,
+                )
+            )
+        return Versoes(
+            atual=atual,
+            desfazer=volta.alvo_desfazer(ops, atual),
+            refazer=volta.alvo_refazer(ops, atual),
+            versoes=resumos,
+        )
 
     def geometria(self, codigo: str, pavimento: str) -> PavimentoTela:
         c, _ = repositorio.ler(self.sessao, codigo)
@@ -373,6 +402,40 @@ class Servico:
         return arq
 
     # ------------------------------------------------------------ projeto inteiro
+
+    def voltar(
+        self, codigo: str, versao: int, tipo: volta.Tipo, para: int | None = None
+    ) -> ResultadoEdicao:
+        """Desfaz, refaz ou volta para a versão ``para`` gravando o conteúdo dela como
+        versão nova (nada é apagado). O código do projeto atual é mantido."""
+        atual, na_base = repositorio.ler(self.sessao, codigo)
+        if versao != na_base:
+            raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)
+        if tipo == "reverter":
+            if para is None or para == na_base:
+                raise ValueError("escolha uma versão diferente da atual para voltar")
+        else:
+            ops = repositorio.operacoes(self.sessao, codigo)
+            alvo = volta.alvo_desfazer if tipo == "desfazer" else volta.alvo_refazer
+            para = alvo(ops, na_base)
+            if para is None:
+                raise ValueError(f"nada para {tipo}")
+        antigo = repositorio.snapshot(self.sessao, codigo, para)
+        projeto = antigo.projeto.model_copy(update={"projeto": codigo})  # sobrevive a renomear
+        novo = Conteudo(projeto, antigo.comodos, antigo.variacoes, antigo.regras_toml)
+        if novo.hash == atual.hash:
+            raise ValueError(f"a versão {para} é igual à atual: nada para {tipo}")
+        nova_versao = self._gravar(novo, volta.operacao(tipo, para), versao)
+        hist = self.historico(codigo, versao)
+        probs = sorted(
+            validar(novo.projeto, novo.comodos), key=lambda p: ORDEM_SEVERIDADE[p.severidade]
+        )
+        return ResultadoEdicao(
+            versao=nova_versao,
+            alteracoes=[Mudanca(caminho=h.caminho, antes=h.antes, depois=h.depois) for h in hist],
+            novos=[],
+            problemas=probs,
+        )
 
     def renomear(self, codigo: str, versao: int, novo: str) -> ResultadoEdicao:
         """Troca o código; a pasta ``projetos/<codigo>`` (com as referências) vai junto."""
