@@ -24,6 +24,7 @@ from interiores_api.esquemas import (
     MedidaEstimada,
     Mudanca,
     NovoProjeto,
+    Preferencias,
     ProjetoCompleto,
     ResultadoEdicao,
     ResumoProjeto,
@@ -35,6 +36,7 @@ from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
 from interiores_core.modelo import DadosComodo, Projeto
 from interiores_core.regras import checar
+from interiores_core.tela import PavimentoTela, pavimento_para_tela
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
 
 log = structlog.get_logger("interiores.api")
@@ -78,6 +80,23 @@ class Servico:
 
     def versao(self, codigo: str, versao: int) -> ProjetoCompleto:
         return _completo(repositorio.snapshot(self.sessao, codigo, versao), versao)
+
+    def geometria(self, codigo: str, pavimento: str) -> PavimentoTela:
+        c, _ = repositorio.ler(self.sessao, codigo)
+        pav = next((p for p in c.projeto.pavimentos if p.id == pavimento), None)
+        if pav is None:
+            raise KeyError(f"pavimento '{pavimento}' não existe")
+        return pavimento_para_tela(pav, c.comodos)
+
+    def preferencias(self) -> Preferencias:
+        linhas = self.sessao.scalars(select(t.Preferencia))
+        return Preferencias.model_validate({p.chave: p.valor for p in linhas})
+
+    def salvar_preferencias(self, novas: Preferencias) -> Preferencias:
+        for chave, valor in novas.model_dump(mode="json", exclude_unset=True).items():
+            self.sessao.merge(t.Preferencia(chave=chave, valor=valor))
+        self.sessao.flush()
+        return self.preferencias()
 
     def problemas(self, codigo: str) -> list[Problema]:
         """Validação estrutural + checagens de uso (passagem, cama, portas...)."""

@@ -91,3 +91,14 @@ def rodar() -> None:
 
     config = Config.do_ambiente()
     uvicorn.run(criar_app(config), host=config.host, port=config.porta)
+
+
+def openapi(saida: str = "frontend/src/api/openapi.json") -> None:
+    """Grava o OpenAPI sem subir servidor nem banco (os tipos do frontend saem dele)."""
+    import json
+    from pathlib import Path
+
+    esquema = criar_app(Config(), engine=object()).openapi()  # type: ignore[arg-type]
+    Path(saida).write_text(
+        json.dumps(esquema, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )

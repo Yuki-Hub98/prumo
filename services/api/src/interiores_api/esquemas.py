@@ -70,6 +70,14 @@ class Apagado(_Esquema):
     )
 
 
+class Preferencias(_Esquema):
+    """Preferências do usuário (por ora um só; com login, uma por pessoa)."""
+
+    unidade: Literal["mm", "cm", "m"] = Field(
+        "cm", description="Unidade em que a tela mostra e recebe medidas (a API é sempre mm)."
+    )
+
+
 class ProjetoCompleto(_Esquema):
     versao: int
     projeto: Projeto
@@ -209,6 +217,7 @@ __all__ = [
     "NovoPavimento",
     "NovoProjeto",
     "Parede",
+    "Preferencias",
     "ProjetoCompleto",
     "Renomear",
     "ResultadoEdicao",
