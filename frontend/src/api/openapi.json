@@ -2725,17 +2725,99 @@
         "summary": "Estimativas",
         "description": "Segundos estimados por qualidade (rascunho, final), pelo histórico.",
         "operationId": "estimativas_renders_estimativas_get",
+        "parameters": [
+          {
+            "name": "imagens",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "description": "Quantas vistas.",
+              "default": 2,
+              "title": "Imagens"
+            },
+            "description": "Quantas vistas."
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
                   "additionalProperties": {
                     "type": "number"
                   },
-                  "type": "object",
                   "title": "Response Estimativas Renders Estimativas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/comodos/{comodo}/vistas": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Vistas",
+        "description": "Câmeras disponíveis no cômodo (perspectiva, porta, cama, canto-N, superior).",
+        "operationId": "vistas_projetos__codigo__comodos__comodo__vistas_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Vista"
+                  },
+                  "title": "Response Vistas Projetos  Codigo  Comodos  Comodo  Vistas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -3624,6 +3706,13 @@
             "type": "string",
             "title": "Qualidade"
           },
+          "vistas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Vistas"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -3740,6 +3829,7 @@
           "comodo",
           "variacao",
           "qualidade",
+          "vistas",
           "status",
           "progresso",
           "imagem_atual",
@@ -5094,6 +5184,15 @@
             "title": "Qualidade",
             "description": "rascunho: segundos, para conferir; final: ~2 min.",
             "default": "rascunho"
+          },
+          "vistas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Vistas",
+            "description": "Câmeras (ver GET .../vistas): perspectiva, porta, cama, canto-N, superior."
           }
         },
         "additionalProperties": false,
@@ -6008,6 +6107,25 @@
           "altura"
         ],
         "title": "Viga"
+      },
+      "Vista": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nome",
+          "titulo"
+        ],
+        "title": "Vista"
       }
     }
   }
