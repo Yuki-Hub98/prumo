@@ -42,6 +42,9 @@ Mudou alguma rota ou esquema da API? `make frontend-tipos` regera `openapi.json`
   houver chute, os desenhos saem PRELIMINAR).
 - **Versão:** toda edição vai com a versão que a tela tem; se outra aba gravou antes, a
   tela recarrega e avisa.
+- **Desfazer / refazer:** botões no topo, ou **Ctrl+Z** e **Ctrl+Shift+Z** (ou Ctrl+Y), fora
+  de campos de texto. **Histórico** abre a lista de versões (o que mudou e quando) com
+  "voltar para esta" (pede confirmação). Nada é apagado: voltar vira uma versão nova.
 
 ## Imagens 3D
 

@@ -47,7 +47,11 @@ make api                # http://localhost:8010/docs (documentação interativa)
 | GET | `/projetos/{p}/problemas` | erros, avisos, infos |
 | GET | `/projetos/{p}/estimadas` | lista "falta medir" |
 | GET | `/projetos/{p}/historico?desde=` | mudanças (antes → depois) |
+| GET | `/projetos/{p}/versoes` | lista de versões + para onde o desfazer/refazer levariam |
 | GET | `/projetos/{p}/versoes/{v}` | projeto numa versão antiga |
+| POST | `/projetos/{p}/desfazer` | volta ao estado de antes da última edição |
+| POST | `/projetos/{p}/refazer` | refaz o último desfazer (só logo depois de desfazer) |
+| POST | `/projetos/{p}/versoes/{v}/restaurar` | volta para o conteúdo da versão `v` |
 | PATCH | `/projetos/{p}/imovel` | tipo (casa/apartamento) e apelido |
 | POST | `/projetos/{p}/renomear` | troca o código (a pasta em `projetos/` vai junto) |
 | DELETE | `/projetos/{p}?confirmar={p}` | apaga do banco; a pasta vai para `projetos/_apagados/` |
@@ -67,6 +71,12 @@ make api                # http://localhost:8010/docs (documentação interativa)
 Toda resposta de edição traz `novos` e `problemas`: nos móveis, as checagens de uso do
 cômodo (passagem, lateral da cama, frente do guarda-roupa, giro de porta, tomada atrás de
 móvel, distância sofá-TV), para a tela mostrar na hora.
+
+**Desfazer, refazer e restaurar nunca apagam nada:** o conteúdo da versão alvo (do
+`snapshot`) é gravado como **versão nova**, com a operação `desfazer:N`, `refazer:N` ou
+`reverter:N` no histórico. Assim dá para desfazer um desfazer, e o histórico conta tudo.
+Qualquer edição nova depois de desfazer zera o refazer. Voltar para antes de um
+`renomear` mantém o código atual do projeto.
 
 O esquema completo (para gerar os tipos do frontend) está em `/openapi.json`.
 
