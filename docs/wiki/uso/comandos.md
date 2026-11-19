@@ -28,6 +28,16 @@ make setup             # instala dependências, pre-commit e exclui .relatorios/
 make blender-imagem    # imagem Docker do Blender 4.5 LTS (~2 GB), necessária para o render 3D
 ```
 
+**Subir tudo de uma vez (dia a dia):**
+
+```bash
+make dev    # Postgres + Redis (Docker), migrações, API, worker e frontend num terminal só
+```
+
+Os logs saem com prefixo (`[api]`, `[worker]`, `[front]`); Ctrl+C para os três (a infra
+continua no Docker: `make down` para parar). Se a porta da API ou a 5173 já estiver em uso,
+ele avisa e não sobe. Na primeira vez instala as dependências do frontend.
+
 ---
 
 ## 2. Conferir o projeto
