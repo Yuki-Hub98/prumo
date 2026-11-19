@@ -31,11 +31,13 @@ from interiores_api.esquemas import (
     ProjetoCompleto,
     ResultadoEdicao,
     ResumoProjeto,
+    Vista,
 )
 from interiores_api.fila import Fila
 from interiores_banco import arquivos, renders, repositorio
 from interiores_banco import tabelas as t
 from interiores_banco.mapear import Conteudo
+from interiores_core.carregar import ProjetoCarregado
 from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
 from interiores_core.edicao_variacoes import validar_variacao
@@ -43,6 +45,7 @@ from interiores_core.modelo import DadosComodo, Projeto, Variacao
 from interiores_core.regras import checar
 from interiores_core.tela import PavimentoTela, pavimento_para_tela
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
+from interiores_render.cena import vistas_do_comodo
 from interiores_render.gerar import IMAGENS_POR_RENDER, QUALIDADES
 
 log = structlog.get_logger("interiores.api")
@@ -64,9 +67,6 @@ def _mudancas(alteracoes: list[Alteracao]) -> list[Mudanca]:
     return [Mudanca(caminho=a.caminho, antes=a.antes, depois=a.depois) for a in alteracoes]
 
 
-IMAGENS_RENDER = ("render-perspectiva.png", "render-superior.png")
-
-
 def _info(r: t.Render) -> InfoRender:
     agora = datetime.now(UTC)
     decorrido = ((r.fim or agora) - r.inicio).total_seconds() if r.inicio is not None else None
@@ -80,12 +80,13 @@ def _info(r: t.Render) -> InfoRender:
             restante = max(r.estimativa_s - decorrido, 0.0)
     elif r.status == "pronto":
         restante = 0.0
-    nomes = [n for n in (r.arquivos or []) if n in IMAGENS_RENDER] if r.status == "pronto" else []
+    nomes = [n for n in (r.arquivos or []) if n.endswith(".png")] if r.status == "pronto" else []
     return InfoRender(
         id=r.id,
         comodo=r.comodo,
         variacao=r.variacao,
         qualidade=r.qualidade,
+        vistas=list(r.vistas),
         status=r.status,
         progresso=r.progresso,
         imagem_atual=r.imagem_atual,
@@ -336,11 +337,19 @@ class Servico:
             raise KeyError(f"cômodo '{comodo}' não existe no projeto")
         if pedido.variacao != "base" and pedido.variacao not in c.variacoes.get(comodo, {}):
             raise KeyError(f"variação '{pedido.variacao}' não existe em '{comodo}'")
+        disponiveis = {v.nome for v in self._vistas(c, comodo)}
+        fora = [v for v in pedido.vistas if v not in disponiveis]
+        if fora:
+            raise ValueError(
+                f"vista(s) {', '.join(fora)} não existem em '{comodo}' "
+                f"({', '.join(sorted(disponiveis))})"
+            )
         if self.fila is None:
             raise RuntimeError("fila de render não configurada")
+        vistas = list(dict.fromkeys(pedido.vistas))  # sem repetidas, na ordem pedida
         r, novo = renders.pedir(
             self.sessao, codigo, comodo, pedido.variacao, pedido.qualidade,
-            QUALIDADES[pedido.qualidade], IMAGENS_POR_RENDER,
+            QUALIDADES[pedido.qualidade], vistas,
         )  # fmt: skip
         if novo:
             self.sessao.commit()  # o worker precisa enxergar o pedido
@@ -348,12 +357,26 @@ class Servico:
             log.info("render na fila", render=r.id, projeto=codigo, comodo=comodo)
         return _info(r)
 
-    def estimativas(self) -> dict[str, float]:
+    def estimativas(self, imagens: int = IMAGENS_POR_RENDER) -> dict[str, float]:
         """Segundos estimados por qualidade, pelo histórico desta máquina."""
         return {
-            q: renders.estimar_s(self.sessao, *tamanho, IMAGENS_POR_RENDER)
+            q: renders.estimar_s(self.sessao, *tamanho, imagens)
             for q, tamanho in QUALIDADES.items()
         }
+
+    @staticmethod
+    def _vistas(c: Conteudo, comodo: str) -> list[Vista]:
+        carregado = ProjetoCarregado(
+            pasta=Path(), projeto=c.projeto, dados_comodos=c.comodos, variacoes=c.variacoes
+        )
+        return [Vista(**v) for v in vistas_do_comodo(carregado, comodo)]
+
+    def vistas(self, codigo: str, comodo: str) -> list[Vista]:
+        """Câmeras que fazem sentido no cômodo (porta, cama, cantos...)."""
+        c, _ = repositorio.ler(self.sessao, codigo)
+        if c.projeto.pavimento_do_comodo(comodo) is None:
+            raise KeyError(f"cômodo '{comodo}' não existe no projeto")
+        return self._vistas(c, comodo)
 
     def renders(self, codigo: str, comodo: str | None) -> list[InfoRender]:
         self._id(codigo)
@@ -365,7 +388,8 @@ class Servico:
     def imagem_render(self, id_: int, nome: str) -> Path:
         """Arquivo de imagem de um render pronto (só os nomes conhecidos)."""
         r = renders.obter(self.sessao, id_)
-        if nome not in IMAGENS_RENDER or r.status != "pronto" or r.pasta is None:
+        validos = [n for n in (r.arquivos or []) if n.endswith(".png")]
+        if nome not in validos or r.status != "pronto" or r.pasta is None:
             raise KeyError(f"imagem '{nome}' não existe no render {id_}")
         arq = Path(r.pasta) / nome
         if not arq.is_file():

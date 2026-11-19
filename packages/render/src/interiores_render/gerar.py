@@ -43,8 +43,9 @@ QUALIDADES: dict[str, tuple[int, int, int]] = {
 }
 """Largura, altura e amostras de cada qualidade. Rascunho: segundos, para conferir;
 final: ~2 min por variação (medido em 2026-11-18, 16 núcleos)."""
-IMAGENS_POR_RENDER = 2
-"""Perspectiva + vista de cima."""
+VISTAS_PADRAO: tuple[str, ...] = ("perspectiva", "superior")
+IMAGENS_POR_RENDER = len(VISTAS_PADRAO)
+"""Imagens de um render com as vistas padrão (cada vista é uma imagem)."""
 
 
 class BlenderIndisponivelError(RuntimeError):
@@ -97,10 +98,10 @@ def ler_progresso(linha: str, atual: Progresso) -> Progresso | None:
 
 
 def _rodar(
-    cmd: list[str], amostras: int, progresso: Callable[[Progresso], None] | None
+    cmd: list[str], amostras: int, imagens: int, progresso: Callable[[Progresso], None] | None
 ) -> tuple[int, str]:
     """Roda o Blender lendo a saída linha a linha (progresso ao vivo)."""
-    atual = Progresso(1, 2, 0, amostras, None)
+    atual = Progresso(1, imagens, 0, amostras, None)
     linhas: list[str] = []
     limite = time.monotonic() + TEMPO_MAXIMO
     with subprocess.Popen(
@@ -201,6 +202,7 @@ def renderizar(
     amostras: int = 96,
     progresso: Callable[[Progresso], None] | None = None,
     subpasta: str | None = None,
+    vistas: tuple[str, ...] = VISTAS_PADRAO,
 ) -> ResultadoRender:
     """Renderiza uma variação do cômodo (pula se a entrada e o gerador não mudaram).
 
@@ -218,15 +220,12 @@ def renderizar(
         largura,
         altura,
         amostras,
+        tuple(vistas),
     )
     pasta = saida / carregado.projeto.projeto / pav.id / comodo / variacao
     if subpasta:
         pasta = pasta / subpasta
-    esperados = (
-        pasta / "render-perspectiva.png",
-        pasta / "render-superior.png",
-        pasta / f"{comodo}.glb",
-    )
+    esperados = (*(pasta / f"render-{v}.png" for v in vistas), pasta / f"{comodo}.glb")
     texto_cena = json.dumps(cena, ensure_ascii=False, sort_keys=True, indent=1)
     # o próprio script do Blender entra na chave: mudou o script, regera
     chave = hashlib.sha256(
@@ -251,7 +250,7 @@ def renderizar(
     cmd = comando_blender(arquivo_cena, pasta)
     log.info("renderizando %s/%s com %s", comodo, variacao, cmd[0])
     inicio = time.monotonic()
-    codigo, saida_blender = _rodar(cmd, amostras, progresso)
+    codigo, saida_blender = _rodar(cmd, amostras, len(vistas), progresso)
     duracao = round(time.monotonic() - inicio, 1)
     faltando = [a.name for a in esperados if not a.exists()]
     if codigo != 0 or faltando:

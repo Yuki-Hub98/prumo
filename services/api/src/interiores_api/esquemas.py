@@ -94,6 +94,16 @@ class PedidoRender(_Esquema):
     qualidade: Literal["rascunho", "final"] = Field(
         "rascunho", description="rascunho: segundos, para conferir; final: ~2 min."
     )
+    vistas: list[str] = Field(
+        default_factory=lambda: ["perspectiva", "superior"],
+        min_length=1,
+        description="Câmeras (ver GET .../vistas): perspectiva, porta, cama, canto-N, superior.",
+    )
+
+
+class Vista(_Esquema):
+    nome: str
+    titulo: str
 
 
 class InfoRender(_Esquema):
@@ -101,6 +111,7 @@ class InfoRender(_Esquema):
     comodo: str
     variacao: str
     qualidade: str
+    vistas: list[str]
     status: Literal["na_fila", "rodando", "pronto", "erro"]
     progresso: float = Field(description="0 a 1")
     imagem_atual: int | None
@@ -263,4 +274,5 @@ __all__ = [
     "Renomear",
     "ResultadoEdicao",
     "ResumoProjeto",
+    "Vista",
 ]

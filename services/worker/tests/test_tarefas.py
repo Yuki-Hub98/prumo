@@ -13,7 +13,9 @@ from interiores_worker import tarefas
 
 def _pedir(engine: Engine, variacao: str = "base") -> int:
     with sessao(engine) as s:
-        r, _ = renders.pedir(s, "casa", "quarto", variacao, "rascunho", (800, 500, 16), 2)
+        r, _ = renders.pedir(
+            s, "casa", "quarto", variacao, "rascunho", (800, 500, 16), ["perspectiva", "superior"]
+        )
         return r.id
 
 

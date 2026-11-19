@@ -37,6 +37,7 @@ from interiores_api.esquemas import (
     Renomear,
     ResultadoEdicao,
     ResumoProjeto,
+    Vista,
 )
 from interiores_api.servicos import Servico
 from interiores_banco.conexao import sessao as abrir_sessao
@@ -430,9 +431,17 @@ def listar_renders(svc: Svc, codigo: str, comodo: str | None = None) -> list[Inf
 
 
 @render.get("/renders/estimativas")
-def estimativas(svc: Svc) -> dict[str, float]:
+def estimativas(
+    svc: Svc, imagens: Annotated[int, Query(ge=1, le=20, description="Quantas vistas.")] = 2
+) -> dict[str, float]:
     """Segundos estimados por qualidade (rascunho, final), pelo histórico."""
-    return svc.estimativas()
+    return svc.estimativas(imagens)
+
+
+@render.get("/projetos/{codigo}/comodos/{comodo}/vistas")
+def vistas(svc: Svc, codigo: str, comodo: str) -> list[Vista]:
+    """Câmeras disponíveis no cômodo (perspectiva, porta, cama, canto-N, superior)."""
+    return svc.vistas(codigo, comodo)
 
 
 @render.get("/renders/{id_}")
