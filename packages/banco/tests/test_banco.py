@@ -72,13 +72,13 @@ def test_edicao_vira_versao_com_historico(sessao: Session, casa: Path) -> None:
     novo = Conteudo(ed.projeto, base.comodos, base.variacoes, base.regras_toml)
     gravado = repositorio.gravar(
         sessao, novo, fonte="api", operacao="alterar_parede", versao_esperada=1,
-        alteracoes=ed.alteracoes,
+        alteracoes=repositorio.do_projeto(ed.alteracoes),
     )  # fmt: skip
     assert gravado.versao == 2
     hist = sessao.scalars(select(t.Historico).where(t.Historico.versao == 2)).one()
     assert (hist.operacao, hist.caminho) == (
         "alterar_parede",
-        "pavimentos[terreo].paredes[p1].espessura",
+        "projeto.pavimentos[terreo].paredes[p1].espessura",
     )
     assert (hist.antes["valor"], hist.depois["valor"]) == (150, 140)
     assert repositorio.snapshot(sessao, "casa", 1) == base

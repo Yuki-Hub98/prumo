@@ -66,6 +66,13 @@ def _carregar(sessao: Session, codigo: str, travar: bool = False) -> t.Projeto |
     return sessao.scalars(consulta).first()
 
 
+def do_projeto(alteracoes: Iterable[Alteracao]) -> list[Alteracao]:
+    """Põe no caminho o prefixo ``projeto.`` das alterações feitas no ``Projeto``
+    (ex.: de :class:`interiores_core.edicao.Edicao`), para casar com o caminho das
+    diferenças calculadas sobre o conteúdo inteiro (``projeto``, ``comodos``...)."""
+    return [Alteracao(f"projeto.{a.caminho}", a.antes, a.depois) for a in alteracoes]
+
+
 def codigos(sessao: Session) -> list[str]:
     return list(sessao.scalars(select(t.Projeto.codigo).order_by(t.Projeto.codigo)))
 
@@ -88,8 +95,9 @@ def gravar(
 ) -> Gravado:
     """Grava o conteúdo como nova versão (ou cria o projeto). Não faz commit.
 
-    ``alteracoes`` (ex.: de :class:`interiores_core.edicao.Edicao`) evita recalcular
-    a diferença; sem elas, a diferença é calculada contra a versão atual.
+    ``alteracoes`` evita recalcular a diferença (caminhos relativos ao conteúdo
+    inteiro; para as de uma ``Edicao`` use :func:`do_projeto`); sem elas, a
+    diferença é calculada contra a versão atual.
     """
     codigo = conteudo.projeto.projeto
     linha = _carregar(sessao, codigo, travar=True)
