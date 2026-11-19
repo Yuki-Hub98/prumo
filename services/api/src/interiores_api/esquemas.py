@@ -89,6 +89,33 @@ class NovaVariacao(_Esquema):
     cores: CoresVariacao = Field(default_factory=CoresVariacao)
 
 
+class PedidoRender(_Esquema):
+    variacao: str = Field("base", description="'base' (cores padrão) ou o nome da variação.")
+    qualidade: Literal["rascunho", "final"] = Field(
+        "rascunho", description="rascunho: segundos, para conferir; final: ~2 min."
+    )
+
+
+class InfoRender(_Esquema):
+    id: int
+    comodo: str
+    variacao: str
+    qualidade: str
+    status: Literal["na_fila", "rodando", "pronto", "erro"]
+    progresso: float = Field(description="0 a 1")
+    imagem_atual: int | None
+    imagens: int
+    estimativa_s: float | None = Field(description="Estimativa feita ao pedir (histórico).")
+    restante_s: float | None = Field(description="Quanto falta, pelo ritmo real ou estimativa.")
+    decorrido_s: float | None
+    duracao_s: float | None = Field(description="Tempo real do Blender (pronto).")
+    em_cache: bool
+    versao_projeto: int
+    criado_em: str
+    erro: str | None
+    imagens_url: list[str] = Field(description="Caminhos das imagens (pronto).")
+
+
 class ProjetoCompleto(_Esquema):
     versao: int
     projeto: Projeto
@@ -216,6 +243,7 @@ __all__ = [
     "Apagado",
     "Campos",
     "DividirParede",
+    "InfoRender",
     "ItemHistorico",
     "MedidaEstimada",
     "MoverMovel",
@@ -229,6 +257,7 @@ __all__ = [
     "NovoPavimento",
     "NovoProjeto",
     "Parede",
+    "PedidoRender",
     "Preferencias",
     "ProjetoCompleto",
     "Renomear",

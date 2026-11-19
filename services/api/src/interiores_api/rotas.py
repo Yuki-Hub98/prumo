@@ -10,6 +10,7 @@ from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi.responses import FileResponse
 
 from interiores_api.esquemas import (
     AdicionarPavimento,
@@ -19,6 +20,7 @@ from interiores_api.esquemas import (
     Apagado,
     Campos,
     DividirParede,
+    InfoRender,
     ItemHistorico,
     MedidaEstimada,
     MoverMovel,
@@ -29,6 +31,7 @@ from interiores_api.esquemas import (
     NovoComodo,
     NovoMovel,
     NovoProjeto,
+    PedidoRender,
     Preferencias,
     ProjetoCompleto,
     Renomear,
@@ -47,7 +50,7 @@ from interiores_core.validacao import Problema
 def servico(request: Request) -> Iterator[Servico]:
     """Uma transação por pedido: commit se deu certo, rollback se deu erro."""
     with abrir_sessao(request.app.state.engine) as s:
-        yield Servico(s, request.app.state.config)
+        yield Servico(s, request.app.state.config, request.app.state.fila)
 
 
 Svc = Annotated[Servico, Depends(servico)]
@@ -408,3 +411,35 @@ def remover_variacao(
     svc: Svc, codigo: str, comodo: str, nome: str, versao: Versao
 ) -> ResultadoEdicao:
     return svc.salvar_variacao(codigo, versao, comodo, nome, None)
+
+
+# ---------------------------------------------------------------- render (fila)
+
+render = APIRouter(tags=["render"])
+
+
+@render.post("/projetos/{codigo}/comodos/{comodo}/renders", status_code=status.HTTP_202_ACCEPTED)
+def pedir_render(svc: Svc, codigo: str, comodo: str, pedido: PedidoRender) -> InfoRender:
+    """Põe o render na fila; acompanhe por ``GET /renders/{id}`` (progresso e tempo)."""
+    return svc.pedir_render(codigo, comodo, pedido)
+
+
+@render.get("/projetos/{codigo}/renders")
+def listar_renders(svc: Svc, codigo: str, comodo: str | None = None) -> list[InfoRender]:
+    return svc.renders(codigo, comodo)
+
+
+@render.get("/renders/estimativas")
+def estimativas(svc: Svc) -> dict[str, float]:
+    """Segundos estimados por qualidade (rascunho, final), pelo histórico."""
+    return svc.estimativas()
+
+
+@render.get("/renders/{id_}")
+def ver_render(svc: Svc, id_: int) -> InfoRender:
+    return svc.render(id_)
+
+
+@render.get("/renders/{id_}/imagens/{nome}", response_class=FileResponse)
+def imagem_render(svc: Svc, id_: int, nome: str) -> FileResponse:
+    return FileResponse(svc.imagem_render(id_, nome), media_type="image/png")

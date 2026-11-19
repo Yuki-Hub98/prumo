@@ -50,8 +50,23 @@ def projetos(engine: Engine, tmp_path: Path) -> Path:
     return pasta
 
 
+class FilaFalsa:
+    """Guarda os ids em vez de mandar para o Redis."""
+
+    def __init__(self) -> None:
+        self.ids: list[int] = []
+
+    def enfileirar(self, render_id: int) -> None:
+        self.ids.append(render_id)
+
+
 @pytest.fixture
-def api(engine: Engine, projetos: Path) -> Iterator[TestClient]:
+def fila() -> FilaFalsa:
+    return FilaFalsa()
+
+
+@pytest.fixture
+def api(engine: Engine, projetos: Path, fila: FilaFalsa) -> Iterator[TestClient]:
     config = Config(pasta_projetos=projetos)
-    with TestClient(criar_app(config, engine)) as cliente:
+    with TestClient(criar_app(config, engine, fila)) as cliente:
         yield cliente

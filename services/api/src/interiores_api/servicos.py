@@ -12,7 +12,8 @@ from __future__ import annotations
 import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
+from pathlib import Path
 
 import structlog
 from sqlalchemy import select
@@ -20,16 +21,19 @@ from sqlalchemy.orm import Session
 
 from interiores_api.config import Config
 from interiores_api.esquemas import (
+    InfoRender,
     ItemHistorico,
     MedidaEstimada,
     Mudanca,
     NovoProjeto,
+    PedidoRender,
     Preferencias,
     ProjetoCompleto,
     ResultadoEdicao,
     ResumoProjeto,
 )
-from interiores_banco import arquivos, repositorio
+from interiores_api.fila import Fila
+from interiores_banco import arquivos, renders, repositorio
 from interiores_banco import tabelas as t
 from interiores_banco.mapear import Conteudo
 from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
@@ -39,6 +43,7 @@ from interiores_core.modelo import DadosComodo, Projeto, Variacao
 from interiores_core.regras import checar
 from interiores_core.tela import PavimentoTela, pavimento_para_tela
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
+from interiores_render.gerar import IMAGENS_POR_RENDER, QUALIDADES
 
 log = structlog.get_logger("interiores.api")
 
@@ -59,10 +64,49 @@ def _mudancas(alteracoes: list[Alteracao]) -> list[Mudanca]:
     return [Mudanca(caminho=a.caminho, antes=a.antes, depois=a.depois) for a in alteracoes]
 
 
+IMAGENS_RENDER = ("render-perspectiva.png", "render-superior.png")
+
+
+def _info(r: t.Render) -> InfoRender:
+    agora = datetime.now(UTC)
+    decorrido = ((r.fim or agora) - r.inicio).total_seconds() if r.inicio is not None else None
+    restante: float | None = None
+    if r.status == "na_fila":
+        restante = r.estimativa_s
+    elif r.status == "rodando" and decorrido is not None:
+        if r.progresso >= 0.05:  # ritmo real do Blender
+            restante = decorrido * (1 - r.progresso) / r.progresso
+        elif r.estimativa_s is not None:
+            restante = max(r.estimativa_s - decorrido, 0.0)
+    elif r.status == "pronto":
+        restante = 0.0
+    nomes = [n for n in (r.arquivos or []) if n in IMAGENS_RENDER] if r.status == "pronto" else []
+    return InfoRender(
+        id=r.id,
+        comodo=r.comodo,
+        variacao=r.variacao,
+        qualidade=r.qualidade,
+        status=r.status,
+        progresso=r.progresso,
+        imagem_atual=r.imagem_atual,
+        imagens=r.imagens,
+        estimativa_s=r.estimativa_s,
+        restante_s=round(restante, 1) if restante is not None else None,
+        decorrido_s=round(decorrido, 1) if decorrido is not None else None,
+        duracao_s=r.duracao_s,
+        em_cache=r.em_cache,
+        versao_projeto=r.versao_projeto,
+        criado_em=r.criado_em.isoformat(),
+        erro=r.erro,
+        imagens_url=[f"/renders/{r.id}/imagens/{n}" for n in nomes],
+    )
+
+
 @dataclass
 class Servico:
     sessao: Session
     config: Config
+    fila: Fila | None = None
 
     # ------------------------------------------------------------ leitura
 
@@ -282,6 +326,51 @@ class Servico:
             novos=[],
             problemas=[],
         )
+
+    # ------------------------------------------------------------ render (fila)
+
+    def pedir_render(self, codigo: str, comodo: str, pedido: PedidoRender) -> InfoRender:
+        """Põe o render na fila (ou devolve o mesmo pedido, se já estiver na fila)."""
+        c, _ = repositorio.ler(self.sessao, codigo)
+        if c.projeto.pavimento_do_comodo(comodo) is None:
+            raise KeyError(f"cômodo '{comodo}' não existe no projeto")
+        if pedido.variacao != "base" and pedido.variacao not in c.variacoes.get(comodo, {}):
+            raise KeyError(f"variação '{pedido.variacao}' não existe em '{comodo}'")
+        if self.fila is None:
+            raise RuntimeError("fila de render não configurada")
+        r, novo = renders.pedir(
+            self.sessao, codigo, comodo, pedido.variacao, pedido.qualidade,
+            QUALIDADES[pedido.qualidade], IMAGENS_POR_RENDER,
+        )  # fmt: skip
+        if novo:
+            self.sessao.commit()  # o worker precisa enxergar o pedido
+            self.fila.enfileirar(r.id)
+            log.info("render na fila", render=r.id, projeto=codigo, comodo=comodo)
+        return _info(r)
+
+    def estimativas(self) -> dict[str, float]:
+        """Segundos estimados por qualidade, pelo histórico desta máquina."""
+        return {
+            q: renders.estimar_s(self.sessao, *tamanho, IMAGENS_POR_RENDER)
+            for q, tamanho in QUALIDADES.items()
+        }
+
+    def renders(self, codigo: str, comodo: str | None) -> list[InfoRender]:
+        self._id(codigo)
+        return [_info(r) for r in renders.listar(self.sessao, codigo, comodo)]
+
+    def render(self, id_: int) -> InfoRender:
+        return _info(renders.obter(self.sessao, id_))
+
+    def imagem_render(self, id_: int, nome: str) -> Path:
+        """Arquivo de imagem de um render pronto (só os nomes conhecidos)."""
+        r = renders.obter(self.sessao, id_)
+        if nome not in IMAGENS_RENDER or r.status != "pronto" or r.pasta is None:
+            raise KeyError(f"imagem '{nome}' não existe no render {id_}")
+        arq = Path(r.pasta) / nome
+        if not arq.is_file():
+            raise KeyError(f"imagem '{nome}' do render {id_} não está mais em disco")
+        return arq
 
     # ------------------------------------------------------------ projeto inteiro
 

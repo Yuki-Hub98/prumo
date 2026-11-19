@@ -567,18 +567,22 @@ name = "interiores-api"
 version = "0.1.0"
 source = { editable = "services/api" }
 dependencies = [
+    { name = "arq" },
     { name = "fastapi" },
     { name = "interiores-banco" },
     { name = "interiores-core" },
+    { name = "interiores-render" },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "arq", specifier = ">=0.28.0" },
     { name = "fastapi", specifier = ">=0.165.0" },
     { name = "interiores-banco", editable = "packages/banco" },
     { name = "interiores-core", editable = "packages/core" },
+    { name = "interiores-render", editable = "packages/render" },
     { name = "structlog", specifier = ">=26.1.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.54.0" },
 ]

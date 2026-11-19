@@ -17,7 +17,8 @@ from sqlalchemy import Engine
 
 from interiores_api import __version__
 from interiores_api.config import Config
-from interiores_api.rotas import geral, moveis, planta, projetos, variacoes
+from interiores_api.fila import Fila, FilaArq
+from interiores_api.rotas import geral, moveis, planta, projetos, render, variacoes
 from interiores_banco.arquivos import ConflitoDeSincronizacaoError
 from interiores_banco.conexao import criar_engine
 from interiores_banco.repositorio import ConflitoDeVersaoError, ProjetoInexistenteError
@@ -30,13 +31,16 @@ def _erro(codigo: int, tipo: str, mensagem: str, **extra: object) -> JSONRespons
     return JSONResponse({"erro": tipo, "mensagem": mensagem, **extra}, status_code=codigo)
 
 
-def criar_app(config: Config | None = None, engine: Engine | None = None) -> FastAPI:
+def criar_app(
+    config: Config | None = None, engine: Engine | None = None, fila: Fila | None = None
+) -> FastAPI:
     config = config or Config.do_ambiente()
 
     @asynccontextmanager
     async def ciclo(app: FastAPI) -> AsyncIterator[None]:
         app.state.config = config
         app.state.engine = engine or criar_engine(config.banco_url)
+        app.state.fila = fila or FilaArq(config.redis)
         log.info("api iniciada", porta=config.porta, exportar=config.exportar)
         yield
         if engine is None:
@@ -58,6 +62,7 @@ def criar_app(config: Config | None = None, engine: Engine | None = None) -> Fas
     app.include_router(planta)
     app.include_router(moveis)
     app.include_router(variacoes)
+    app.include_router(render)
     app.include_router(geral)
 
     @app.get("/saude", tags=["infra"])
