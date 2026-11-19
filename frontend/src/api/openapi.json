@@ -2376,6 +2376,242 @@
         }
       }
     },
+    "/projetos/{codigo}/comodos/{comodo}/renders": {
+      "post": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Pedir Render",
+        "description": "Põe o render na fila; acompanhe por ``GET /renders/{id}`` (progresso e tempo).",
+        "operationId": "pedir_render_projetos__codigo__comodos__comodo__renders_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoRender"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfoRender"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/renders": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Listar Renders",
+        "operationId": "listar_renders_projetos__codigo__renders_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Comodo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InfoRender"
+                  },
+                  "title": "Response Listar Renders Projetos  Codigo  Renders Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/renders/estimativas": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Estimativas",
+        "description": "Segundos estimados por qualidade (rascunho, final), pelo histórico.",
+        "operationId": "estimativas_renders_estimativas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object",
+                  "title": "Response Estimativas Renders Estimativas Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/renders/{id_}": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Ver Render",
+        "operationId": "ver_render_renders__id___get",
+        "parameters": [
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id "
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfoRender"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/renders/{id_}/imagens/{nome}": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Imagem Render",
+        "operationId": "imagem_render_renders__id___imagens__nome__get",
+        "parameters": [
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "nome",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Nome"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/preferencias": {
       "get": {
         "tags": [
@@ -3152,6 +3388,156 @@
           "tipo"
         ],
         "title": "Imovel"
+      },
+      "InfoRender": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "comodo": {
+            "type": "string",
+            "title": "Comodo"
+          },
+          "variacao": {
+            "type": "string",
+            "title": "Variacao"
+          },
+          "qualidade": {
+            "type": "string",
+            "title": "Qualidade"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "na_fila",
+              "rodando",
+              "pronto",
+              "erro"
+            ],
+            "title": "Status"
+          },
+          "progresso": {
+            "type": "number",
+            "title": "Progresso",
+            "description": "0 a 1"
+          },
+          "imagem_atual": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imagem Atual"
+          },
+          "imagens": {
+            "type": "integer",
+            "title": "Imagens"
+          },
+          "estimativa_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimativa S",
+            "description": "Estimativa feita ao pedir (histórico)."
+          },
+          "restante_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restante S",
+            "description": "Quanto falta, pelo ritmo real ou estimativa."
+          },
+          "decorrido_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decorrido S"
+          },
+          "duracao_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duracao S",
+            "description": "Tempo real do Blender (pronto)."
+          },
+          "em_cache": {
+            "type": "boolean",
+            "title": "Em Cache"
+          },
+          "versao_projeto": {
+            "type": "integer",
+            "title": "Versao Projeto"
+          },
+          "criado_em": {
+            "type": "string",
+            "title": "Criado Em"
+          },
+          "erro": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Erro"
+          },
+          "imagens_url": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Imagens Url",
+            "description": "Caminhos das imagens (pronto)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "comodo",
+          "variacao",
+          "qualidade",
+          "status",
+          "progresso",
+          "imagem_atual",
+          "imagens",
+          "estimativa_s",
+          "restante_s",
+          "decorrido_s",
+          "duracao_s",
+          "em_cache",
+          "versao_projeto",
+          "criado_em",
+          "erro",
+          "imagens_url"
+        ],
+        "title": "InfoRender"
       },
       "InstalacaoTela": {
         "properties": {
@@ -4473,6 +4859,29 @@
           "limites"
         ],
         "title": "PavimentoTela"
+      },
+      "PedidoRender": {
+        "properties": {
+          "variacao": {
+            "type": "string",
+            "title": "Variacao",
+            "description": "'base' (cores padrão) ou o nome da variação.",
+            "default": "base"
+          },
+          "qualidade": {
+            "type": "string",
+            "enum": [
+              "rascunho",
+              "final"
+            ],
+            "title": "Qualidade",
+            "description": "rascunho: segundos, para conferir; final: ~2 min.",
+            "default": "rascunho"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PedidoRender"
       },
       "Pilar": {
         "properties": {

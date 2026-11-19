@@ -1,9 +1,9 @@
 import createClient from "openapi-fetch";
 import type { components, paths } from "./esquema";
 
-export const api = createClient<paths>({
-  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:8010",
-});
+export const URL_API: string = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
+
+export const api = createClient<paths>({ baseUrl: URL_API });
 
 export type Esquemas = components["schemas"];
 /** Medida enviada à API (mm inteiros + origem). */
@@ -27,6 +27,8 @@ export const buscar = {
         params: { path: { codigo, comodo } },
       }),
     ),
+  renders: (codigo: string, comodo: string) =>
+    ou(api.GET("/projetos/{codigo}/renders", { params: { path: { codigo }, query: { comodo } } })),
   moverMovel: (codigo: string, comodo: string, id_: string, versao: number, body: object) =>
     ou(
       api.POST("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover", {
@@ -43,6 +45,7 @@ export type ProjetoCompleto = Awaited<ReturnType<typeof buscar.projeto>>;
 export type ResultadoEdicao = Awaited<ReturnType<typeof buscar.moverMovel>>;
 export type Variacao = Awaited<ReturnType<typeof buscar.variacoes>>[string];
 export type Cores = Esquemas["CoresVariacao"];
+export type InfoRender = Awaited<ReturnType<typeof buscar.renders>>[number];
 
 /** Erro da API num texto para mostrar (409 de versão, 422 de edição inválida...). */
 export class ErroApi extends Error {
