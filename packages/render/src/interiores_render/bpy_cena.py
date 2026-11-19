@@ -131,6 +131,18 @@ def materiais(defs):
     return criados
 
 
+def cor_lisa(mats):
+    """Para o .glb: a textura procedural (madeira, tecido...) não sai no glTF e o material
+    ficaria branco; depois dos PNG, a cor base volta a ser a cor lisa da variação."""
+    for mat in mats.values():
+        bsdf = mat.node_tree.nodes.get("Principled BSDF")
+        if bsdf is None:
+            continue
+        for entrada in ("Base Color", "Normal"):
+            for ligacao in list(bsdf.inputs[entrada].links):
+                mat.node_tree.links.remove(ligacao)
+
+
 def _objeto(nome, verts, faces, material):
     malha = bpy.data.meshes.new(nome)
     malha.from_pydata(verts, [], faces)
@@ -282,6 +294,9 @@ def main():
     mats = materiais(cena["materiais"])
     objetos = [(prisma(p, mats), p.get("oculto_em", [])) for p in cena["prismas"]]
     objetos += [(caixa(c, mats), c.get("oculto_em", [])) for c in cena["caixas"]]
+    for obj, oculto_em in objetos:
+        if oculto_em:  # vai para o .glb (extras): o visor 3D esconde o teto na vista de cima
+            obj["oculto_em"] = ",".join(oculto_em)
     cameras = [camera(c) for c in cena["cameras"]]
     luzes(cena["luzes"])
     configurar_render(cena["saida"])
@@ -307,12 +322,14 @@ def main():
             bpy.data.objects.remove(obj, do_unlink=True)
     for obj in bpy.context.scene.objects:
         obj.hide_render = False
+    cor_lisa(mats)
     bpy.ops.export_scene.gltf(
         filepath=str(pasta / f"{cena['comodo']}.glb"),
         export_format="GLB",
         export_cameras=False,
         export_lights=False,
         export_apply=True,  # leva o chanfro (modificador) para o .glb
+        export_extras=True,  # leva ``oculto_em`` (teto, luminárias) para o visor 3D
     )
 
 
