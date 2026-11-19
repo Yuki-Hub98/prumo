@@ -196,7 +196,9 @@ def main():
         for cam in cameras:
             avisos[cam.name] = faixa_aviso(cam, cena["saida"], cena["aviso"], objetos)
 
-    for cam in cameras:
+    for i, cam in enumerate(cameras, 1):
+        # o orquestrador lê esta linha para a barra de progresso ("imagem 1 de 2")
+        print(f"PROGRESSO imagem {i} {len(cameras)} {cam.name}", flush=True)  # noqa: T201
         bpy.context.scene.camera = cam
         for obj, oculto_em in objetos:
             obj.hide_render = cam.name in oculto_em

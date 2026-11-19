@@ -69,3 +69,24 @@ cômodo (passagem, lateral da cama, frente do guarda-roupa, giro de porta, tomad
 móvel, distância sofá-TV), para a tela mostrar na hora.
 
 O esquema completo (para gerar os tipos do frontend) está em `/openapi.json`.
+
+## Render pela fila
+
+`make worker` sobe o Redis e o worker (arq), que chama o Blender (Docker) um render por vez.
+
+| Método | Caminho | Para quê |
+|---|---|---|
+| GET | `/renders/estimativas` | segundos estimados por qualidade (histórico desta máquina) |
+| POST | `/projetos/{p}/comodos/{c}/renders` | pedir (`variacao`, `qualidade`: rascunho \| final) → 202 |
+| GET | `/projetos/{p}/renders?comodo=` | pedidos recentes |
+| GET | `/renders/{id}` | status, progresso, imagem atual, tempo restante, duração |
+| GET | `/renders/{id}/imagens/{nome}` | PNG pronto (`render-perspectiva.png`, `render-superior.png`) |
+
+- **Qualidades:** rascunho 800×500, 16 amostras (segundos); final 1600×1000, 96 amostras
+  (~2 min). O rascunho grava em `<variação>/rascunho/` e nunca sobrescreve o final.
+- **Versão:** renderiza a versão do projeto do momento do pedido (snapshot do banco).
+- **Estimativa:** mediana dos renders do mesmo tamanho; sem eles, custo por pixel·amostra
+  dos outros; sem histórico, o medido (119 s o final).
+- **Progresso:** lido da saída do Blender ("Sample x/y", "Remaining"); o tempo restante usa
+  o ritmo real depois de 5%.
+- Pedido igual (mesmo cômodo, variação, qualidade e versão) já na fila não entra de novo.

@@ -147,6 +147,15 @@ make api                          # API em http://localhost:8010/docs
 make exportar P=casa              # banco → arquivos (a API já faz isso a cada edição)
 ```
 
+Imagens 3D pela tela (fila Redis + worker que chama o Blender):
+
+```bash
+make worker                  # sobe o Redis e consome a fila (um render por vez)
+```
+
+No frontend, clique num cômodo e use "Imagens 3D": **rascunho** (segundos) ou **final**
+(~2 min), com estimativa pelo histórico da máquina e barra de progresso lida do Blender.
+
 Frontend (planta 2D com edição de móveis; precisa da API):
 
 ```bash

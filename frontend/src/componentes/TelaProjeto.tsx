@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { api, ou, type Cores, type MovelTela, type Problema } from "../api/cliente";
 import { PainelCores } from "./PainelCores";
+import { PainelImagens } from "./PainelImagens";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade } from "../dados";
 import { AdicionarMovel, FaltaMedir, PainelMovel, PainelProblemas } from "./Paineis";
 import { Planta } from "./Planta";
@@ -107,6 +108,9 @@ export function TelaProjeto({
               aoAtivar={(nome) => setAtiva((a) => ({ ...a, [comodo]: nome }))}
               aoRascunho={aoRascunho}
             />
+          )}
+          {comodo && (
+            <PainelImagens key={`img-${comodo}`} codigo={codigo} comodo={comodo} variacao={ativa[comodo] ?? "base"} />
           )}
           {!comodo && (
             <p className="border-b border-stone-200 p-3 text-sm text-stone-500">

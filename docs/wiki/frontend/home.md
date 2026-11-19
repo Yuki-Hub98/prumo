@@ -43,9 +43,15 @@ Mudou alguma rota ou esquema da API? `make frontend-tipos` regera `openapi.json`
 - **Versão:** toda edição vai com a versão que a tela tem; se outra aba gravou antes, a
   tela recarrega e avisa.
 
+## Imagens 3D
+
+Com um cômodo selecionado, o painel "Imagens 3D" pede **rascunho** ou **final** da variação
+de cor ativa, mostra a estimativa antes, a barra de progresso enquanto roda ("imagem 1 de 2
+· 42% · faltam ~1 min") e as miniaturas quando fica pronto. Precisa do worker (`make worker`).
+
 ## Ainda não
 
 - Editor de planta (desenhar paredes, portas, janelas, cômodos, instalações) — a API já
   tem as rotas.
-- Visor 3D (`.glb`), comparador de variações, construção de planejados.
+- Visor 3D interativo (`.glb`), comparador de variações, construção de planejados.
 - Login e perfis (planejado).

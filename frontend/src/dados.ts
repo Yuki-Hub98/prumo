@@ -94,3 +94,35 @@ export function useVariacoes(codigo: string, comodo: string | null) {
     enabled: comodo !== null,
   });
 }
+
+const ATIVO = new Set(["na_fila", "rodando"]);
+
+/** Renders do cômodo; enquanto algum estiver na fila/rodando, atualiza a cada segundo. */
+export function useRenders(codigo: string, comodo: string) {
+  return useQuery({
+    queryKey: [...chaves.projeto(codigo), "renders", comodo],
+    queryFn: () => buscar.renders(codigo, comodo),
+    refetchInterval: (q) => (q.state.data?.some((r) => ATIVO.has(r.status)) ? 1000 : false),
+  });
+}
+
+export function useEstimativas() {
+  return useQuery({
+    queryKey: ["estimativas"],
+    queryFn: () => ou(api.GET("/renders/estimativas")),
+  });
+}
+
+export function usePedirRender(codigo: string, comodo: string) {
+  const qc = useQueryClient();
+  return useMutation<unknown, ErroApi, { variacao: string; qualidade: "rascunho" | "final" }>({
+    mutationFn: (corpo) =>
+      ou(
+        api.POST("/projetos/{codigo}/comodos/{comodo}/renders", {
+          params: { path: { codigo, comodo } },
+          body: corpo,
+        }),
+      ),
+    onSettled: () => qc.invalidateQueries({ queryKey: [...chaves.projeto(codigo), "renders", comodo] }),
+  });
+}

@@ -19,6 +19,9 @@ args = sys.argv[sys.argv.index("--") + 1:]
 cena = json.loads(Path(args[0]).read_text())
 pasta = Path(args[1])
 (pasta / "chamadas.txt").open("a").write("x\\n")
+for i, cam in ((1, "perspectiva"), (2, "superior")):
+    print(f"PROGRESSO imagem {i} 2 {cam}", flush=True)
+    print("Fra:1 Mem:12M | Time:00:01.00 | Remaining:00:03.50 | Sample 48/96", flush=True)
 if cena["comodo"] == "banheiro":
     sys.exit(3)
 for nome in ("render-perspectiva.png", "render-superior.png", cena["comodo"] + ".glb"):
@@ -45,6 +48,35 @@ def test_render_com_cache(blender_falso: Path, tmp_path: Path) -> None:
     assert (pasta / "chamadas.txt").read_text().count("x") == 1
     assert gerar.renderizar(c, tmp_path / "out", "quarto", forcar=True).gerado
     assert gerar.renderizar(c, tmp_path / "out", "quarto", amostras=8).gerado  # cena mudou
+
+
+def test_rascunho_nao_sobrescreve_o_final(blender_falso: Path, tmp_path: Path) -> None:
+    c = carregar(DADOS)
+    final = gerar.renderizar(c, tmp_path, "quarto")
+    rascunho = gerar.renderizar(c, tmp_path, "quarto", amostras=16, subpasta="rascunho")
+    assert rascunho.arquivos[0].parent == final.arquivos[0].parent / "rascunho"
+    assert all(a.exists() for a in (*final.arquivos, *rascunho.arquivos))
+
+
+def test_progresso_ao_vivo(blender_falso: Path, tmp_path: Path) -> None:
+    vistos: list[gerar.Progresso] = []
+    r = gerar.renderizar(carregar(DADOS), tmp_path, "quarto", progresso=vistos.append)
+    assert [(p.imagem, p.amostra) for p in vistos] == [(1, 0), (1, 48), (2, 0), (2, 48)]
+    assert vistos[1].restante_s == 3.5 and vistos[-1].fracao == 0.75
+    assert r.duracao_s is not None and r.duracao_s >= 0
+
+
+def test_ler_progresso() -> None:
+    p0 = gerar.Progresso(1, 2, 0, 96, None)
+    linha = "Fra:1 Mem:80M | Time:00:12.40 | Remaining:01:05.25 | Mem:9M | Sample 32/96"
+    p = gerar.ler_progresso(linha, p0)
+    assert p is not None and (p.amostra, p.amostras, p.restante_s) == (32, 96, 65.25)
+    assert round(p.fracao, 3) == round(32 / 96 / 2, 3)
+    assert gerar.ler_progresso("Fra:1 Mem | Sample 1/16", p0).restante_s is None  # type: ignore[union-attr]
+    longa = gerar.ler_progresso("Remaining:1:02:03.5 | Sample 5/96", p0)
+    assert longa is not None and longa.restante_s == 3723.5
+    assert gerar.ler_progresso("Read blend: /tmp/x", p0) is None
+    assert gerar.Progresso(0, 0, 0, 0, None).fracao == 0.0
 
 
 def test_render_que_falha(blender_falso: Path, tmp_path: Path) -> None:

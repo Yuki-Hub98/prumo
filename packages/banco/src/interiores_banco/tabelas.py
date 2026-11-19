@@ -277,6 +277,42 @@ class Snapshot(Base):
     )
 
 
+class Render(Base):
+    """Pedido de imagem do render (fila): status, progresso ao vivo e duração real.
+
+    O histórico das durações alimenta a estimativa de tempo dos próximos pedidos.
+    """
+
+    __tablename__ = "render"
+    __table_args__ = (Index("ix_render_projeto_comodo", "projeto_id", "comodo"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    projeto_id: Mapped[int] = mapped_column(ForeignKey("projeto.id", ondelete="CASCADE"))
+    comodo: Mapped[str] = mapped_column(Codigo)
+    variacao: Mapped[str] = mapped_column(Codigo)
+    qualidade: Mapped[str] = mapped_column(String(10), comment="rascunho | final")
+    largura: Mapped[int]
+    altura: Mapped[int]
+    amostras: Mapped[int]
+    imagens: Mapped[int] = mapped_column(comment="imagens por render (perspectiva + superior)")
+    status: Mapped[str] = mapped_column(
+        String(12), index=True, comment="na_fila | rodando | pronto | erro"
+    )
+    versao_projeto: Mapped[int] = mapped_column(comment="versão do projeto renderizada")
+    estimativa_s: Mapped[float | None] = mapped_column(comment="estimativa ao pedir")
+    progresso: Mapped[float] = mapped_column(default=0.0, comment="0 a 1")
+    imagem_atual: Mapped[int | None]
+    restante_s: Mapped[float | None] = mapped_column(comment="do Cycles, da imagem atual")
+    duracao_s: Mapped[float | None] = mapped_column(comment="tempo real do Blender")
+    em_cache: Mapped[bool] = mapped_column(Boolean, default=False)
+    pasta: Mapped[str | None] = mapped_column(Text)
+    arquivos: Mapped[list[Any] | None]
+    erro: Mapped[str | None] = mapped_column(Text)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    inicio: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    fim: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class Preferencia(Base):
     """Preferências do usuário (por ora um só: CLAUDE.md §13)."""
 

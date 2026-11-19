@@ -515,6 +515,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/renders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pedir Render
+         * @description Põe o render na fila; acompanhe por ``GET /renders/{id}`` (progresso e tempo).
+         */
+        post: operations["pedir_render_projetos__codigo__comodos__comodo__renders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/renders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Renders */
+        get: operations["listar_renders_projetos__codigo__renders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/renders/estimativas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Estimativas
+         * @description Segundos estimados por qualidade (rascunho, final), pelo histórico.
+         */
+        get: operations["estimativas_renders_estimativas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/renders/{id_}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ver Render */
+        get: operations["ver_render_renders__id___get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/renders/{id_}/imagens/{nome}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Imagem Render */
+        get: operations["imagem_render_renders__id___imagens__nome__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/preferencias": {
         parameters: {
             query?: never;
@@ -831,6 +922,61 @@ export interface components {
             tipo: "casa" | "apartamento";
             /** Endereco Apelido */
             endereco_apelido?: string | null;
+        };
+        /** InfoRender */
+        InfoRender: {
+            /** Id */
+            id: number;
+            /** Comodo */
+            comodo: string;
+            /** Variacao */
+            variacao: string;
+            /** Qualidade */
+            qualidade: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "na_fila" | "rodando" | "pronto" | "erro";
+            /**
+             * Progresso
+             * @description 0 a 1
+             */
+            progresso: number;
+            /** Imagem Atual */
+            imagem_atual: number | null;
+            /** Imagens */
+            imagens: number;
+            /**
+             * Estimativa S
+             * @description Estimativa feita ao pedir (histórico).
+             */
+            estimativa_s: number | null;
+            /**
+             * Restante S
+             * @description Quanto falta, pelo ritmo real ou estimativa.
+             */
+            restante_s: number | null;
+            /** Decorrido S */
+            decorrido_s: number | null;
+            /**
+             * Duracao S
+             * @description Tempo real do Blender (pronto).
+             */
+            duracao_s: number | null;
+            /** Em Cache */
+            em_cache: boolean;
+            /** Versao Projeto */
+            versao_projeto: number;
+            /** Criado Em */
+            criado_em: string;
+            /** Erro */
+            erro: string | null;
+            /**
+             * Imagens Url
+             * @description Caminhos das imagens (pronto).
+             */
+            imagens_url: string[];
         };
         /** InstalacaoTela */
         InstalacaoTela: {
@@ -1285,6 +1431,22 @@ export interface components {
                     number
                 ]
             ] | null;
+        };
+        /** PedidoRender */
+        PedidoRender: {
+            /**
+             * Variacao
+             * @description 'base' (cores padrão) ou o nome da variação.
+             * @default base
+             */
+            variacao?: string;
+            /**
+             * Qualidade
+             * @description rascunho: segundos, para conferir; final: ~2 min.
+             * @default rascunho
+             * @enum {string}
+             */
+            qualidade?: "rascunho" | "final";
         };
         /** Pilar */
         Pilar: {
@@ -2873,6 +3035,158 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ResultadoEdicao"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pedir_render_projetos__codigo__comodos__comodo__renders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedidoRender"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InfoRender"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_renders_projetos__codigo__renders_get: {
+        parameters: {
+            query?: {
+                comodo?: string | null;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InfoRender"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    estimativas_renders_estimativas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
+    ver_render_renders__id___get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id_: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InfoRender"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    imagem_render_renders__id___imagens__nome__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id_: number;
+                nome: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -9,6 +9,8 @@ dependencies = [
     "fastapi>=0.165.0",
     "uvicorn[standard]>=0.54.0",
     "structlog>=26.1.0",
+    "arq>=0.28.0",
+    "interiores-render",
 ]
 
 [build-system]
@@ -21,6 +23,7 @@ packages = ["src/interiores_api"]
 [tool.uv.sources]
 interiores-core = { workspace = true }
 interiores-banco = { workspace = true }
+interiores-render = { workspace = true }
 
 [project.scripts]
 interiores-api = "interiores_api.app:rodar"
