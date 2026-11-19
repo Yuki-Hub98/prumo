@@ -31,12 +31,17 @@ planejados.
 | `cad` | planta, cortes, elevações, desenho do móvel planejado (DXF + PDF) | core, ezdxf, matplotlib |
 | `render` | monta a `cena.json` e chama o Blender | **só core + stdlib** |
 | `relatorios` | lista de corte (.xlsx) | core, openpyxl |
+| `banco` | tabelas SQLAlchemy, migrações Alembic, importar/exportar `projetos/` | core, sqlalchemy, alembic, psycopg |
 | `cli` | comando `interiores` (Typer) | todos |
+| `services/api` | API FastAPI: rotas → *service* (pré-filtro e orquestração) → core | core, banco, fastapi |
 
 ## Princípios
 
-1. **JSON é a fonte da verdade.** Banco (futuro) guarda histórico e escolhas, nunca a única
-   cópia de uma medida.
+1. **O banco é a fonte da verdade** (PostgreSQL): todo o modelo em tabelas pesquisáveis,
+   todas as medidas com origem numa tabela só, histórico de cada mudança e snapshot de cada
+   versão. `projetos/` é a exportação versionada; `interiores importar|exportar`
+   sincronizam sem atropelar mudança dos dois lados. `core`, `cad` e `cli` continuam
+   funcionando só com o JSON.
 2. **`core` é Python puro**, testável sem Docker.
 3. **Geração determinística e com cache.** Cada saída grava um `.json` com a chave (hash da
    entrada + versão do gerador); se nada mudou, não refaz.
