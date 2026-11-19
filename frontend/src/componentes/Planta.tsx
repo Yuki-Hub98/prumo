@@ -1,9 +1,23 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Cores, MovelTela, PavimentoTela, Problema } from "../api/cliente";
 import { PADRAO } from "./PainelCores";
 import { formatar, type Unidade } from "../unidades";
+import { encaixar, vertices, type Pt } from "../editor/geometria";
 
-type Pt = [number, number];
+export type Item = { tipo: "parede" | "abertura" | "instalacao" | "comodo"; id: string };
+
+/** Modo editor de planta: o que está selecionado e os callbacks de edição. */
+export type ModoEditor = {
+  item: Item | null;
+  /** Paredes marcadas (ex.: escolhendo as paredes de um cômodo novo). */
+  destacadas: string[];
+  desenhando: boolean;
+  aoItem: (i: Item | null) => void;
+  aoMoverVertice: (de: Pt, para: Pt) => void;
+  aoNovaParede: (a: Pt, b: Pt) => void;
+};
+
+const AZUL = "#0284c7";
 
 /** y do pavimento é para cima; no SVG é para baixo: inverte só aqui. */
 const xy = ([x, y]: Pt | readonly number[]) => `${x},${-y}`;
@@ -40,7 +54,9 @@ export function Planta({
   comodoSelecionado,
   aoSelecionarComodo,
   cores,
+  editor,
 }: {
+  editor?: ModoEditor;
   comodoSelecionado: string | null;
   aoSelecionarComodo: (id: string) => void;
   /** Cores (rascunho da variação) do cômodo selecionado; os outros ficam no padrão. */
@@ -54,6 +70,15 @@ export function Planta({
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const [arrasto, setArrasto] = useState<{ id: string; ini: Pt; d: Pt } | null>(null);
+  const [canto, setCanto] = useState<{ de: Pt; para: Pt } | null>(null);
+  const [trilha, setTrilha] = useState<Pt | null>(null);
+  const [cursor, setCursor] = useState<Pt | null>(null);
+  const cantos = vertices(geometria.paredes.map((p) => p.eixo));
+  const desenhando = editor?.desenhando ?? false;
+  useEffect(() => {
+    if (!desenhando) setTrilha(null); // parou de desenhar: a próxima sequência começa do zero
+  }, [desenhando]);
+  const ehSel = (tipo: Item["tipo"], id: string) => editor?.item?.tipo === tipo && editor.item.id === id;
 
   const lim = geometria.limites ?? [
     [0, 0],
@@ -78,13 +103,45 @@ export function Planta({
       ref={svg}
       viewBox={viewBox}
       className="h-full w-full touch-none select-none bg-white"
-      onPointerDown={(e) => e.target === svg.current && aoSelecionar(null)}
+      onPointerDown={(e) => {
+        if (editor?.desenhando) {
+          if (e.button !== 0) return;
+          const p = encaixar(emMm(e), cantos, trilha);
+          if (trilha && (p[0] !== trilha[0] || p[1] !== trilha[1])) editor.aoNovaParede(trilha, p);
+          setTrilha(p);
+          return;
+        }
+        if (e.target === svg.current) {
+          aoSelecionar(null);
+          editor?.aoItem(null);
+        }
+      }}
+      onContextMenu={(e) => {
+        if (editor?.desenhando) {
+          e.preventDefault();
+          setTrilha(null); // botão direito: termina a sequência de paredes
+        }
+      }}
       onPointerMove={(e) => {
+        if (editor?.desenhando) {
+          setCursor(encaixar(emMm(e), cantos, trilha));
+          return;
+        }
+        if (canto) {
+          setCanto({ ...canto, para: encaixar(emMm(e), cantos, null, canto.de) });
+          return;
+        }
         if (!arrasto) return;
         const [x, y] = emMm(e);
         setArrasto({ ...arrasto, d: [arredonda(x - arrasto.ini[0]), arredonda(y - arrasto.ini[1])] });
       }}
       onPointerUp={() => {
+        if (canto) {
+          if (canto.para[0] !== canto.de[0] || canto.para[1] !== canto.de[1])
+            editor?.aoMoverVertice(canto.de, canto.para);
+          setCanto(null);
+          return;
+        }
         if (!arrasto) return;
         const m = geometria.moveis.find((x) => x.id === arrasto.id);
         if (m && (arrasto.d[0] || arrasto.d[1]))
@@ -101,13 +158,15 @@ export function Planta({
               key={c.id}
               points={pontos(c.poligono)}
               fill={pintado && cores.piso ? cores.piso : "#f5f1ea"}
-              stroke={c.id === comodoSelecionado ? "#0369a1" : "none"}
+              stroke={(editor ? ehSel("comodo", c.id) : c.id === comodoSelecionado) ? "#0369a1" : "none"}
               strokeWidth={20}
               className="cursor-pointer"
               onPointerDown={(e) => {
+                if (editor?.desenhando) return;
                 e.stopPropagation();
                 aoSelecionar(null);
-                aoSelecionarComodo(c.id);
+                if (editor) editor.aoItem({ tipo: "comodo", id: c.id });
+                else aoSelecionarComodo(c.id);
               }}
             />
           )
@@ -115,12 +174,40 @@ export function Planta({
       })}
 
       {/* paredes, com os vãos abertos por cima */}
-      {geometria.paredes.map((p) => (
-        <polygon key={p.id} points={pontos(p.corpo)} fill="#3f3a36" />
-      ))}
+      {geometria.paredes.map((p) => {
+        const marcada = ehSel("parede", p.id) || editor?.destacadas.includes(p.id);
+        return (
+          <polygon
+            key={p.id}
+            points={pontos(p.corpo)}
+            fill={marcada ? AZUL : "#3f3a36"}
+            className={editor && !editor.desenhando ? "cursor-pointer" : undefined}
+            onPointerDown={(e) => {
+              if (!editor || editor.desenhando) return;
+              e.stopPropagation();
+              editor.aoItem({ tipo: "parede", id: p.id });
+            }}
+          >
+            {editor && <title>{p.id}</title>}
+          </polygon>
+        );
+      })}
       {geometria.aberturas.map((a) => (
-        <g key={a.id}>
-          <polygon points={pontos(a.vao)} fill={a.tipo === "janela" ? "#dbeafe" : "#f5f1ea"} />
+        <g
+          key={a.id}
+          className={editor && !editor.desenhando ? "cursor-pointer" : undefined}
+          onPointerDown={(e) => {
+            if (!editor || editor.desenhando) return;
+            e.stopPropagation();
+            editor.aoItem({ tipo: "abertura", id: a.id });
+          }}
+        >
+          <polygon
+            points={pontos(a.vao)}
+            fill={a.tipo === "janela" ? "#dbeafe" : "#f5f1ea"}
+            stroke={ehSel("abertura", a.id) ? AZUL : "none"}
+            strokeWidth={25}
+          />
           {a.giro && (
             <polygon
               points={pontos(a.giro)}
@@ -155,8 +242,17 @@ export function Planta({
       {geometria.instalacoes.map(
         (i) =>
           i.posicao && (
-            <g key={i.id} transform={`translate(${xy(i.posicao)})`}>
-              <circle r={85} fill="#fff" stroke="#b45309" strokeWidth={12} />
+            <g
+              key={i.id}
+              transform={`translate(${xy(i.posicao)})`}
+              className={editor && !editor.desenhando ? "cursor-pointer" : undefined}
+              onPointerDown={(e) => {
+                if (!editor || editor.desenhando) return;
+                e.stopPropagation();
+                editor.aoItem({ tipo: "instalacao", id: i.id });
+              }}
+            >
+              <circle r={85} fill={ehSel("instalacao", i.id) ? "#e0f2fe" : "#fff"} stroke={ehSel("instalacao", i.id) ? AZUL : "#b45309"} strokeWidth={ehSel("instalacao", i.id) ? 24 : 12} />
               <text fontSize={LETRA[i.tipo]?.length === 2 ? 70 : 90} textAnchor="middle" dy={30} fill="#b45309" fontWeight={600}>
                 {LETRA[i.tipo] ?? "?"}
               </text>
@@ -180,7 +276,9 @@ export function Planta({
           <g
             key={m.id}
             transform={`translate(${d[0]},${-d[1]})`}
-            className="cursor-move"
+            className={editor ? undefined : "cursor-move"}
+            opacity={editor ? 0.35 : 1}
+            pointerEvents={editor ? "none" : undefined}
             onPointerDown={(e) => {
               e.stopPropagation();
               (e.target as Element).setPointerCapture?.(e.pointerId);
@@ -259,6 +357,55 @@ export function Planta({
             <title>{p.mensagem}</title>
           </circle>
         ))}
+
+      {/* editor: alças nos cantos (arrastar move o canto e as paredes que se encontram nele) */}
+      {editor &&
+        !editor.desenhando &&
+        cantos.map((c) => {
+          const movendo = canto && canto.de[0] === c[0] && canto.de[1] === c[1];
+          const [x, y] = movendo ? canto.para : c;
+          return (
+            <circle
+              key={`${c[0]},${c[1]}`}
+              cx={x}
+              cy={-y}
+              r={movendo ? 90 : 60}
+              fill="#fff"
+              stroke={AZUL}
+              strokeWidth={18}
+              className="cursor-grab"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                (e.target as Element).setPointerCapture?.(e.pointerId);
+                setCanto({ de: c, para: c });
+              }}
+            >
+              <title>
+                canto ({formatar(c[0], unidade)}, {formatar(c[1], unidade)}) — arraste para mover
+              </title>
+            </circle>
+          );
+        })}
+      {canto && (
+        <text x={canto.para[0]} y={-canto.para[1] - 140} fontSize={90} textAnchor="middle" fill={AZUL}>
+          {formatar(canto.para[0], unidade)}, {formatar(canto.para[1], unidade)}
+        </text>
+      )}
+
+      {/* editor: desenhando paredes (clique a clique; botão direito termina) */}
+      {editor?.desenhando && cursor && (
+        <g pointerEvents="none">
+          {trilha && (
+            <>
+              <line x1={trilha[0]} y1={-trilha[1]} x2={cursor[0]} y2={-cursor[1]} stroke={AZUL} strokeWidth={40} strokeDasharray="80 40" />
+              <text x={(trilha[0] + cursor[0]) / 2} y={-(trilha[1] + cursor[1]) / 2 - 80} fontSize={100} textAnchor="middle" fill={AZUL}>
+                {formatar(Math.round(Math.hypot(cursor[0] - trilha[0], cursor[1] - trilha[1])), unidade)}
+              </text>
+            </>
+          )}
+          <circle cx={cursor[0]} cy={-cursor[1]} r={50} fill={AZUL} />
+        </g>
+      )}
 
       {/* escala: 1 m */}
       <g transform={`translate(${x0},${-y0 + margem / 2})`}>

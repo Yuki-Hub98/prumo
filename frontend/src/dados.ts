@@ -65,19 +65,33 @@ export function useCatalogo() {
   });
 }
 
+/** Fila de edições por projeto: uma de cada vez (desenhar paredes em sequência rápida
+ * não pode mandar duas edições sobre a mesma versão). */
+const filas = new Map<string, Promise<unknown>>();
+
 /**
- * Edição sobre a versão que a tela tem. Tudo do projeto é recarregado depois; num
- * 409 (alguém gravou antes) a tela recarrega e a mensagem explica.
+ * Edição sobre a versão que a tela tem. As edições do mesmo projeto vão em fila, cada
+ * uma com a versão devolvida pela anterior. Tudo do projeto é recarregado depois; num
+ * 409 (outra aba gravou antes) a tela recarrega e a mensagem explica.
  */
 export function useEditar(codigo: string) {
   const qc = useQueryClient();
   return useMutation<ResultadoEdicao, ErroApi, (versao: number) => Promise<ResultadoEdicao>>({
-    mutationFn: async (fazer) => {
-      const projeto = await qc.ensureQueryData({
-        queryKey: chaves.projeto(codigo),
-        queryFn: () => buscar.projeto(codigo),
-      });
-      return fazer(projeto.versao);
+    mutationFn: (fazer) => {
+      const anterior = filas.get(codigo) ?? Promise.resolve();
+      const esta = anterior
+        .catch(() => undefined)
+        .then(async () => {
+          const projeto = await qc.ensureQueryData({
+            queryKey: chaves.projeto(codigo),
+            queryFn: () => buscar.projeto(codigo),
+          });
+          const r = await fazer(projeto.versao);
+          qc.setQueryData(chaves.projeto(codigo), { ...projeto, versao: r.versao });
+          return r;
+        });
+      filas.set(codigo, esta);
+      return esta;
     },
     onSettled: () => qc.invalidateQueries({ queryKey: chaves.projeto(codigo) }),
     onError: (e) => {
