@@ -112,7 +112,7 @@ def luzes(defs):
     mundo.use_nodes = True
     fundo = mundo.node_tree.nodes["Background"]
     fundo.inputs["Color"].default_value = (0.8, 0.85, 0.9, 1)
-    fundo.inputs["Strength"].default_value = 0.35
+    fundo.inputs["Strength"].default_value = 0.2
     bpy.context.scene.world = mundo
 
 
@@ -176,7 +176,8 @@ def configurar_render(saida):
     cena.render.resolution_y = saida["altura"]
     cena.render.resolution_percentage = 100
     cena.render.image_settings.file_format = "PNG"
-    cena.view_settings.view_transform = "AgX"
+    # Standard: a cor do hexadecimal sai como foi escolhida (AgX dessaturava os claros)
+    cena.view_settings.view_transform = "Standard"
 
 
 def main():
