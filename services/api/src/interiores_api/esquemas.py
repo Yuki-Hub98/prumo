@@ -101,6 +101,17 @@ class PedidoRender(_Esquema):
     )
 
 
+class PedidoRenderPavimento(_Esquema):
+    qualidade: Literal["rascunho", "final"] = Field(
+        "rascunho", description="rascunho: segundos, para conferir; final: alguns minutos."
+    )
+    vistas: list[str] = Field(
+        default_factory=lambda: ["perspectiva", "superior"],
+        min_length=1,
+        description="Câmeras: perspectiva (aérea) e superior (de cima), as duas sem teto.",
+    )
+
+
 class Vista(_Esquema):
     nome: str
     titulo: str
@@ -108,7 +119,10 @@ class Vista(_Esquema):
 
 class InfoRender(_Esquema):
     id: int
-    comodo: str
+    escopo: Literal["comodo", "pavimento"] = Field(
+        "comodo", description="pavimento: a casa inteira do pavimento (id em ``comodo``)."
+    )
+    comodo: str = Field(description="Id do cômodo (ou do pavimento, no escopo pavimento).")
     variacao: str
     qualidade: str
     vistas: list[str]
@@ -125,7 +139,9 @@ class InfoRender(_Esquema):
     criado_em: str
     erro: str | None
     imagens_url: list[str] = Field(description="Caminhos das imagens (pronto).")
-    modelo_url: str | None = Field(None, description="Modelo 3D do cômodo (.glb), se pronto.")
+    modelo_url: str | None = Field(
+        None, description="Modelo 3D do cômodo ou do pavimento (.glb), se pronto."
+    )
 
 
 class ProjetoCompleto(_Esquema):

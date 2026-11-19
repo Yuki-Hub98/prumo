@@ -78,3 +78,34 @@ def test_vistas(api: TestClient, fila: Any) -> None:
     assert api.get("/projetos/casa/comodos/banheiro/vistas").status_code == 200
     um, tres = (api.get("/renders/estimativas", params={"imagens": n}).json() for n in (1, 3))
     assert um["final"] < tres["final"]
+
+
+def test_render_do_pavimento(api: TestClient, fila: Any) -> None:
+    url = "/projetos/casa/pavimentos/terreo/renders"
+    r = api.post(url, json={})
+    assert r.status_code == 202, r.text
+    info = r.json()
+    assert (info["escopo"], info["comodo"], info["vistas"]) == (
+        "pavimento",
+        "terreo",
+        ["perspectiva", "superior"],
+    )
+    assert fila.ids == [info["id"]]
+    assert api.post(url, json={}).json()["id"] == info["id"]  # mesmo pedido, não repete
+    # listagens separadas: o pavimento não aparece como cômodo e vice-versa
+    assert [x["id"] for x in api.get("/projetos/casa/renders?pavimento=terreo").json()] == [
+        info["id"]
+    ]
+    assert api.get("/projetos/casa/renders?comodo=terreo").json() == []
+    quarto = api.post(URL, json={}).json()
+    assert quarto["escopo"] == "comodo"
+    assert [x["id"] for x in api.get("/projetos/casa/renders?pavimento=terreo").json()] == [
+        info["id"]
+    ]
+
+
+def test_recusas_do_pavimento(api: TestClient) -> None:
+    assert api.post("/projetos/casa/pavimentos/superior/renders", json={}).status_code == 404
+    url = "/projetos/casa/pavimentos/terreo/renders"
+    assert api.post(url, json={"vistas": ["cama"]}).status_code == 422
+    assert api.post(url, json={"qualidade": "ultra"}).status_code == 422

@@ -289,7 +289,12 @@ class Render(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     projeto_id: Mapped[int] = mapped_column(ForeignKey("projeto.id", ondelete="CASCADE"))
-    comodo: Mapped[str] = mapped_column(Codigo)
+    escopo: Mapped[str] = mapped_column(
+        String(10),
+        server_default="comodo",
+        comment="comodo | pavimento (aí ``comodo`` guarda o id do pavimento)",
+    )
+    comodo: Mapped[str] = mapped_column(Codigo, comment="id do cômodo ou do pavimento")
     variacao: Mapped[str] = mapped_column(Codigo)
     qualidade: Mapped[str] = mapped_column(String(10), comment="rascunho | final")
     largura: Mapped[int]

@@ -32,6 +32,7 @@ from interiores_api.esquemas import (
     NovoMovel,
     NovoProjeto,
     PedidoRender,
+    PedidoRenderPavimento,
     Preferencias,
     ProjetoCompleto,
     Renomear,
@@ -450,9 +451,22 @@ def pedir_render(svc: Svc, codigo: str, comodo: str, pedido: PedidoRender) -> In
     return svc.pedir_render(codigo, comodo, pedido)
 
 
+@render.post(
+    "/projetos/{codigo}/pavimentos/{pavimento}/renders", status_code=status.HTTP_202_ACCEPTED
+)
+def pedir_render_pavimento(
+    svc: Svc, codigo: str, pavimento: str, pedido: PedidoRenderPavimento
+) -> InfoRender:
+    """Modelo 3D do pavimento inteiro (todos os cômodos, teto cortado) na fila."""
+    return svc.pedir_render_pavimento(codigo, pavimento, pedido)
+
+
 @render.get("/projetos/{codigo}/renders")
-def listar_renders(svc: Svc, codigo: str, comodo: str | None = None) -> list[InfoRender]:
-    return svc.renders(codigo, comodo)
+def listar_renders(
+    svc: Svc, codigo: str, comodo: str | None = None, pavimento: str | None = None
+) -> list[InfoRender]:
+    """Pedidos recentes; ``comodo`` filtra um cômodo, ``pavimento`` os do pavimento inteiro."""
+    return svc.renders(codigo, comodo, pavimento)
 
 
 @render.get("/renders/estimativas")
@@ -481,5 +495,5 @@ def imagem_render(svc: Svc, id_: int, nome: str) -> FileResponse:
 
 @render.get("/renders/{id_}/modelo", response_class=FileResponse)
 def modelo_render(svc: Svc, id_: int) -> FileResponse:
-    """Modelo 3D do cômodo (.glb) do render pronto, para o visor da tela."""
+    """Modelo 3D (.glb) do cômodo ou do pavimento do render pronto, para o visor da tela."""
     return FileResponse(svc.modelo_render(id_), media_type="model/gltf-binary")
