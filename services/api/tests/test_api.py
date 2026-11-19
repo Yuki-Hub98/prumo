@@ -132,3 +132,18 @@ def test_openapi_para_o_frontend(api: TestClient) -> None:
     esquema = api.get("/openapi.json").json()
     assert "/projetos/{codigo}/pavimentos/{pavimento}/paredes/{id_}" in esquema["paths"]
     assert "Medida" in esquema["components"]["schemas"]
+
+
+def test_geometria_para_a_tela(api: TestClient) -> None:
+    g = api.get(f"{PAV}/geometria").json()
+    assert {p["id"] for p in g["paredes"]} >= {"p1", "p2"}
+    assert next(c for c in g["comodos"] if c["id"] == "quarto")["area_m2"] == 11.04
+    assert {m["id"] for m in g["moveis"]} == {"cama", "guarda-roupa"}
+    assert api.get("/projetos/casa/pavimentos/superior/geometria").status_code == 404
+
+
+def test_preferencias(api: TestClient) -> None:
+    assert api.get("/preferencias").json() == {"unidade": "cm"}  # padrão
+    assert api.patch("/preferencias", json={"unidade": "m"}).json() == {"unidade": "m"}
+    assert api.get("/preferencias").json() == {"unidade": "m"}
+    assert api.patch("/preferencias", json={"unidade": "pé"}).status_code == 422

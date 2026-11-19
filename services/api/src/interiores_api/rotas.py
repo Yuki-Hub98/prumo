@@ -28,6 +28,7 @@ from interiores_api.esquemas import (
     NovoComodo,
     NovoMovel,
     NovoProjeto,
+    Preferencias,
     ProjetoCompleto,
     Renomear,
     ResultadoEdicao,
@@ -38,6 +39,7 @@ from interiores_banco.conexao import sessao as abrir_sessao
 from interiores_core import catalogo, edicao
 from interiores_core import edicao_moveis as em
 from interiores_core.modelo import Parede
+from interiores_core.tela import PavimentoTela
 from interiores_core.validacao import Problema
 
 
@@ -54,6 +56,17 @@ projetos = APIRouter(prefix="/projetos", tags=["projetos"])
 planta = APIRouter(prefix="/projetos/{codigo}/pavimentos/{pavimento}", tags=["planta"])
 moveis = APIRouter(prefix="/projetos/{codigo}/comodos/{comodo}/moveis", tags=["móveis"])
 geral = APIRouter(tags=["catálogo"])
+
+
+@geral.get("/preferencias", tags=["preferências"])
+def ver_preferencias(svc: Svc) -> Preferencias:
+    return svc.preferencias()
+
+
+@geral.patch("/preferencias", tags=["preferências"])
+def salvar_preferencias(svc: Svc, novas: Preferencias) -> Preferencias:
+    """Ex.: ``{"unidade": "m"}``. Só o que vier no pedido muda."""
+    return svc.salvar_preferencias(novas)
 
 
 @geral.get("/catalogo")
@@ -152,6 +165,12 @@ def remover_pavimento(
 
 
 # ---------------------------------------------------------------- planta
+
+
+@planta.get("/geometria")
+def geometria(svc: Svc, codigo: str, pavimento: str) -> PavimentoTela:
+    """Tudo do pavimento em polígonos prontos para desenhar (mm, y para cima)."""
+    return svc.geometria(codigo, pavimento)
 
 
 @planta.patch("")
