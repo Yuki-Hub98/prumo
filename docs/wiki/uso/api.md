@@ -48,11 +48,24 @@ make api                # http://localhost:8010/docs (documentação interativa)
 | GET | `/projetos/{p}/estimadas` | lista "falta medir" |
 | GET | `/projetos/{p}/historico?desde=` | mudanças (antes → depois) |
 | GET | `/projetos/{p}/versoes/{v}` | projeto numa versão antiga |
+| PATCH | `/projetos/{p}/imovel` | tipo (casa/apartamento) e apelido |
+| POST | `/projetos/{p}/renomear` | troca o código (a pasta em `projetos/` vai junto) |
+| DELETE | `/projetos/{p}?confirmar={p}` | apaga do banco; a pasta vai para `projetos/_apagados/` |
+| POST | `/projetos/{p}/pavimentos` | novo pavimento (ex.: superior) |
+| DELETE | `/projetos/{p}/pavimentos/{a}` | remove; com conteúdo, só com `?cascata=true` |
 | PATCH | `/projetos/{p}/pavimentos/{a}` | nome, pé-direito, rodapé |
 | POST/PATCH/DELETE | `.../paredes`, `.../paredes/{id}` | paredes (`/dividir`, `?cascata=`) |
 | POST | `.../vertices/mover` | arrastar um canto |
 | POST/PATCH/DELETE | `.../aberturas`, `.../aberturas/{id}` | portas e janelas |
 | POST/PATCH/DELETE | `.../comodos`, `.../comodos/{id}` | cômodos |
 | POST/PATCH/DELETE | `.../instalacoes`, `.../instalacoes/{id}` | tomadas, água, esgoto... |
+| GET | `/catalogo` | tipos e modelos de móvel (medidas padrão, lados de uso) |
+| POST | `/projetos/{p}/comodos/{c}/moveis` | pôr móvel do catálogo: `centro` (+`rotacao`) ou `parede` (+`distancia`) |
+| POST | `.../moveis/{id}/mover` | arrastar, girar ou prender numa parede |
+| PATCH/DELETE | `.../moveis/{id}` | medidas (com origem), nome, modelo; remover |
+
+Toda resposta de edição traz `novos` e `problemas`: nos móveis, as checagens de uso do
+cômodo (passagem, lateral da cama, frente do guarda-roupa, giro de porta, tomada atrás de
+móvel, distância sofá-TV), para a tela mostrar na hora.
 
 O esquema completo (para gerar os tipos do frontend) está em `/openapi.json`.
