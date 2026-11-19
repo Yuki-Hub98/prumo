@@ -1,6 +1,6 @@
 # Atalhos do projeto — ver CLAUDE.md §12.
 .DEFAULT_GOAL := help
-.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem wiki banco importar exportar api frontend frontend-tipos up down logs
+.PHONY: help setup sync lint format typecheck test check schema validate cad planejado render blender-imagem wiki banco importar exportar api frontend frontend-tipos worker up down logs
 
 help: ## Lista os comandos
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -71,6 +71,10 @@ exportar: ## Banco → arquivos: make exportar P=casa [F=1 sobrescreve]
 
 api: ## Sobe a API (http://localhost:8010/docs); precisa do banco (make banco)
 	uv run interiores-api
+
+worker: ## Worker da fila de render (Redis + Blender); precisa de make banco e do redis
+	docker compose up -d --wait redis
+	uv run interiores-worker
 
 frontend-tipos: ## Regera o OpenAPI e os tipos TypeScript do frontend
 	uv run python -c "from interiores_api.app import openapi; openapi()"
