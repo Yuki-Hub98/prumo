@@ -29,6 +29,85 @@ def limpar():
         bpy.data.objects.remove(obj, do_unlink=True)
 
 
+def _tom(cor, fator):
+    """Mesma cor, mais clara (fator > 1) ou mais escura (< 1), em linear."""
+    return [min(c * fator, 1.0) for c in cor[:3]] + [1.0]
+
+
+def _textura(mat, bsdf, d):
+    """Textura procedural a partir da cor (a variação continua valendo):
+    madeira, porcelanato, tecido ou pintura. Coordenadas do objeto, em metros."""
+    nt, nos, links = mat.node_tree, mat.node_tree.nodes, mat.node_tree.links
+    cor = _cor(d["cor"])
+    coord = nos.new("ShaderNodeTexCoord").outputs["Object"]
+    tipo = d["textura"]
+    if tipo == "madeira":
+        tabua = nos.new("ShaderNodeTexBrick")  # tábuas com tons alternados
+        tabua.offset, tabua.offset_frequency = 0.5, 1
+        tabua.inputs["Color1"].default_value = _tom(cor, 1.04)
+        tabua.inputs["Color2"].default_value = _tom(cor, 0.92)
+        tabua.inputs["Mortar"].default_value = _tom(cor, 0.55)
+        tabua.inputs["Scale"].default_value = 1.0
+        tabua.inputs["Mortar Size"].default_value = 0.0015 if d.get("tabuas", True) else 0.0
+        tabua.inputs["Brick Width"].default_value = 1.2
+        tabua.inputs["Row Height"].default_value = 0.19
+        links.new(coord, tabua.inputs["Vector"])
+        veio = nos.new("ShaderNodeTexWave")  # veios ao longo da tábua
+        veio.wave_type, veio.bands_direction = "BANDS", "Y"
+        veio.inputs["Scale"].default_value = 45.0
+        veio.inputs["Distortion"].default_value = 1.5
+        veio.inputs["Detail"].default_value = 2.0
+        links.new(coord, veio.inputs["Vector"])
+        mistura = nos.new("ShaderNodeMixRGB")
+        mistura.blend_type = "MULTIPLY"
+        mistura.inputs["Fac"].default_value = 0.12
+        links.new(tabua.outputs["Color"], mistura.inputs["Color1"])
+        links.new(veio.outputs["Color"], mistura.inputs["Color2"])
+        links.new(mistura.outputs["Color"], bsdf.inputs["Base Color"])
+        relevo = nos.new("ShaderNodeBump")
+        relevo.inputs["Strength"].default_value = 0.05
+        links.new(veio.outputs["Fac"], relevo.inputs["Height"])
+        links.new(relevo.outputs["Normal"], bsdf.inputs["Normal"])
+    elif tipo == "porcelanato":
+        placa = nos.new("ShaderNodeTexBrick")  # placas 60×60, rejunte fino
+        placa.offset = 0.0
+        variacao = nos.new("ShaderNodeTexNoise")
+        variacao.inputs["Scale"].default_value = 3.0
+        links.new(coord, variacao.inputs["Vector"])
+        placa.inputs["Color1"].default_value = _tom(cor, 1.03)
+        placa.inputs["Color2"].default_value = _tom(cor, 0.95)
+        placa.inputs["Mortar"].default_value = _tom(cor, 0.7)
+        placa.inputs["Scale"].default_value = 1.0
+        placa.inputs["Mortar Size"].default_value = 0.002
+        placa.inputs["Brick Width"].default_value = 0.6
+        placa.inputs["Row Height"].default_value = 0.6
+        links.new(coord, placa.inputs["Vector"])
+        mistura = nos.new("ShaderNodeMixRGB")
+        mistura.blend_type = "OVERLAY"
+        mistura.inputs["Fac"].default_value = 0.08
+        links.new(placa.outputs["Color"], mistura.inputs["Color1"])
+        links.new(variacao.outputs["Color"], mistura.inputs["Color2"])
+        links.new(mistura.outputs["Color"], bsdf.inputs["Base Color"])
+        relevo = nos.new("ShaderNodeBump")
+        relevo.inputs["Strength"].default_value = 0.3
+        relevo.invert = True
+        links.new(placa.outputs["Fac"], relevo.inputs["Height"])
+        links.new(relevo.outputs["Normal"], bsdf.inputs["Normal"])
+        bsdf.inputs["Roughness"].default_value = 0.22
+    elif tipo in ("tecido", "pintura"):
+        grao = nos.new("ShaderNodeTexNoise")  # trama (tecido) ou rolo de tinta (pintura)
+        grao.inputs["Scale"].default_value = 900.0 if tipo == "tecido" else 120.0
+        grao.inputs["Detail"].default_value = 2.0
+        links.new(coord, grao.inputs["Vector"])
+        relevo = nos.new("ShaderNodeBump")
+        relevo.inputs["Strength"].default_value = 0.25 if tipo == "tecido" else 0.04
+        links.new(grao.outputs["Fac"], relevo.inputs["Height"])
+        links.new(relevo.outputs["Normal"], bsdf.inputs["Normal"])
+        if tipo == "tecido":
+            bsdf.inputs["Sheen Weight"].default_value = 0.4  # brilho aveludado do tecido
+    del nt
+
+
 def materiais(defs):
     criados = {}
     for nome, d in defs.items():
@@ -37,6 +116,13 @@ def materiais(defs):
         bsdf = mat.node_tree.nodes["Principled BSDF"]
         bsdf.inputs["Base Color"].default_value = _cor(d["cor"])
         bsdf.inputs["Roughness"].default_value = d.get("rugosidade", 0.6)
+        if d.get("textura"):
+            _textura(mat, bsdf, d)
+        if d.get("emissao"):  # luminária acesa
+            bsdf.inputs["Emission Color"].default_value = _cor(d["cor"])
+            bsdf.inputs["Emission Strength"].default_value = d["emissao"]
+        if d.get("metal"):
+            bsdf.inputs["Metallic"].default_value = 1.0
         if d.get("vidro"):
             bsdf.inputs["Transmission Weight"].default_value = 1.0
             bsdf.inputs["Roughness"].default_value = 0.02
@@ -73,6 +159,14 @@ def caixa(c, mats):
     obj = _objeto(c["nome"], verts, faces, mats[c["material"]])
     obj.location = [v * MM for v in c["centro"]]
     obj.rotation_euler = (0, 0, math.radians(c["rotacao"]))
+    if c.get("chanfro"):  # quinas arredondadas: o que mais tira o "aspecto de caixa"
+        mod = obj.modifiers.new("chanfro", "BEVEL")
+        mod.width = min(c["chanfro"] * MM, min(sx, sy, sz) * 0.9)
+        mod.segments = 3
+        mod.limit_method = "ANGLE"
+        for poli in obj.data.polygons:
+            poli.use_smooth = True
+        obj.modifiers.new("normais", "WEIGHTED_NORMAL")
     return obj
 
 
@@ -187,7 +281,7 @@ def main():
     limpar()
     mats = materiais(cena["materiais"])
     objetos = [(prisma(p, mats), p.get("oculto_em", [])) for p in cena["prismas"]]
-    objetos += [(caixa(c, mats), []) for c in cena["caixas"]]
+    objetos += [(caixa(c, mats), c.get("oculto_em", [])) for c in cena["caixas"]]
     cameras = [camera(c) for c in cena["cameras"]]
     luzes(cena["luzes"])
     configurar_render(cena["saida"])
@@ -218,6 +312,7 @@ def main():
         export_format="GLB",
         export_cameras=False,
         export_lights=False,
+        export_apply=True,  # leva o chanfro (modificador) para o .glb
     )
 
 

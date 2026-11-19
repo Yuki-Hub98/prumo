@@ -47,6 +47,7 @@ def executar_render(
         tamanho = (r.largura, r.altura, r.amostras)
         # o rascunho não pode sobrescrever o render final da mesma variação
         subpasta = None if r.qualidade == "final" else r.qualidade
+        vistas = tuple(r.vistas)
         renders.comecar(s, r)
 
     ultimo = 0.0
@@ -69,6 +70,7 @@ def executar_render(
                 carregar(pasta), saida, comodo, variacao,
                 largura=largura, altura=altura, amostras=amostras, progresso=progresso,
                 subpasta=subpasta,
+                vistas=vistas,
             )  # fmt: skip
     except Exception as e:  # o pedido fica com o erro para a tela mostrar
         log.exception("render %s falhou", render_id)

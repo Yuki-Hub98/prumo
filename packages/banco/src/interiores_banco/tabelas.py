@@ -37,6 +37,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -294,7 +295,11 @@ class Render(Base):
     largura: Mapped[int]
     altura: Mapped[int]
     amostras: Mapped[int]
-    imagens: Mapped[int] = mapped_column(comment="imagens por render (perspectiva + superior)")
+    imagens: Mapped[int] = mapped_column(comment="imagens por render (uma por vista)")
+    vistas: Mapped[list[Any]] = mapped_column(
+        server_default=text("""'["perspectiva", "superior"]'::jsonb"""),
+        comment="câmeras pedidas (perspectiva, porta, cama, canto-N, superior)",
+    )
     status: Mapped[str] = mapped_column(
         String(12), index=True, comment="na_fila | rodando | pronto | erro"
     )

@@ -55,3 +55,20 @@ def test_recusas(api: TestClient) -> None:
 def test_estimativas(api: TestClient) -> None:
     e = api.get("/renders/estimativas").json()
     assert e["final"] == 119.0 and 0 < e["rascunho"] < e["final"]  # sem histórico
+
+
+def test_vistas(api: TestClient, fila: Any) -> None:
+    vs = api.get("/projetos/casa/comodos/quarto/vistas").json()
+    nomes = [v["nome"] for v in vs]
+    assert {"perspectiva", "porta", "cama", "superior"} <= set(nomes) and "canto-1" in nomes
+    r = api.post(URL, json={"qualidade": "rascunho", "vistas": ["cama", "porta", "cama"]})
+    assert r.status_code == 202, r.text
+    info = r.json()
+    assert info["vistas"] == ["cama", "porta"] and info["imagens"] == 2
+    outro = api.post(URL, json={"qualidade": "rascunho", "vistas": ["cama"]}).json()
+    assert outro["id"] != info["id"]  # vistas diferentes: outro pedido
+    assert api.post(URL, json={"vistas": ["janela-magica"]}).status_code == 422
+    assert api.post(URL, json={"vistas": []}).status_code == 422
+    assert api.get("/projetos/casa/comodos/banheiro/vistas").status_code == 200
+    um, tres = (api.get("/renders/estimativas", params={"imagens": n}).json() for n in (1, 3))
+    assert um["final"] < tres["final"]
