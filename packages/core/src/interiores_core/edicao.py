@@ -621,6 +621,78 @@ def alterar_pavimento(projeto: Projeto, pavimento: str, campos: Mapping[str, Any
     return _aplicar(projeto, mudar)
 
 
+def adicionar_pavimento(
+    projeto: Projeto, pavimento: Pavimento | Mapping[str, Any], depois_de: str | None = None
+) -> Edicao:
+    """Acrescenta um pavimento (ex.: superior de um sobrado), no fim ou após ``depois_de``."""
+
+    def mudar(d: Dados) -> None:
+        dados = _dump(pavimento)
+        if any(p["id"] == dados.get("id") for p in d["pavimentos"]):
+            raise EdicaoInvalidaError(f"já existe um pavimento '{dados.get('id')}'")
+        pos = len(d["pavimentos"])
+        if depois_de is not None:
+            pos = d["pavimentos"].index(_pav(d, depois_de)) + 1
+        d["pavimentos"].insert(pos, dados)
+
+    return _aplicar(projeto, mudar)
+
+
+def remover_pavimento(projeto: Projeto, pavimento: str, cascata: bool = False) -> Edicao:
+    """Remove o pavimento. Com paredes, aberturas, estrutura, instalações ou cômodos,
+    só com ``cascata=True`` (vai tudo junto). O último pavimento não sai.
+    O mobiliário dos cômodos removidos é do chamador."""
+
+    def mudar(d: Dados) -> None:
+        pav = _pav(d, pavimento)
+        if len(d["pavimentos"]) == 1:
+            raise EdicaoInvalidaError("o projeto precisa de pelo menos um pavimento")
+        cheio = {
+            k: len(pav.get(k, []))
+            for k in ("paredes", "aberturas", "estrutura", "instalacoes", "comodos")
+            if pav.get(k)
+        }
+        if cheio and not cascata:
+            itens = ", ".join(f"{n} {k}" for k, n in cheio.items())
+            raise EdicaoInvalidaError(
+                f"pavimento '{pavimento}' não está vazio ({itens}); use cascata para remover junto"
+            )
+        d["pavimentos"].remove(pav)
+
+    return _aplicar(projeto, mudar)
+
+
+def comodos_do_pavimento(projeto: Projeto, pavimento: str) -> list[str]:
+    """Ids dos cômodos de um pavimento (para o chamador limpar o mobiliário)."""
+    pav = next((p for p in projeto.pavimentos if p.id == pavimento), None)
+    if pav is None:
+        raise KeyError(f"pavimento '{pavimento}' não existe")
+    return [c.id for c in pav.comodos]
+
+
+# ---------------------------------------------------------------- imóvel / projeto
+
+CAMPOS_IMOVEL = {"tipo", "endereco_apelido"}
+
+
+def alterar_imovel(projeto: Projeto, campos: Mapping[str, Any]) -> Edicao:
+    """Tipo do imóvel (casa | apartamento) e apelido."""
+
+    def mudar(d: Dados) -> None:
+        _mesclar(d["imovel"], campos, CAMPOS_IMOVEL)
+
+    return _aplicar(projeto, mudar)
+
+
+def renomear_projeto(projeto: Projeto, codigo: str) -> Edicao:
+    """Troca o código do projeto (o nome da pasta em ``projetos/``)."""
+
+    def mudar(d: Dados) -> None:
+        d["projeto"] = codigo
+
+    return _aplicar(projeto, mudar)
+
+
 # ---------------------------------------------------------------- arquivo
 
 
@@ -645,11 +717,14 @@ __all__ = [
     "adicionar_comodo",
     "adicionar_instalacao",
     "adicionar_parede",
+    "adicionar_pavimento",
     "alterar_abertura",
     "alterar_comodo",
+    "alterar_imovel",
     "alterar_instalacao",
     "alterar_parede",
     "alterar_pavimento",
+    "comodos_do_pavimento",
     "diferencas",
     "dividir_parede",
     "gravar_projeto",
@@ -661,4 +736,6 @@ __all__ = [
     "remover_comodo",
     "remover_instalacao",
     "remover_parede",
+    "remover_pavimento",
+    "renomear_projeto",
 ]

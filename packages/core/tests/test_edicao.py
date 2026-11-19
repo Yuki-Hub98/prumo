@@ -355,3 +355,41 @@ def test_trecho_de_tubulacao(casa: Projeto) -> None:
         "pavimentos[terreo].instalacoes[af-banheiro].caminho: "
         "[[1000, 2635], [1000, 4000]] → [[1000, 2635], [1600, 4400]]"
     ]
+
+
+# ---------------------------------------------------------------- pavimentos, imóvel, projeto
+
+
+def _superior() -> dict[str, object]:
+    return {"id": "superior", "cota_piso": {"valor": 2900, "origem": "projeto"},
+            "pe_direito": {"valor": 2600, "origem": "projeto"}}  # fmt: skip
+
+
+def test_adicionar_e_remover_pavimento(casa: Projeto) -> None:
+    ed = edicao.adicionar_pavimento(casa, _superior())
+    assert [p.id for p in ed.projeto.pavimentos] == ["terreo", "superior"]
+    with pytest.raises(EdicaoInvalidaError, match="já existe"):
+        edicao.adicionar_pavimento(ed.projeto, _superior())
+    meio = edicao.adicionar_pavimento(ed.projeto, {**_superior(), "id": "mezanino"}, "terreo")
+    assert [p.id for p in meio.projeto.pavimentos] == ["terreo", "mezanino", "superior"]
+    vazio = edicao.remover_pavimento(ed.projeto, "superior")
+    assert [p.id for p in vazio.projeto.pavimentos] == ["terreo"]
+    with pytest.raises(EdicaoInvalidaError, match="não está vazio"):
+        edicao.remover_pavimento(ed.projeto, "terreo")
+    so_superior = edicao.remover_pavimento(ed.projeto, "terreo", cascata=True)
+    assert [p.id for p in so_superior.projeto.pavimentos] == ["superior"]
+    with pytest.raises(EdicaoInvalidaError, match="pelo menos um"):
+        edicao.remover_pavimento(casa, "terreo", cascata=True)
+    assert edicao.comodos_do_pavimento(casa, "terreo") == ["quarto", "banheiro"]
+    with pytest.raises(KeyError):
+        edicao.comodos_do_pavimento(casa, "superior")
+
+
+def test_imovel_e_codigo(casa: Projeto) -> None:
+    ed = edicao.alterar_imovel(casa, {"tipo": "apartamento", "endereco_apelido": "apê"})
+    assert (ed.projeto.imovel.tipo, ed.projeto.imovel.endereco_apelido) == ("apartamento", "apê")
+    with pytest.raises(EdicaoInvalidaError, match="dados inválidos"):
+        edicao.alterar_imovel(casa, {"tipo": "barco"})
+    assert edicao.renomear_projeto(casa, "casa-praia").projeto.projeto == "casa-praia"
+    with pytest.raises(EdicaoInvalidaError, match="dados inválidos"):
+        edicao.renomear_projeto(casa, "Casa Praia")
