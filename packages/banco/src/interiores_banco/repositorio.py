@@ -170,3 +170,46 @@ def snapshot(sessao: Session, codigo: str, versao: int) -> Conteudo:
     if s is None:
         raise ProjetoInexistenteError(f"projeto '{codigo}' não tem a versão {versao}")
     return Conteudo.de_dict(s.conteudo)
+
+
+def apagar(sessao: Session, codigo: str, versao_esperada: int) -> None:
+    """Apaga o projeto e tudo dele (entidades, medidas, histórico, snapshots)."""
+    linha = _carregar(sessao, codigo, travar=True)
+    if linha is None:
+        raise ProjetoInexistenteError(f"projeto '{codigo}' não está no banco")
+    if linha.versao != versao_esperada:
+        raise ConflitoDeVersaoError(codigo, versao_esperada, linha.versao)
+    sessao.delete(linha)
+    sessao.flush()
+
+
+def renomear(
+    sessao: Session,
+    de: str,
+    conteudo: Conteudo,
+    versao_esperada: int,
+    alteracoes: Iterable[Alteracao] | None = None,
+    fonte: str = "api",
+) -> Gravado:
+    """Troca o código do projeto ``de`` para o de ``conteudo`` (nova versão).
+
+    Histórico e snapshots continuam ligados ao mesmo projeto.
+    """
+    para = conteudo.projeto.projeto
+    if _carregar(sessao, para) is not None:
+        raise ValueError(f"já existe um projeto '{para}'")
+    linha = _carregar(sessao, de, travar=True)
+    if linha is None:
+        raise ProjetoInexistenteError(f"projeto '{de}' não está no banco")
+    if linha.versao != versao_esperada:
+        raise ConflitoDeVersaoError(de, versao_esperada, linha.versao)
+    linha.codigo = para
+    sessao.flush()
+    return gravar(
+        sessao,
+        conteudo,
+        fonte=fonte,
+        operacao="renomear_projeto",
+        versao_esperada=versao_esperada,
+        alteracoes=alteracoes,
+    )
