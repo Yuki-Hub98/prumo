@@ -57,6 +57,14 @@ export function useEstimadas(codigo: string) {
   });
 }
 
+/** Versões do projeto e para onde o desfazer/refazer levariam (recarrega a cada edição). */
+export function useVersoes(codigo: string) {
+  return useQuery({
+    queryKey: [...chaves.projeto(codigo), "versoes"],
+    queryFn: () => ou(api.GET("/projetos/{codigo}/versoes", { params: { path: { codigo } } })),
+  });
+}
+
 export function useCatalogo() {
   return useQuery({
     queryKey: ["catalogo"],

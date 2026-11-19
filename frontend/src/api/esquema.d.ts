@@ -103,6 +103,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/versoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Versoes
+         * @description Versões (da mais nova) e para onde o desfazer/refazer levariam agora.
+         */
+        get: operations["versoes_projetos__codigo__versoes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/desfazer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Desfazer
+         * @description Volta ao estado de antes da última edição (grava como versão nova).
+         */
+        post: operations["desfazer_projetos__codigo__desfazer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/refazer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refazer
+         * @description Refaz o último desfazer (só logo depois de desfazer).
+         */
+        post: operations["refazer_projetos__codigo__refazer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/versoes/{para}/restaurar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restaurar
+         * @description Volta o projeto para o conteúdo da versão ``para`` (grava como versão nova).
+         */
+        post: operations["restaurar_projetos__codigo__versoes__para__restaurar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/versoes/{versao}": {
         parameters: {
             query?: never;
@@ -1637,6 +1717,35 @@ export interface components {
             /** Apelido */
             apelido?: string | null;
         };
+        /** ResumoVersao */
+        ResumoVersao: {
+            /** Versao */
+            versao: number;
+            /** Quando */
+            quando: string;
+            /** Operacao */
+            operacao?: string | null;
+            /**
+             * Tipo
+             * @description desfazer | refazer | reverter, se for uma volta.
+             */
+            tipo?: string | null;
+            /**
+             * Para
+             * @description Versão cujo conteúdo foi restaurado.
+             */
+            para?: number | null;
+            /**
+             * Alteracoes
+             * @description Quantas alterações a versão gravou.
+             */
+            alteracoes: number;
+            /**
+             * Caminhos
+             * @description Até 5 caminhos alterados (resumo).
+             */
+            caminhos: string[];
+        };
         /**
          * Severidade
          * @enum {string}
@@ -1733,6 +1842,26 @@ export interface components {
             /** Descricao */
             descricao?: string | null;
             cores?: components["schemas"]["CoresVariacao"];
+        };
+        /** Versoes */
+        Versoes: {
+            /** Atual */
+            atual: number;
+            /**
+             * Desfazer
+             * @description Versão que o desfazer restaura (None: nada).
+             */
+            desfazer: number | null;
+            /**
+             * Refazer
+             * @description Versão que o refazer restaura (None: nada).
+             */
+            refazer: number | null;
+            /**
+             * Versoes
+             * @description Da mais nova para a mais velha.
+             */
+            versoes: components["schemas"]["ResumoVersao"][];
         };
         /** Viga */
         Viga: {
@@ -1968,6 +2097,140 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ItemHistorico"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    versoes_projetos__codigo__versoes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Versoes"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    desfazer_projetos__codigo__desfazer_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refazer_projetos__codigo__refazer_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restaurar_projetos__codigo__versoes__para__restaurar_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                para: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
                 };
             };
             /** @description Validation Error */
