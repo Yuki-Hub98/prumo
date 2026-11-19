@@ -1,17 +1,24 @@
-import { useCallback, useState } from "react";
-import { api, ou, type Cores, type MovelTela, type Problema } from "../api/cliente";
+import { useCallback, useRef, useState } from "react";
+import { api, ou, type Cores, type Medida, type MovelTela, type Problema } from "../api/cliente";
+import { proximoId, type Pt } from "../editor/geometria";
+import { PainelPlanta } from "../editor/PainelPlanta";
 import { PainelCores } from "./PainelCores";
 import { PainelImagens } from "./PainelImagens";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade } from "../dados";
 import { AdicionarMovel, FaltaMedir, PainelMovel, PainelProblemas } from "./Paineis";
-import { Planta } from "./Planta";
+import { Planta, type Item } from "./Planta";
 
 export function TelaProjeto({
   codigo,
   comodoInicial,
   variacaoInicial,
+  modoInicial = "moveis",
+  selInicial,
   aoVoltar,
 }: {
+  modoInicial?: "moveis" | "planta";
+  /** ``tipo:id`` (ex.: ``parede:p2``) para abrir com o item selecionado no editor. */
+  selInicial?: string;
   codigo: string;
   comodoInicial?: string;
   variacaoInicial?: string;
@@ -33,6 +40,43 @@ export function TelaProjeto({
   );
   const [rascunho, setRascunho] = useState<Cores | null>(null);
   const aoRascunho = useCallback((c: Cores | null) => setRascunho(c), []);
+
+  // editor de planta
+  const [modo, setModo] = useState<"moveis" | "planta">(modoInicial);
+  const [item, setItem] = useState<Item | null>(() => {
+    const [tipo, id] = selInicial?.split(":") ?? [];
+    return tipo && id ? ({ tipo, id } as Item) : null;
+  });
+  const [espessura, setEspessura] = useState<Medida | null>(null);
+  const [escolhendo, setEscolhendo] = useState<string[] | null>(null);
+  const idsNovos = useRef(new Set<string>()); // ids já pedidos nesta sequência de desenho
+  const base = { codigo, pavimento };
+
+  const aoItemEditor = (i: Item | null) => {
+    if (escolhendo !== null) {
+      if (i?.tipo === "parede")
+        setEscolhendo((e) => (e!.includes(i.id) ? e!.filter((x) => x !== i.id) : [...e!, i.id]));
+      return;
+    }
+    setItem(i);
+  };
+  const moverVertice = (de: Pt, para: Pt) =>
+    editar.mutate((versao) =>
+      ou(api.POST("/projetos/{codigo}/pavimentos/{pavimento}/vertices/mover", { params: { path: base, query: { versao } }, body: { de, para } })),
+    );
+  const novaParede = (a: Pt, b: Pt) => {
+    if (!espessura || !geometria.data) return;
+    const id = proximoId("p", [...geometria.data.paredes.map((p) => p.id), ...idsNovos.current]);
+    idsNovos.current.add(id);
+    editar.mutate((versao) =>
+      ou(
+        api.POST("/projetos/{codigo}/pavimentos/{pavimento}/paredes", {
+          params: { path: base, query: { versao } },
+          body: { id, inicio: a, fim: b, espessura, lado_a: "externo", lado_b: "externo" },
+        }),
+      ),
+    );
+  };
 
   const mover = (m: MovelTela, centro: [number, number]) =>
     editar.mutate(
@@ -65,6 +109,23 @@ export function TelaProjeto({
             ))}
           </select>
         )}
+        <div className="ml-4 flex overflow-hidden rounded border border-stone-300 text-sm">
+          {(["moveis", "planta"] as const).map((m) => (
+            <button
+              key={m}
+              className={`px-3 py-0.5 ${modo === m ? "bg-stone-800 text-white" : "hover:bg-stone-100"}`}
+              onClick={() => {
+                setModo(m);
+                setItem(null);
+                setEspessura(null);
+                setEscolhendo(null);
+                setSelecionado(null);
+              }}
+            >
+              {m === "moveis" ? "Móveis e cores" : "Editar planta"}
+            </button>
+          ))}
+        </div>
         {editar.isPending && <span className="text-xs text-stone-500">gravando…</span>}
         {editar.error && <span className="text-sm text-red-700">{editar.error.message}</span>}
       </header>
@@ -80,13 +141,43 @@ export function TelaProjeto({
               aoMover={mover}
               comodoSelecionado={comodo}
               aoSelecionarComodo={setComodo}
-              cores={rascunho}
+              cores={modo === "moveis" ? rascunho : null}
+              editor={
+                modo === "planta"
+                  ? {
+                      item,
+                      destacadas: escolhendo ?? [],
+                      desenhando: espessura !== null,
+                      aoItem: aoItemEditor,
+                      aoMoverVertice: moverVertice,
+                      aoNovaParede: novaParede,
+                    }
+                  : undefined
+              }
             />
           ) : (
             <p className="p-4 text-stone-500">{geometria.error?.message ?? "carregando…"}</p>
           )}
         </main>
         <aside className="w-96 overflow-y-auto border-l border-stone-200 bg-stone-50">
+          {modo === "planta" && geometria.data && (
+            <PainelPlanta
+              codigo={codigo}
+              pavimento={pavimento}
+              geometria={geometria.data}
+              unidade={unidade}
+              item={item}
+              aoItem={setItem}
+              desenhando={espessura !== null}
+              aoDesenhar={(sim, m) => {
+                idsNovos.current.clear();
+                setEspessura(sim ? (m ?? null) : null);
+              }}
+              escolhendo={escolhendo}
+              aoEscolher={setEscolhendo}
+            />
+          )}
+          {modo === "moveis" && <>
           {sel && geometria.data && (
             <PainelMovel
               key={sel.id}
@@ -118,6 +209,7 @@ export function TelaProjeto({
             </p>
           )}
           {geometria.data && <AdicionarMovel codigo={codigo} geometria={geometria.data} />}
+          </>}
           <PainelProblemas problemas={problemas} novos={novos} />
           <FaltaMedir codigo={codigo} unidade={unidade} />
         </aside>

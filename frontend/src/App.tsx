@@ -7,11 +7,24 @@ import { TelaProjeto } from "./componentes/TelaProjeto";
  * ``#/p/<codigo>`` ou ``#/p/<codigo>?comodo=<id>&variacao=<nome>`` (abre já com o
  * cômodo e a variação de cor escolhidos — dá para mandar o link de uma opção).
  */
-function projetoDoHash(): { codigo: string; comodo?: string; variacao?: string } | null {
+function projetoDoHash(): {
+  codigo: string;
+  comodo?: string;
+  variacao?: string;
+  modo?: string;
+  sel?: string;
+} | null {
   const m = window.location.hash.match(/^#\/p\/([a-z0-9][a-z0-9_-]*)(?:\?(.*))?$/);
   if (!m) return null;
   const q = new URLSearchParams(m[2] ?? "");
-  return { codigo: m[1], comodo: q.get("comodo") ?? undefined, variacao: q.get("variacao") ?? undefined };
+  const opcional = (k: string) => q.get(k) ?? undefined;
+  return {
+    codigo: m[1],
+    comodo: opcional("comodo"),
+    variacao: opcional("variacao"),
+    modo: opcional("modo"),
+    sel: opcional("sel"),
+  };
 }
 
 export function App() {
@@ -28,6 +41,8 @@ export function App() {
       codigo={local.codigo}
       comodoInicial={local.comodo}
       variacaoInicial={local.variacao}
+      modoInicial={local.modo === "planta" ? "planta" : "moveis"}
+      selInicial={local.sel}
       aoVoltar={() => ir(null)}
     />
   ) : (
