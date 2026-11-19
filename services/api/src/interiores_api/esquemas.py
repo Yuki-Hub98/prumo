@@ -125,6 +125,7 @@ class InfoRender(_Esquema):
     criado_em: str
     erro: str | None
     imagens_url: list[str] = Field(description="Caminhos das imagens (pronto).")
+    modelo_url: str | None = Field(None, description="Modelo 3D do cômodo (.glb), se pronto.")
 
 
 class ProjetoCompleto(_Esquema):

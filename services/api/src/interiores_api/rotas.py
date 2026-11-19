@@ -477,3 +477,9 @@ def ver_render(svc: Svc, id_: int) -> InfoRender:
 @render.get("/renders/{id_}/imagens/{nome}", response_class=FileResponse)
 def imagem_render(svc: Svc, id_: int, nome: str) -> FileResponse:
     return FileResponse(svc.imagem_render(id_, nome), media_type="image/png")
+
+
+@render.get("/renders/{id_}/modelo", response_class=FileResponse)
+def modelo_render(svc: Svc, id_: int) -> FileResponse:
+    """Modelo 3D do cômodo (.glb) do render pronto, para o visor da tela."""
+    return FileResponse(svc.modelo_render(id_), media_type="model/gltf-binary")

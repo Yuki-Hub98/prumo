@@ -103,7 +103,15 @@ def _info(r: t.Render) -> InfoRender:
         criado_em=r.criado_em.isoformat(),
         erro=r.erro,
         imagens_url=[f"/renders/{r.id}/imagens/{n}" for n in nomes],
+        modelo_url=f"/renders/{r.id}/modelo" if _modelo(r) else None,
     )
+
+
+def _modelo(r: t.Render) -> str | None:
+    """Nome do .glb de um render pronto (``None`` se ainda não tem)."""
+    if r.status != "pronto":
+        return None
+    return next((n for n in (r.arquivos or []) if n.endswith(".glb")), None)
 
 
 @dataclass
@@ -423,6 +431,17 @@ class Servico:
         arq = Path(r.pasta) / nome
         if not arq.is_file():
             raise KeyError(f"imagem '{nome}' do render {id_} não está mais em disco")
+        return arq
+
+    def modelo_render(self, id_: int) -> Path:
+        """O .glb (modelo 3D) de um render pronto, para o visor da tela."""
+        r = renders.obter(self.sessao, id_)
+        nome = _modelo(r)
+        if nome is None or r.pasta is None:
+            raise KeyError(f"o render {id_} não tem modelo 3D pronto")
+        arq = Path(r.pasta) / nome
+        if not arq.is_file():
+            raise KeyError(f"o modelo 3D do render {id_} não está mais em disco")
         return arq
 
     # ------------------------------------------------------------ projeto inteiro
