@@ -1,0 +1,4966 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Interiores",
+    "description": "Projetos de interiores a partir de medidas reais (mm, com origem).",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/projetos": {
+      "get": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Listar",
+        "operationId": "listar_projetos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResumoProjeto"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Projetos Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Criar",
+        "description": "Projeto novo, vazio (um pavimento), para desenhar do zero.",
+        "operationId": "criar_projetos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NovoProjeto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjetoCompleto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}": {
+      "get": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Ler",
+        "operationId": "ler_projetos__codigo__get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjetoCompleto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Apagar",
+        "description": "Apaga do banco (com histórico). A pasta vai para projetos/_apagados/.",
+        "operationId": "apagar_projetos__codigo__delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          },
+          {
+            "name": "confirmar",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Repita o código do projeto para confirmar.",
+              "title": "Confirmar"
+            },
+            "description": "Repita o código do projeto para confirmar."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apagado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/problemas": {
+      "get": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Problemas",
+        "description": "Erros, avisos e infos (validação + checagens), por severidade.",
+        "operationId": "problemas_projetos__codigo__problemas_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Problema"
+                  },
+                  "title": "Response Problemas Projetos  Codigo  Problemas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/estimadas": {
+      "get": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Estimadas",
+        "description": "Lista \"falta medir\": enquanto não zerar, os desenhos saem PRELIMINAR.",
+        "operationId": "estimadas_projetos__codigo__estimadas_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MedidaEstimada"
+                  },
+                  "title": "Response Estimadas Projetos  Codigo  Estimadas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/historico": {
+      "get": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Historico",
+        "operationId": "historico_projetos__codigo__historico_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "desde",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Desde"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemHistorico"
+                  },
+                  "title": "Response Historico Projetos  Codigo  Historico Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/versoes/{versao}": {
+      "get": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Versao",
+        "operationId": "versao_projetos__codigo__versoes__versao__get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Versao"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjetoCompleto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/imovel": {
+      "patch": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Alterar Imovel",
+        "description": "Tipo do imóvel (casa | apartamento) e apelido (``endereco_apelido``).",
+        "operationId": "alterar_imovel_projetos__codigo__imovel_patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Campos"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/renomear": {
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Renomear",
+        "description": "Troca o código do projeto (e o nome da pasta em projetos/).",
+        "operationId": "renomear_projetos__codigo__renomear_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Renomear"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos": {
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Adicionar Pavimento",
+        "description": "Novo pavimento (ex.: superior), vazio.",
+        "operationId": "adicionar_pavimento_projetos__codigo__pavimentos_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdicionarPavimento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}": {
+      "delete": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Remover Pavimento",
+        "description": "Com paredes ou cômodos, só com ``cascata=true`` (vai tudo, inclusive os móveis).",
+        "operationId": "remover_pavimento_projetos__codigo__pavimentos__pavimento__delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          },
+          {
+            "name": "cascata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Cascata"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Alterar Pavimento",
+        "description": "Nome, cota do piso, pé-direito, rodapé.",
+        "operationId": "alterar_pavimento_projetos__codigo__pavimentos__pavimento__patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Campos"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/geometria": {
+      "get": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Geometria",
+        "description": "Tudo do pavimento em polígonos prontos para desenhar (mm, y para cima).",
+        "operationId": "geometria_projetos__codigo__pavimentos__pavimento__geometria_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PavimentoTela"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/paredes": {
+      "post": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Adicionar Parede",
+        "operationId": "adicionar_parede_projetos__codigo__pavimentos__pavimento__paredes_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Parede"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/paredes/{id_}": {
+      "patch": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Alterar Parede",
+        "description": "Mudar uma ponta arrasta as paredes que se encontram nela (``arrastar_vizinhas``).",
+        "operationId": "alterar_parede_projetos__codigo__pavimentos__pavimento__paredes__id___patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlterarParede"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Remover Parede",
+        "operationId": "remover_parede_projetos__codigo__pavimentos__pavimento__paredes__id___delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          },
+          {
+            "name": "cascata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Cascata"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/paredes/{id_}/dividir": {
+      "post": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Dividir Parede",
+        "operationId": "dividir_parede_projetos__codigo__pavimentos__pavimento__paredes__id___dividir_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DividirParede"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/vertices/mover": {
+      "post": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Mover Vertice",
+        "description": "Arrastar um canto: toda ponta de parede nele vai junto.",
+        "operationId": "mover_vertice_projetos__codigo__pavimentos__pavimento__vertices_mover_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoverVertice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/aberturas": {
+      "post": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Adicionar Abertura",
+        "description": "Porta ou janela (campo ``tipo``).",
+        "operationId": "adicionar_abertura_projetos__codigo__pavimentos__pavimento__aberturas_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Porta"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Janela"
+                  }
+                ],
+                "title": "Abertura"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/aberturas/{id_}": {
+      "patch": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Alterar Abertura",
+        "operationId": "alterar_abertura_projetos__codigo__pavimentos__pavimento__aberturas__id___patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Campos"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Remover Abertura",
+        "operationId": "remover_abertura_projetos__codigo__pavimentos__pavimento__aberturas__id___delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/comodos": {
+      "post": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Adicionar Comodo",
+        "description": "O cômodo é posto no lado certo de cada parede pela geometria.",
+        "operationId": "adicionar_comodo_projetos__codigo__pavimentos__pavimento__comodos_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NovoComodo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/comodos/{id_}": {
+      "patch": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Alterar Comodo",
+        "operationId": "alterar_comodo_projetos__codigo__pavimentos__pavimento__comodos__id___patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlterarComodo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Remover Comodo",
+        "description": "Remove também o mobiliário e as variações do cômodo.",
+        "operationId": "remover_comodo_projetos__codigo__pavimentos__pavimento__comodos__id___delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/instalacoes": {
+      "post": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Adicionar Instalacao",
+        "description": "Tomada, interruptor, luz, água, esgoto, ralo, gás ou trecho de tubulação.",
+        "operationId": "adicionar_instalacao_projetos__codigo__pavimentos__pavimento__instalacoes_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NovaInstalacao"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/instalacoes/{id_}": {
+      "patch": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Alterar Instalacao",
+        "operationId": "alterar_instalacao_projetos__codigo__pavimentos__pavimento__instalacoes__id___patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlterarInstalacao"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Remover Instalacao",
+        "operationId": "remover_instalacao_projetos__codigo__pavimentos__pavimento__instalacoes__id___delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/comodos/{comodo}/moveis": {
+      "post": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Adicionar Movel",
+        "description": "Do catálogo; pelo centro ou preso numa parede (virado para o cômodo).",
+        "operationId": "adicionar_movel_projetos__codigo__comodos__comodo__moveis_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NovoMovel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover": {
+      "post": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Mover Movel",
+        "operationId": "mover_movel_projetos__codigo__comodos__comodo__moveis__id___mover_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoverMovel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}": {
+      "patch": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Alterar Movel",
+        "description": "Medidas (com origem), nome, modelo, portas, polegadas.",
+        "operationId": "alterar_movel_projetos__codigo__comodos__comodo__moveis__id___patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Campos"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Remover Movel",
+        "operationId": "remover_movel_projetos__codigo__comodos__comodo__moveis__id___delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preferencias": {
+      "get": {
+        "tags": [
+          "catálogo",
+          "preferências"
+        ],
+        "summary": "Ver Preferencias",
+        "operationId": "ver_preferencias_preferencias_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferencias"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "catálogo",
+          "preferências"
+        ],
+        "summary": "Salvar Preferencias",
+        "description": "Ex.: ``{\"unidade\": \"m\"}``. Só o que vier no pedido muda.",
+        "operationId": "salvar_preferencias_preferencias_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Preferencias"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferencias"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogo": {
+      "get": {
+        "tags": [
+          "catálogo"
+        ],
+        "summary": "Ver Catalogo",
+        "description": "Tipos de móvel, modelos com medidas padrão, lados de uso e símbolo na planta.",
+        "operationId": "ver_catalogo_catalogo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Ver Catalogo Catalogo Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/saude": {
+      "get": {
+        "tags": [
+          "infra"
+        ],
+        "summary": "Saude",
+        "operationId": "saude_saude_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Saude Saude Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AberturaTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "parede": {
+            "type": "string",
+            "title": "Parede"
+          },
+          "vao": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Vao"
+          },
+          "giro": {
+            "anyOf": [
+              {
+                "items": {
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array",
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Giro"
+          },
+          "largura": {
+            "type": "integer",
+            "title": "Largura"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "parede",
+          "vao",
+          "largura"
+        ],
+        "title": "AberturaTela"
+      },
+      "AdicionarPavimento": {
+        "properties": {
+          "pavimento": {
+            "$ref": "#/components/schemas/NovoPavimento"
+          },
+          "depois_de": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depois De",
+            "description": "Id do pavimento anterior (padrão: no fim)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pavimento"
+        ],
+        "title": "AdicionarPavimento"
+      },
+      "AlterarComodo": {
+        "properties": {
+          "campos": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Campos"
+          },
+          "ajustar_lados": {
+            "type": "boolean",
+            "title": "Ajustar Lados",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "campos"
+        ],
+        "title": "AlterarComodo"
+      },
+      "AlterarInstalacao": {
+        "properties": {
+          "campos": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Campos"
+          },
+          "distancia": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "campos"
+        ],
+        "title": "AlterarInstalacao"
+      },
+      "AlterarParede": {
+        "properties": {
+          "campos": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Campos"
+          },
+          "arrastar_vizinhas": {
+            "type": "boolean",
+            "title": "Arrastar Vizinhas",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "campos"
+        ],
+        "title": "AlterarParede"
+      },
+      "Apagado": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "title": "Codigo"
+          },
+          "pasta_movida_para": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pasta Movida Para",
+            "description": "A pasta não é apagada: vai para projetos/_apagados/ (fotos, croquis)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "codigo",
+          "pasta_movida_para"
+        ],
+        "title": "Apagado"
+      },
+      "Chapa": {
+        "properties": {
+          "material": {
+            "type": "string",
+            "title": "Material",
+            "description": "Ex.: \"MDF branco\", \"MDP carvalho\", \"HDF branco\"."
+          },
+          "espessura": {
+            "$ref": "#/components/schemas/Medida"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "material",
+          "espessura"
+        ],
+        "title": "Chapa",
+        "description": "Material de chapa (MDF, MDP, HDF...) e sua espessura."
+      },
+      "Comodo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoComodo"
+          },
+          "paredes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 3,
+            "title": "Paredes"
+          },
+          "piso": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Piso",
+            "description": "Acabamento do piso."
+          },
+          "teto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teto",
+            "description": "Acabamento do teto."
+          },
+          "pe_direito": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Se omitido, vale o do pavimento."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "paredes"
+        ],
+        "title": "Comodo",
+        "description": "Cômodo: polígono derivado das paredes que o delimitam (não digitado à parte)."
+      },
+      "ComodoTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "poligono": {
+            "anyOf": [
+              {
+                "items": {
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array",
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poligono"
+          },
+          "area_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area M2"
+          },
+          "centro": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Centro"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "poligono",
+          "area_m2",
+          "centro"
+        ],
+        "title": "ComodoTela"
+      },
+      "Construcao": {
+        "properties": {
+          "chapa": {
+            "$ref": "#/components/schemas/Chapa"
+          },
+          "fundo": {
+            "$ref": "#/components/schemas/Chapa"
+          },
+          "rodape": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Altura do rodapé (base recuada)."
+          },
+          "vaos": {
+            "items": {
+              "$ref": "#/components/schemas/Vao"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Vaos",
+            "description": "Da esquerda para a direita (de frente)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "chapa",
+          "fundo",
+          "vaos"
+        ],
+        "title": "Construcao",
+        "description": "Como o móvel planejado é construído por dentro (marcenaria em chapa).\n\nCaixa com laterais inteiras, base e tampo entre as laterais, divisórias entre a\nbase e o tampo, fundo sobreposto, portas sobrepostas (de abrir, por vão) ou de\ncorrer (no móvel todo, conforme ``Movel.portas``) e gavetas com corrediça\ntelescópica."
+      },
+      "CoresVariacao": {
+        "properties": {
+          "parede": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "description": "Cor em hexadecimal: #RRGGBB."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parede"
+          },
+          "piso": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "description": "Cor em hexadecimal: #RRGGBB."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Piso"
+          },
+          "teto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "description": "Cor em hexadecimal: #RRGGBB."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teto"
+          },
+          "rodape": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "description": "Cor em hexadecimal: #RRGGBB."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rodape"
+          },
+          "moveis": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Cor em hexadecimal: #RRGGBB."
+            },
+            "type": "object",
+            "title": "Moveis",
+            "description": "Cor por id de móvel ou por tipo (o id tem prioridade)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CoresVariacao",
+        "description": "Paleta de uma variação. Tudo opcional: o que faltar usa a cor padrão."
+      },
+      "DadosComodo": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version"
+          },
+          "comodo": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Comodo"
+          },
+          "moveis": {
+            "items": {
+              "$ref": "#/components/schemas/Movel"
+            },
+            "type": "array",
+            "title": "Moveis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "comodo"
+        ],
+        "title": "DadosComodo",
+        "description": "Raiz de ``comodos/<comodo>.json``: mobiliário e dados específicos."
+      },
+      "DividirParede": {
+        "properties": {
+          "distancia": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Distancia",
+            "description": "mm do início da parede até o corte"
+          },
+          "novo_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[a-z0-9][a-z0-9_-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Novo Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "distancia"
+        ],
+        "title": "DividirParede"
+      },
+      "Espaco": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "gaveta",
+              "nicho",
+              "cabideiro"
+            ],
+            "title": "Tipo"
+          },
+          "altura": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tipo"
+        ],
+        "title": "Espaco",
+        "description": "Espaço dentro de um vão, de baixo para cima.\n\nEntre dois espaços seguidos entra uma prateleira, exceto entre duas gavetas\n(que ficam empilhadas). ``altura`` é a altura livre do espaço (na gaveta, a\naltura da frente); se faltar, divide igualmente o que sobra no vão."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Imovel": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "casa",
+              "apartamento"
+            ],
+            "title": "Tipo"
+          },
+          "endereco_apelido": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endereco Apelido"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tipo"
+        ],
+        "title": "Imovel"
+      },
+      "InstalacaoTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "forma": {
+            "type": "string",
+            "title": "Forma"
+          },
+          "posicao": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posicao"
+          },
+          "caminho": {
+            "anyOf": [
+              {
+                "items": {
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array",
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caminho"
+          },
+          "parede": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parede"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "forma"
+        ],
+        "title": "InstalacaoTela"
+      },
+      "ItemHistorico": {
+        "properties": {
+          "caminho": {
+            "type": "string",
+            "title": "Caminho"
+          },
+          "antes": {
+            "title": "Antes"
+          },
+          "depois": {
+            "title": "Depois"
+          },
+          "versao": {
+            "type": "integer",
+            "title": "Versao"
+          },
+          "quando": {
+            "type": "string",
+            "title": "Quando"
+          },
+          "fonte": {
+            "type": "string",
+            "title": "Fonte"
+          },
+          "operacao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operacao"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "caminho",
+          "versao",
+          "quando",
+          "fonte"
+        ],
+        "title": "ItemHistorico"
+      },
+      "Janela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "parede": {
+            "type": "string",
+            "title": "Parede"
+          },
+          "distancia_inicio": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Do início da parede até o vão."
+          },
+          "largura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "altura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "tipo": {
+            "type": "string",
+            "const": "janela",
+            "title": "Tipo"
+          },
+          "peitoril": {
+            "$ref": "#/components/schemas/Medida"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "parede",
+          "distancia_inicio",
+          "largura",
+          "altura",
+          "tipo",
+          "peitoril"
+        ],
+        "title": "Janela",
+        "description": "Janela com peitoril (altura do piso até o vão)."
+      },
+      "Medida": {
+        "properties": {
+          "valor": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Valor",
+            "description": "Valor inteiro em milímetros."
+          },
+          "origem": {
+            "$ref": "#/components/schemas/Origem"
+          },
+          "obs": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Obs"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "valor",
+          "origem"
+        ],
+        "title": "Medida",
+        "description": "Medida em milímetros inteiros, sempre com origem.\n\nExemplo: ``{\"valor\": 3150, \"origem\": \"trena\", \"obs\": \"rodapé a rodapé\"}``.\nValores com casa decimal são recusados (unidade interna é mm inteiro)."
+      },
+      "MedidaEstimada": {
+        "properties": {
+          "caminho": {
+            "type": "string",
+            "title": "Caminho"
+          },
+          "pavimento": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pavimento"
+          },
+          "comodo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comodo"
+          },
+          "entidade": {
+            "type": "string",
+            "title": "Entidade"
+          },
+          "entidade_codigo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entidade Codigo"
+          },
+          "campo": {
+            "type": "string",
+            "title": "Campo"
+          },
+          "valor": {
+            "type": "integer",
+            "title": "Valor"
+          },
+          "obs": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Obs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "caminho",
+          "pavimento",
+          "comodo",
+          "entidade",
+          "entidade_codigo",
+          "campo",
+          "valor",
+          "obs"
+        ],
+        "title": "MedidaEstimada"
+      },
+      "Movel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo",
+            "description": "Tipo do catálogo (cama, guarda_roupa, sofa, tv...); fora dele vira caixa."
+          },
+          "modelo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo",
+            "description": "Modelo do catálogo de onde vieram as medidas."
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nome"
+          },
+          "centro": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Centro"
+          },
+          "rotacao": {
+            "type": "integer",
+            "enum": [
+              0,
+              90,
+              180,
+              270
+            ],
+            "title": "Rotacao",
+            "description": "Graus, anti-horário. Em 0 as costas ficam para -y e a frente para +y; a frente aponta para 0: +y, 90: -x, 180: -y, 270: +x.",
+            "default": 0
+          },
+          "largura": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Dimensão ao longo do eixo x antes da rotação."
+          },
+          "profundidade": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Dimensão de costas a frente (eixo y antes da rotação)."
+          },
+          "altura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "portas": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "abrir",
+                  "correr"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portas",
+            "description": "Portas na frente do móvel (guarda-roupa, armário). Define o espaço livre exigido à frente: de abrir precisa de mais."
+          },
+          "largura_porta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Largura de cada folha de porta de abrir (para o espaço de giro)."
+          },
+          "elevacao": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Do piso até a base do móvel (TV na parede, armário aéreo). Móvel elevado não ocupa o piso: não conta para passagem nem para o giro de portas."
+          },
+          "polegadas": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 150.0,
+                "minimum": 10.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Polegadas",
+            "description": "Diagonal da tela (TV)."
+          },
+          "construcao": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Construcao"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Móvel planejado: estrutura interna para desenho e lista de corte."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "centro",
+          "largura",
+          "profundidade",
+          "altura"
+        ],
+        "title": "Movel",
+        "description": "Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).\n\nConvenção de orientação: com ``rotacao: 0`` o móvel tem as **costas para -y**\n(para baixo na planta) e a **frente para +y**. A largura corre em x e a\nprofundidade em y. A rotação gira o móvel em torno do centro, então a frente\naponta para: 0 → +y, 90 → -x, 180 → -y, 270 → +x.\n\n\"Costas\" é o lado que encosta na parede: cabeceira da cama, fundo do\nguarda-roupa. \"Frente\" é o lado de uso: pés da cama, portas do guarda-roupa."
+      },
+      "MovelTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "comodo": {
+            "type": "string",
+            "title": "Comodo"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nome"
+          },
+          "centro": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Centro"
+          },
+          "rotacao": {
+            "type": "integer",
+            "title": "Rotacao"
+          },
+          "cantos": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Cantos"
+          },
+          "frente": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Frente"
+          },
+          "elevado": {
+            "type": "boolean",
+            "title": "Elevado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "comodo",
+          "tipo",
+          "nome",
+          "centro",
+          "rotacao",
+          "cantos",
+          "frente",
+          "elevado"
+        ],
+        "title": "MovelTela"
+      },
+      "MoverMovel": {
+        "properties": {
+          "centro": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Centro"
+          },
+          "rotacao": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "enum": [
+                  0,
+                  90,
+                  180,
+                  270
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotacao"
+          },
+          "parede": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parede"
+          },
+          "distancia": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Distancia",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MoverMovel",
+        "description": "Arrastar (``centro``), girar (``rotacao``) ou prender numa ``parede``."
+      },
+      "MoverVertice": {
+        "properties": {
+          "de": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "De"
+          },
+          "para": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Para"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "de",
+          "para"
+        ],
+        "title": "MoverVertice"
+      },
+      "Mudanca": {
+        "properties": {
+          "caminho": {
+            "type": "string",
+            "title": "Caminho"
+          },
+          "antes": {
+            "title": "Antes"
+          },
+          "depois": {
+            "title": "Depois"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "caminho"
+        ],
+        "title": "Mudanca"
+      },
+      "NovaInstalacao": {
+        "properties": {
+          "instalacao": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PontoInstalacao"
+              },
+              {
+                "$ref": "#/components/schemas/TrechoInstalacao"
+              }
+            ],
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Instalacao",
+            "description": "Ponto (``forma: ponto``, como PontoInstalacao) ou trecho (``forma: trecho``). Ponto em parede pode vir sem ``posicao`` se ``distancia`` for informada."
+          },
+          "distancia": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia",
+            "description": "mm do início da parede (ponto)"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "instalacao"
+        ],
+        "title": "NovaInstalacao"
+      },
+      "NovoComodo": {
+        "properties": {
+          "comodo": {
+            "$ref": "#/components/schemas/Comodo"
+          },
+          "ajustar_lados": {
+            "type": "boolean",
+            "title": "Ajustar Lados",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "comodo"
+        ],
+        "title": "NovoComodo"
+      },
+      "NovoMovel": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "modelo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[a-z0-9][a-z0-9_-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nome"
+          },
+          "centro": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Centro"
+          },
+          "rotacao": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "enum": [
+                  0,
+                  90,
+                  180,
+                  270
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotacao"
+          },
+          "parede": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parede"
+          },
+          "distancia": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Distancia",
+            "description": "mm do início da parede até a borda do móvel",
+            "default": 0
+          },
+          "medidas": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Medida"
+            },
+            "type": "object",
+            "title": "Medidas",
+            "description": "largura, profundidade, altura, elevacao, largura_porta"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tipo"
+        ],
+        "title": "NovoMovel",
+        "description": "Móvel do catálogo. Posição: ``centro`` (+ ``rotacao``) **ou** ``parede`` (+ ``distancia``).\n\nMedidas do catálogo entram como ``estimada``; as de ``medidas`` substituem com\na origem que a pessoa escolheu."
+      },
+      "NovoPavimento": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id",
+            "default": "terreo"
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nome",
+            "default": "Térreo"
+          },
+          "pe_direito": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "cota_piso": {
+            "$ref": "#/components/schemas/Medida",
+            "default": {
+              "valor": 0,
+              "origem": "projeto",
+              "obs": "referência do pavimento"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pe_direito"
+        ],
+        "title": "NovoPavimento"
+      },
+      "NovoProjeto": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Codigo"
+          },
+          "imovel": {
+            "type": "string",
+            "enum": [
+              "casa",
+              "apartamento"
+            ],
+            "title": "Imovel"
+          },
+          "apelido": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apelido"
+          },
+          "pavimento": {
+            "$ref": "#/components/schemas/NovoPavimento"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "codigo",
+          "imovel",
+          "pavimento"
+        ],
+        "title": "NovoProjeto",
+        "description": "Projeto vazio (um pavimento, sem paredes), para desenhar do zero."
+      },
+      "Origem": {
+        "type": "string",
+        "enum": [
+          "trena",
+          "estimada",
+          "projeto"
+        ],
+        "title": "Origem",
+        "description": "De onde veio a medida."
+      },
+      "Parede": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "inicio": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Inicio"
+          },
+          "fim": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Fim"
+          },
+          "espessura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "lado_a": {
+            "type": "string",
+            "title": "Lado A"
+          },
+          "lado_b": {
+            "type": "string",
+            "title": "Lado B"
+          },
+          "altura": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Se omitida, vale o pé-direito."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "inicio",
+          "fim",
+          "espessura",
+          "lado_a",
+          "lado_b"
+        ],
+        "title": "Parede",
+        "description": "Parede como entidade própria, compartilhada entre cômodos.\n\n``lado_a`` é o cômodo à **esquerda** de quem anda de ``inicio`` para ``fim``;\n``lado_b``, o da direita. Use ``\"externo\"`` quando não houver cômodo modelado."
+      },
+      "ParedeTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "eixo": {
+            "prefixItems": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Eixo"
+          },
+          "corpo": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Corpo"
+          },
+          "espessura": {
+            "type": "integer",
+            "title": "Espessura"
+          },
+          "lado_a": {
+            "type": "string",
+            "title": "Lado A"
+          },
+          "lado_b": {
+            "type": "string",
+            "title": "Lado B"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "eixo",
+          "corpo",
+          "espessura",
+          "lado_a",
+          "lado_b"
+        ],
+        "title": "ParedeTela"
+      },
+      "Pavimento": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nome"
+          },
+          "cota_piso": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "pe_direito": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "rodape": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Altura do rodapé."
+          },
+          "paredes": {
+            "items": {
+              "$ref": "#/components/schemas/Parede"
+            },
+            "type": "array",
+            "title": "Paredes"
+          },
+          "aberturas": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Porta"
+                },
+                {
+                  "$ref": "#/components/schemas/Janela"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tipo",
+                "mapping": {
+                  "janela": "#/components/schemas/Janela",
+                  "porta": "#/components/schemas/Porta"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Aberturas"
+          },
+          "estrutura": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Pilar"
+                },
+                {
+                  "$ref": "#/components/schemas/Viga"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tipo",
+                "mapping": {
+                  "pilar": "#/components/schemas/Pilar",
+                  "viga": "#/components/schemas/Viga"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Estrutura"
+          },
+          "instalacoes": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/PontoInstalacao"
+                },
+                {
+                  "$ref": "#/components/schemas/TrechoInstalacao"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "forma",
+                "mapping": {
+                  "ponto": "#/components/schemas/PontoInstalacao",
+                  "trecho": "#/components/schemas/TrechoInstalacao"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Instalacoes"
+          },
+          "comodos": {
+            "items": {
+              "$ref": "#/components/schemas/Comodo"
+            },
+            "type": "array",
+            "title": "Comodos"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "cota_piso",
+          "pe_direito"
+        ],
+        "title": "Pavimento"
+      },
+      "PavimentoTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "paredes": {
+            "items": {
+              "$ref": "#/components/schemas/ParedeTela"
+            },
+            "type": "array",
+            "title": "Paredes"
+          },
+          "aberturas": {
+            "items": {
+              "$ref": "#/components/schemas/AberturaTela"
+            },
+            "type": "array",
+            "title": "Aberturas"
+          },
+          "comodos": {
+            "items": {
+              "$ref": "#/components/schemas/ComodoTela"
+            },
+            "type": "array",
+            "title": "Comodos"
+          },
+          "moveis": {
+            "items": {
+              "$ref": "#/components/schemas/MovelTela"
+            },
+            "type": "array",
+            "title": "Moveis"
+          },
+          "instalacoes": {
+            "items": {
+              "$ref": "#/components/schemas/InstalacaoTela"
+            },
+            "type": "array",
+            "title": "Instalacoes"
+          },
+          "limites": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "type": "array",
+                    "maxItems": 2,
+                    "minItems": 2
+                  },
+                  {
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "type": "array",
+                    "maxItems": 2,
+                    "minItems": 2
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limites"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "paredes",
+          "aberturas",
+          "comodos",
+          "moveis",
+          "instalacoes",
+          "limites"
+        ],
+        "title": "PavimentoTela"
+      },
+      "Pilar": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "const": "pilar",
+            "title": "Tipo"
+          },
+          "centro": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Centro"
+          },
+          "largura": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Dimensão em x."
+          },
+          "profundidade": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Dimensão em y."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "centro",
+          "largura",
+          "profundidade"
+        ],
+        "title": "Pilar"
+      },
+      "PontoInstalacao": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "forma": {
+            "type": "string",
+            "const": "ponto",
+            "title": "Forma"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoInstalacao"
+          },
+          "posicao": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Posicao"
+          },
+          "altura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "parede": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parede"
+          },
+          "comodo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comodo",
+            "description": "Cômodo atendido pelo ponto. Obrigatório em parede entre dois cômodos: diz de que lado da parede ele fica."
+          },
+          "obs": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Obs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "forma",
+          "tipo",
+          "posicao",
+          "altura"
+        ],
+        "title": "PontoInstalacao",
+        "description": "Ponto (tomada, interruptor, saída de água...) com altura do piso."
+      },
+      "Porta": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "parede": {
+            "type": "string",
+            "title": "Parede"
+          },
+          "distancia_inicio": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Do início da parede até o vão."
+          },
+          "largura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "altura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "tipo": {
+            "type": "string",
+            "const": "porta",
+            "title": "Tipo"
+          },
+          "de": {
+            "type": "string",
+            "title": "De"
+          },
+          "para": {
+            "type": "string",
+            "title": "Para"
+          },
+          "folha": {
+            "type": "string",
+            "enum": [
+              "giro",
+              "correr"
+            ],
+            "title": "Folha",
+            "default": "giro"
+          },
+          "abre_para": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abre Para",
+            "description": "Cômodo (de/para) para onde a folha gira. Obrigatório se giro."
+          },
+          "dobradica": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "inicio",
+                  "fim"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dobradica",
+            "description": "Lado do vão com a dobradiça, no sentido da parede."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "parede",
+          "distancia_inicio",
+          "largura",
+          "altura",
+          "tipo",
+          "de",
+          "para"
+        ],
+        "title": "Porta",
+        "description": "Porta: liga dois cômodos e tem sentido de abertura."
+      },
+      "Preferencias": {
+        "properties": {
+          "unidade": {
+            "type": "string",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "title": "Unidade",
+            "description": "Unidade em que a tela mostra e recebe medidas (a API é sempre mm).",
+            "default": "cm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Preferencias",
+        "description": "Preferências do usuário (por ora um só; com login, uma por pessoa)."
+      },
+      "Problema": {
+        "properties": {
+          "severidade": {
+            "$ref": "#/components/schemas/Severidade"
+          },
+          "codigo": {
+            "type": "string",
+            "title": "Codigo"
+          },
+          "mensagem": {
+            "type": "string",
+            "title": "Mensagem"
+          },
+          "pavimento": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pavimento"
+          },
+          "comodo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comodo"
+          },
+          "elemento": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elemento"
+          },
+          "posicao": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posicao"
+          },
+          "regiao": {
+            "anyOf": [
+              {
+                "items": {
+                  "prefixItems": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ],
+                  "type": "array",
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regiao"
+          }
+        },
+        "type": "object",
+        "required": [
+          "severidade",
+          "codigo",
+          "mensagem"
+        ],
+        "title": "Problema"
+      },
+      "Projeto": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version"
+          },
+          "projeto": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Projeto"
+          },
+          "imovel": {
+            "$ref": "#/components/schemas/Imovel"
+          },
+          "pavimentos": {
+            "items": {
+              "$ref": "#/components/schemas/Pavimento"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Pavimentos"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "projeto",
+          "imovel",
+          "pavimentos"
+        ],
+        "title": "Projeto",
+        "description": "Raiz do ``projeto.json``."
+      },
+      "ProjetoCompleto": {
+        "properties": {
+          "versao": {
+            "type": "integer",
+            "title": "Versao"
+          },
+          "projeto": {
+            "$ref": "#/components/schemas/Projeto"
+          },
+          "comodos": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DadosComodo"
+            },
+            "type": "object",
+            "title": "Comodos"
+          },
+          "variacoes": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/Variacao"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Variacoes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "versao",
+          "projeto",
+          "comodos",
+          "variacoes"
+        ],
+        "title": "ProjetoCompleto"
+      },
+      "Renomear": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Codigo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "codigo"
+        ],
+        "title": "Renomear"
+      },
+      "ResultadoEdicao": {
+        "properties": {
+          "versao": {
+            "type": "integer",
+            "title": "Versao"
+          },
+          "alteracoes": {
+            "items": {
+              "$ref": "#/components/schemas/Mudanca"
+            },
+            "type": "array",
+            "title": "Alteracoes"
+          },
+          "novos": {
+            "items": {
+              "$ref": "#/components/schemas/Problema"
+            },
+            "type": "array",
+            "title": "Novos",
+            "description": "Problemas que esta edição introduziu."
+          },
+          "problemas": {
+            "items": {
+              "$ref": "#/components/schemas/Problema"
+            },
+            "type": "array",
+            "title": "Problemas",
+            "description": "Todos os problemas estruturais agora."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "versao",
+          "alteracoes",
+          "novos",
+          "problemas"
+        ],
+        "title": "ResultadoEdicao"
+      },
+      "ResumoProjeto": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "title": "Codigo"
+          },
+          "versao": {
+            "type": "integer",
+            "title": "Versao"
+          },
+          "imovel": {
+            "type": "string",
+            "title": "Imovel"
+          },
+          "apelido": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apelido"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "codigo",
+          "versao",
+          "imovel"
+        ],
+        "title": "ResumoProjeto"
+      },
+      "Severidade": {
+        "type": "string",
+        "enum": [
+          "erro",
+          "aviso",
+          "info"
+        ],
+        "title": "Severidade"
+      },
+      "TipoComodo": {
+        "type": "string",
+        "enum": [
+          "quarto",
+          "sala",
+          "cozinha",
+          "banheiro",
+          "lavabo",
+          "area_servico",
+          "escritorio",
+          "corredor",
+          "varanda",
+          "garagem",
+          "outro"
+        ],
+        "title": "TipoComodo"
+      },
+      "TipoInstalacao": {
+        "type": "string",
+        "enum": [
+          "tomada",
+          "interruptor",
+          "ponto_luz",
+          "agua_fria",
+          "agua_quente",
+          "esgoto",
+          "ralo",
+          "gas"
+        ],
+        "title": "TipoInstalacao"
+      },
+      "TrechoInstalacao": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "forma": {
+            "type": "string",
+            "const": "trecho",
+            "title": "Forma"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoInstalacao"
+          },
+          "caminho": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Caminho"
+          },
+          "altura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "embutido": {
+            "type": "boolean",
+            "title": "Embutido",
+            "default": true
+          },
+          "obs": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Obs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "forma",
+          "tipo",
+          "caminho",
+          "altura"
+        ],
+        "title": "TrechoInstalacao",
+        "description": "Trecho de tubulação/eletroduto. Se embutido, gera faixa de \"não furar\"."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Vao": {
+        "properties": {
+          "largura": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Largura livre; se faltar, divide igualmente o que sobra."
+          },
+          "espacos": {
+            "items": {
+              "$ref": "#/components/schemas/Espaco"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Espacos",
+            "description": "De baixo para cima."
+          },
+          "porta": {
+            "type": "boolean",
+            "title": "Porta",
+            "description": "Com portas de abrir: se este vão tem porta (False = nicho aberto).",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "espacos"
+        ],
+        "title": "Vao",
+        "description": "Coluna do móvel entre duas divisórias (ou entre a lateral e uma divisória)."
+      },
+      "Variacao": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version"
+          },
+          "comodo": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Comodo"
+          },
+          "nome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nome",
+            "description": "Nome para exibir; o id é o nome do arquivo."
+          },
+          "descricao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descricao"
+          },
+          "cores": {
+            "$ref": "#/components/schemas/CoresVariacao"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "comodo"
+        ],
+        "title": "Variacao",
+        "description": "Raiz de ``variacoes/<comodo>/<nome>.json``: uma alternativa de acabamento.\n\nVariações nunca alteram o ``projeto.json`` base (CLAUDE.md §7)."
+      },
+      "Viga": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "const": "viga",
+            "title": "Tipo"
+          },
+          "inicio": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Inicio"
+          },
+          "fim": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Fim"
+          },
+          "largura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "altura": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Quanto a viga desce abaixo da laje."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "inicio",
+          "fim",
+          "largura",
+          "altura"
+        ],
+        "title": "Viga"
+      }
+    }
+  }
+}
