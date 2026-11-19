@@ -327,6 +327,223 @@
         }
       }
     },
+    "/projetos/{codigo}/versoes": {
+      "get": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Versoes",
+        "description": "Versões (da mais nova) e para onde o desfazer/refazer levariam agora.",
+        "operationId": "versoes_projetos__codigo__versoes_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Versoes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/desfazer": {
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Desfazer",
+        "description": "Volta ao estado de antes da última edição (grava como versão nova).",
+        "operationId": "desfazer_projetos__codigo__desfazer_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/refazer": {
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Refazer",
+        "description": "Refaz o último desfazer (só logo depois de desfazer).",
+        "operationId": "refazer_projetos__codigo__refazer_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/versoes/{para}/restaurar": {
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Restaurar",
+        "description": "Volta o projeto para o conteúdo da versão ``para`` (grava como versão nova).",
+        "operationId": "restaurar_projetos__codigo__versoes__para__restaurar_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "para",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Para"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/versoes/{versao}": {
       "get": {
         "tags": [
@@ -5381,6 +5598,75 @@
         ],
         "title": "ResumoProjeto"
       },
+      "ResumoVersao": {
+        "properties": {
+          "versao": {
+            "type": "integer",
+            "title": "Versao"
+          },
+          "quando": {
+            "type": "string",
+            "title": "Quando"
+          },
+          "operacao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operacao"
+          },
+          "tipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo",
+            "description": "desfazer | refazer | reverter, se for uma volta."
+          },
+          "para": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Para",
+            "description": "Versão cujo conteúdo foi restaurado."
+          },
+          "alteracoes": {
+            "type": "integer",
+            "title": "Alteracoes",
+            "description": "Quantas alterações a versão gravou."
+          },
+          "caminhos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Caminhos",
+            "description": "Até 5 caminhos alterados (resumo)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "versao",
+          "quando",
+          "alteracoes",
+          "caminhos"
+        ],
+        "title": "ResumoVersao"
+      },
       "Severidade": {
         "type": "string",
         "enum": [
@@ -5612,6 +5898,55 @@
         ],
         "title": "Variacao",
         "description": "Raiz de ``variacoes/<comodo>/<nome>.json``: uma alternativa de acabamento.\n\nVariações nunca alteram o ``projeto.json`` base (CLAUDE.md §7)."
+      },
+      "Versoes": {
+        "properties": {
+          "atual": {
+            "type": "integer",
+            "title": "Atual"
+          },
+          "desfazer": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desfazer",
+            "description": "Versão que o desfazer restaura (None: nada)."
+          },
+          "refazer": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refazer",
+            "description": "Versão que o refazer restaura (None: nada)."
+          },
+          "versoes": {
+            "items": {
+              "$ref": "#/components/schemas/ResumoVersao"
+            },
+            "type": "array",
+            "title": "Versoes",
+            "description": "Da mais nova para a mais velha."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "atual",
+          "desfazer",
+          "refazer",
+          "versoes"
+        ],
+        "title": "Versoes"
       },
       "Viga": {
         "properties": {

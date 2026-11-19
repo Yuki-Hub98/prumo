@@ -94,16 +94,6 @@ class PedidoRender(_Esquema):
     qualidade: Literal["rascunho", "final"] = Field(
         "rascunho", description="rascunho: segundos, para conferir; final: ~2 min."
     )
-    vistas: list[str] = Field(
-        default_factory=lambda: ["perspectiva", "superior"],
-        min_length=1,
-        description="Câmeras (ver GET .../vistas): perspectiva, porta, cama, canto-N, superior.",
-    )
-
-
-class Vista(_Esquema):
-    nome: str
-    titulo: str
 
 
 class InfoRender(_Esquema):
@@ -111,7 +101,6 @@ class InfoRender(_Esquema):
     comodo: str
     variacao: str
     qualidade: str
-    vistas: list[str]
     status: Literal["na_fila", "rodando", "pronto", "erro"]
     progresso: float = Field(description="0 a 1")
     imagem_atual: int | None
@@ -145,6 +134,23 @@ class ItemHistorico(Mudanca):
     quando: str
     fonte: str
     operacao: str | None = None
+
+
+class ResumoVersao(_Esquema):
+    versao: int
+    quando: str
+    operacao: str | None = None
+    tipo: str | None = Field(None, description="desfazer | refazer | reverter, se for uma volta.")
+    para: int | None = Field(None, description="Versão cujo conteúdo foi restaurado.")
+    alteracoes: int = Field(description="Quantas alterações a versão gravou.")
+    caminhos: list[str] = Field(description="Até 5 caminhos alterados (resumo).")
+
+
+class Versoes(_Esquema):
+    atual: int
+    desfazer: int | None = Field(description="Versão que o desfazer restaura (None: nada).")
+    refazer: int | None = Field(description="Versão que o refazer restaura (None: nada).")
+    versoes: list[ResumoVersao] = Field(description="Da mais nova para a mais velha.")
 
 
 class MedidaEstimada(_Esquema):
@@ -274,5 +280,6 @@ __all__ = [
     "Renomear",
     "ResultadoEdicao",
     "ResumoProjeto",
-    "Vista",
+    "ResumoVersao",
+    "Versoes",
 ]

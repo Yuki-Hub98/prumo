@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { api, ou, type Cores, type Medida, type MovelTela, type Problema } from "../api/cliente";
 import { proximoId, type Pt } from "../editor/geometria";
 import { PainelPlanta } from "../editor/PainelPlanta";
+import { BotoesDesfazer, PainelHistorico } from "./Desfazer";
 import { PainelCores } from "./PainelCores";
 import { PainelImagens } from "./PainelImagens";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade } from "../dados";
@@ -38,6 +39,7 @@ export function TelaProjeto({
   const [ativa, setAtiva] = useState<Record<string, string>>(
     comodoInicial && variacaoInicial ? { [comodoInicial]: variacaoInicial } : {},
   );
+  const [historico, setHistorico] = useState(false);
   const [rascunho, setRascunho] = useState<Cores | null>(null);
   const aoRascunho = useCallback((c: Cores | null) => setRascunho(c), []);
 
@@ -126,6 +128,7 @@ export function TelaProjeto({
             </button>
           ))}
         </div>
+        <BotoesDesfazer codigo={codigo} aoProblemas={setNovos} aoHistorico={() => setHistorico((h) => !h)} />
         {editar.isPending && <span className="text-xs text-stone-500">gravando…</span>}
         {editar.error && <span className="text-sm text-red-700">{editar.error.message}</span>}
       </header>
@@ -160,6 +163,7 @@ export function TelaProjeto({
           )}
         </main>
         <aside className="w-96 overflow-y-auto border-l border-stone-200 bg-stone-50">
+          {historico && <PainelHistorico codigo={codigo} aoFechar={() => setHistorico(false)} />}
           {modo === "planta" && geometria.data && (
             <PainelPlanta
               codigo={codigo}

@@ -31,13 +31,14 @@ from interiores_api.esquemas import (
     ProjetoCompleto,
     ResultadoEdicao,
     ResumoProjeto,
-    Vista,
+    ResumoVersao,
+    Versoes,
 )
 from interiores_api.fila import Fila
 from interiores_banco import arquivos, renders, repositorio
 from interiores_banco import tabelas as t
+from interiores_banco import versoes as volta
 from interiores_banco.mapear import Conteudo
-from interiores_core.carregar import ProjetoCarregado
 from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
 from interiores_core.edicao_variacoes import validar_variacao
@@ -45,7 +46,6 @@ from interiores_core.modelo import DadosComodo, Projeto, Variacao
 from interiores_core.regras import checar
 from interiores_core.tela import PavimentoTela, pavimento_para_tela
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
-from interiores_render.cena import vistas_do_comodo
 from interiores_render.gerar import IMAGENS_POR_RENDER, QUALIDADES
 
 log = structlog.get_logger("interiores.api")
@@ -67,6 +67,9 @@ def _mudancas(alteracoes: list[Alteracao]) -> list[Mudanca]:
     return [Mudanca(caminho=a.caminho, antes=a.antes, depois=a.depois) for a in alteracoes]
 
 
+IMAGENS_RENDER = ("render-perspectiva.png", "render-superior.png")
+
+
 def _info(r: t.Render) -> InfoRender:
     agora = datetime.now(UTC)
     decorrido = ((r.fim or agora) - r.inicio).total_seconds() if r.inicio is not None else None
@@ -80,13 +83,12 @@ def _info(r: t.Render) -> InfoRender:
             restante = max(r.estimativa_s - decorrido, 0.0)
     elif r.status == "pronto":
         restante = 0.0
-    nomes = [n for n in (r.arquivos or []) if n.endswith(".png")] if r.status == "pronto" else []
+    nomes = [n for n in (r.arquivos or []) if n in IMAGENS_RENDER] if r.status == "pronto" else []
     return InfoRender(
         id=r.id,
         comodo=r.comodo,
         variacao=r.variacao,
         qualidade=r.qualidade,
-        vistas=list(r.vistas),
         status=r.status,
         progresso=r.progresso,
         imagem_atual=r.imagem_atual,
@@ -126,6 +128,32 @@ class Servico:
 
     def versao(self, codigo: str, versao: int) -> ProjetoCompleto:
         return _completo(repositorio.snapshot(self.sessao, codigo, versao), versao)
+
+    def versoes(self, codigo: str) -> Versoes:
+        """Lista de versões e para onde o desfazer e o refazer levariam agora."""
+        lista = repositorio.versoes(self.sessao, codigo)
+        ops = {v.versao: v.operacao for v in lista}
+        atual = lista[0].versao
+        resumos = []
+        for v in lista:
+            lida = volta.ler_operacao(v.operacao)
+            resumos.append(
+                ResumoVersao(
+                    versao=v.versao,
+                    quando=v.quando.isoformat(),
+                    operacao=v.operacao,
+                    tipo=lida[0] if lida else None,
+                    para=lida[1] if lida else None,
+                    alteracoes=v.alteracoes,
+                    caminhos=v.caminhos,
+                )
+            )
+        return Versoes(
+            atual=atual,
+            desfazer=volta.alvo_desfazer(ops, atual),
+            refazer=volta.alvo_refazer(ops, atual),
+            versoes=resumos,
+        )
 
     def geometria(self, codigo: str, pavimento: str) -> PavimentoTela:
         c, _ = repositorio.ler(self.sessao, codigo)
@@ -337,19 +365,11 @@ class Servico:
             raise KeyError(f"cômodo '{comodo}' não existe no projeto")
         if pedido.variacao != "base" and pedido.variacao not in c.variacoes.get(comodo, {}):
             raise KeyError(f"variação '{pedido.variacao}' não existe em '{comodo}'")
-        disponiveis = {v.nome for v in self._vistas(c, comodo)}
-        fora = [v for v in pedido.vistas if v not in disponiveis]
-        if fora:
-            raise ValueError(
-                f"vista(s) {', '.join(fora)} não existem em '{comodo}' "
-                f"({', '.join(sorted(disponiveis))})"
-            )
         if self.fila is None:
             raise RuntimeError("fila de render não configurada")
-        vistas = list(dict.fromkeys(pedido.vistas))  # sem repetidas, na ordem pedida
         r, novo = renders.pedir(
             self.sessao, codigo, comodo, pedido.variacao, pedido.qualidade,
-            QUALIDADES[pedido.qualidade], vistas,
+            QUALIDADES[pedido.qualidade], IMAGENS_POR_RENDER,
         )  # fmt: skip
         if novo:
             self.sessao.commit()  # o worker precisa enxergar o pedido
@@ -357,26 +377,12 @@ class Servico:
             log.info("render na fila", render=r.id, projeto=codigo, comodo=comodo)
         return _info(r)
 
-    def estimativas(self, imagens: int = IMAGENS_POR_RENDER) -> dict[str, float]:
+    def estimativas(self) -> dict[str, float]:
         """Segundos estimados por qualidade, pelo histórico desta máquina."""
         return {
-            q: renders.estimar_s(self.sessao, *tamanho, imagens)
+            q: renders.estimar_s(self.sessao, *tamanho, IMAGENS_POR_RENDER)
             for q, tamanho in QUALIDADES.items()
         }
-
-    @staticmethod
-    def _vistas(c: Conteudo, comodo: str) -> list[Vista]:
-        carregado = ProjetoCarregado(
-            pasta=Path(), projeto=c.projeto, dados_comodos=c.comodos, variacoes=c.variacoes
-        )
-        return [Vista(**v) for v in vistas_do_comodo(carregado, comodo)]
-
-    def vistas(self, codigo: str, comodo: str) -> list[Vista]:
-        """Câmeras que fazem sentido no cômodo (porta, cama, cantos...)."""
-        c, _ = repositorio.ler(self.sessao, codigo)
-        if c.projeto.pavimento_do_comodo(comodo) is None:
-            raise KeyError(f"cômodo '{comodo}' não existe no projeto")
-        return self._vistas(c, comodo)
 
     def renders(self, codigo: str, comodo: str | None) -> list[InfoRender]:
         self._id(codigo)
@@ -388,8 +394,7 @@ class Servico:
     def imagem_render(self, id_: int, nome: str) -> Path:
         """Arquivo de imagem de um render pronto (só os nomes conhecidos)."""
         r = renders.obter(self.sessao, id_)
-        validos = [n for n in (r.arquivos or []) if n.endswith(".png")]
-        if nome not in validos or r.status != "pronto" or r.pasta is None:
+        if nome not in IMAGENS_RENDER or r.status != "pronto" or r.pasta is None:
             raise KeyError(f"imagem '{nome}' não existe no render {id_}")
         arq = Path(r.pasta) / nome
         if not arq.is_file():
@@ -397,6 +402,40 @@ class Servico:
         return arq
 
     # ------------------------------------------------------------ projeto inteiro
+
+    def voltar(
+        self, codigo: str, versao: int, tipo: volta.Tipo, para: int | None = None
+    ) -> ResultadoEdicao:
+        """Desfaz, refaz ou volta para a versão ``para`` gravando o conteúdo dela como
+        versão nova (nada é apagado). O código do projeto atual é mantido."""
+        atual, na_base = repositorio.ler(self.sessao, codigo)
+        if versao != na_base:
+            raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)
+        if tipo == "reverter":
+            if para is None or para == na_base:
+                raise ValueError("escolha uma versão diferente da atual para voltar")
+        else:
+            ops = repositorio.operacoes(self.sessao, codigo)
+            alvo = volta.alvo_desfazer if tipo == "desfazer" else volta.alvo_refazer
+            para = alvo(ops, na_base)
+            if para is None:
+                raise ValueError(f"nada para {tipo}")
+        antigo = repositorio.snapshot(self.sessao, codigo, para)
+        projeto = antigo.projeto.model_copy(update={"projeto": codigo})  # sobrevive a renomear
+        novo = Conteudo(projeto, antigo.comodos, antigo.variacoes, antigo.regras_toml)
+        if novo.hash == atual.hash:
+            raise ValueError(f"a versão {para} é igual à atual: nada para {tipo}")
+        nova_versao = self._gravar(novo, volta.operacao(tipo, para), versao)
+        hist = self.historico(codigo, versao)
+        probs = sorted(
+            validar(novo.projeto, novo.comodos), key=lambda p: ORDEM_SEVERIDADE[p.severidade]
+        )
+        return ResultadoEdicao(
+            versao=nova_versao,
+            alteracoes=[Mudanca(caminho=h.caminho, antes=h.antes, depois=h.depois) for h in hist],
+            novos=[],
+            problemas=probs,
+        )
 
     def renomear(self, codigo: str, versao: int, novo: str) -> ResultadoEdicao:
         """Troca o código; a pasta ``projetos/<codigo>`` (com as referências) vai junto."""

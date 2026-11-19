@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -170,6 +171,51 @@ def snapshot(sessao: Session, codigo: str, versao: int) -> Conteudo:
     if s is None:
         raise ProjetoInexistenteError(f"projeto '{codigo}' não tem a versão {versao}")
     return Conteudo.de_dict(s.conteudo)
+
+
+@dataclass(frozen=True)
+class ResumoVersao:
+    versao: int
+    quando: datetime
+    operacao: str | None
+    alteracoes: int
+    caminhos: list[str]
+    """Até 5 caminhos alterados, para a tela resumir o que mudou."""
+
+
+def versoes(sessao: Session, codigo: str) -> list[ResumoVersao]:
+    """Todas as versões do projeto, da mais nova para a mais velha."""
+    projeto_id = sessao.scalar(select(t.Projeto.id).where(t.Projeto.codigo == codigo))
+    if projeto_id is None:
+        raise ProjetoInexistenteError(f"projeto '{codigo}' não está no banco")
+    quando = dict(
+        sessao.execute(
+            select(t.Snapshot.versao, t.Snapshot.quando).where(t.Snapshot.projeto_id == projeto_id)
+        ).all()
+    )
+    por_versao: dict[int, tuple[str | None, list[str]]] = {}
+    for versao, op, caminho in sessao.execute(
+        select(t.Historico.versao, t.Historico.operacao, t.Historico.caminho)
+        .where(t.Historico.projeto_id == projeto_id)
+        .order_by(t.Historico.versao, t.Historico.id)
+    ):
+        _, caminhos = por_versao.setdefault(versao, (op, []))
+        caminhos.append(caminho)
+    return [
+        ResumoVersao(
+            versao=v,
+            quando=q,
+            operacao=por_versao.get(v, (None, []))[0],
+            alteracoes=len(por_versao.get(v, (None, []))[1]),
+            caminhos=por_versao.get(v, (None, []))[1][:5],
+        )
+        for v, q in sorted(quando.items(), reverse=True)
+    ]
+
+
+def operacoes(sessao: Session, codigo: str) -> dict[int, str | None]:
+    """Operação de cada versão (``{versao: operacao}``), para desfazer/refazer."""
+    return {r.versao: r.operacao for r in versoes(sessao, codigo)}
 
 
 def apagar(sessao: Session, codigo: str, versao_esperada: int) -> None:
