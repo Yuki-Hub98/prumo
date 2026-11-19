@@ -217,6 +217,17 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       as checagens rodando na hora; precisa de funções de edição no core como as de móveis
 - [ ] Frontend — editor de móveis: escolher do catálogo, arrastar, girar e redimensionar na
       planta/3D, editar medidas e criar móveis planejados, com as checagens rodando na hora
+- [ ] Modelos prontos (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
+      escolher e posicionar, com símbolo na planta e 3D detalhado no render/visor. **Tudo
+      editável pela pessoa** (no frontend): partir de um modelo pronto e mudar medidas,
+      acabamento/cor, número de portas/folhas/gavetas, puxador, sentido de abertura etc.,
+      podendo salvar a versão editada como modelo próprio para reutilizar:
+      - **móveis mais comuns** do mercado (camas, guarda-roupas, sofás, racks, mesas, cadeiras,
+        cômodas, criados-mudos...), com acabamento, puxadores, pés e portas visíveis;
+      - **portas**: de giro (lisa, almofadada, com vidro), de correr (aparente e embutida),
+        camarão, pivotante, de banheiro com veneziana; com batente, guarnição e maçaneta;
+      - **janelas**: de correr (2 e 4 folhas), basculante, maxim-ar, de abrir, veneziana,
+        com caixilho, vidro e peitoril padrão; tamanhos comerciais (ex.: 120 × 100, 150 × 120)
 - [ ] Cozinha (hidráulica, gás, triângulo de trabalho)
 - [ ] Planta geral do pavimento e 3D da casa
 - [ ] Deploy
