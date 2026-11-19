@@ -32,11 +32,10 @@
       "tipo": "guarda_roupa",
       "nome": "Guarda-roupa",
       "centro": [
-        3600,
-        3150
+        3310,
+        3130
       ],
       "rotacao": 180,
-      "portas": "correr",
       "largura": {
         "valor": 1800,
         "origem": "estimada",
@@ -51,7 +50,8 @@
         "valor": 2300,
         "origem": "estimada",
         "obs": "estimada"
-      }
+      },
+      "portas": "correr"
     },
     {
       "id": "tv",
@@ -90,8 +90,8 @@
       "modelo": "alto",
       "nome": "Armário",
       "centro": [
-        3150,
-        275
+        3160,
+        295
       ],
       "rotacao": 0,
       "largura": {
