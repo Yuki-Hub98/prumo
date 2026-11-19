@@ -128,16 +128,27 @@ export function useRenders(codigo: string, comodo: string) {
   });
 }
 
-export function useEstimativas() {
+/** Segundos estimados (rascunho, final) para ``imagens`` vistas, pelo histórico da máquina. */
+export function useEstimativas(imagens = 2) {
   return useQuery({
-    queryKey: ["estimativas"],
-    queryFn: () => ou(api.GET("/renders/estimativas")),
+    queryKey: ["estimativas", imagens],
+    queryFn: () => ou(api.GET("/renders/estimativas", { params: { query: { imagens } } })),
+    placeholderData: (anterior) => anterior,
+  });
+}
+
+/** Câmeras que fazem sentido no cômodo (perspectiva, porta, cama, canto-N, superior). */
+export function useVistas(codigo: string, comodo: string) {
+  return useQuery({
+    queryKey: [...chaves.projeto(codigo), "vistas", comodo],
+    queryFn: () =>
+      ou(api.GET("/projetos/{codigo}/comodos/{comodo}/vistas", { params: { path: { codigo, comodo } } })),
   });
 }
 
 export function usePedirRender(codigo: string, comodo: string) {
   const qc = useQueryClient();
-  return useMutation<unknown, ErroApi, { variacao: string; qualidade: "rascunho" | "final" }>({
+  return useMutation<unknown, ErroApi, { variacao: string; qualidade: "rascunho" | "final"; vistas: string[] }>({
     mutationFn: (corpo) =>
       ou(
         api.POST("/projetos/{codigo}/comodos/{comodo}/renders", {
