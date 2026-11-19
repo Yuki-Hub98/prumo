@@ -324,7 +324,7 @@ def main():
         obj.hide_render = False
     cor_lisa(mats)
     bpy.ops.export_scene.gltf(
-        filepath=str(pasta / f"{cena['comodo']}.glb"),
+        filepath=str(pasta / f"{cena.get('modelo') or cena['comodo']}.glb"),
         export_format="GLB",
         export_cameras=False,
         export_lights=False,

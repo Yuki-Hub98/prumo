@@ -11,7 +11,7 @@ from shapely.ops import unary_union
 
 from interiores_core import geometria
 from interiores_core.carregar import carregar
-from interiores_render.cena import AVISO_OBRA, montar_cena
+from interiores_render.cena import AVISO_OBRA, montar_cena, montar_cena_pavimento
 
 DADOS = Path(__file__).resolve().parents[2] / "core" / "tests" / "dados" / "casa"
 
@@ -193,3 +193,61 @@ def test_texturas(cena: dict[str, Any]) -> None:
     assert textura_piso(comodo("cozinha", "vinílico amadeirado")) == "madeira"
     banheiro = montar_cena(carregar(DADOS), "banheiro")["materiais"]["piso"]
     assert banheiro["textura"] == "porcelanato" and banheiro["cor"] == "#D6D1C8"
+
+
+# ---------------------------------------------------------------- pavimento inteiro
+
+
+def test_pavimento_junta_os_comodos() -> None:
+    c = carregar(DADOS)
+    cena = montar_cena_pavimento(c, "terreo")
+    pav = c.projeto.pavimentos[0]
+    nomes = _nomes(cena["prismas"]) | _nomes(cena["caixas"])
+    for comodo in pav.comodos:
+        assert {f"piso-{comodo.id}", f"teto-{comodo.id}"} <= nomes
+    # nomes únicos: no .glb cada objeto é achado pelo nome
+    todos = [i["nome"] for i in cena["prismas"] + cena["caixas"]]
+    assert len(todos) == len(set(todos))
+    # cada móvel do quarto aparece uma vez, com o cômodo no nome
+    assert any(n.startswith("cama") and n.endswith("-quarto") for n in nomes)
+    assert cena["modelo"] == "terreo" and cena["comodo"] == "_geral"
+    assert cena["aviso"] is not None and cena["aviso"].startswith(AVISO_OBRA)
+    assert [cam["nome"] for cam in cena["cameras"]] == ["perspectiva", "superior"]
+
+
+def test_pavimento_parede_compartilhada_sai_uma_vez() -> None:
+    c = carregar(DADOS)
+    pav = c.projeto.pavimentos[0]
+    cena = montar_cena_pavimento(c, "terreo")
+    paredes = [p for p in cena["prismas"] if p["nome"].startswith("parede-")]
+    # sem volume sobreposto: a área somada é a da união
+    pols = [Polygon(p["contorno"]) for p in paredes]
+    assert sum(p.area for p in pols) == pytest.approx(unary_union(pols).area, rel=1e-6)
+    ids = {p["nome"].split("-")[1] for p in paredes}
+    assert ids == {p.id for p in pav.paredes if geometria.comprimento(p) > 0}
+
+
+def test_pavimento_teto_some_nas_duas_vistas() -> None:
+    cena = montar_cena_pavimento(carregar(DADOS), "terreo")
+    tetos = [p for p in cena["prismas"] if p["nome"].startswith("teto-")]
+    assert tetos and all(set(p["oculto_em"]) == {"perspectiva", "superior"} for p in tetos)
+    luminarias = [cx for cx in cena["caixas"] if cx["nome"].startswith("luminaria-")]
+    assert all("perspectiva" in cx["oculto_em"] for cx in luminarias)
+
+
+def test_pavimento_vista_de_cima_cabe_no_quadro() -> None:
+    c = carregar(DADOS)
+    cena = montar_cena_pavimento(c, "terreo", largura=1600, altura=1000)
+    sup = next(cam for cam in cena["cameras"] if cam["nome"] == "superior")
+    pav = c.projeto.pavimentos[0]
+    x0, y0, x1, y1 = unary_union([geometria.corpo(p) for p in pav.paredes]).bounds
+    assert sup["escala"] >= x1 - x0  # a escala vale na largura do quadro
+    assert sup["escala"] * 1000 / 1600 >= y1 - y0
+
+
+def test_pavimento_inexistente_e_vistas_erradas() -> None:
+    c = carregar(DADOS)
+    with pytest.raises(KeyError, match="terreo"):
+        montar_cena_pavimento(c, "superior")
+    with pytest.raises(KeyError, match="porta"):
+        montar_cena_pavimento(c, "terreo", vistas=("porta",))

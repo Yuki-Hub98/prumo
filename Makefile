@@ -50,9 +50,9 @@ BLENDER_VERSION ?= 4.5.16
 blender-imagem: ## Constrói a imagem Docker do Blender headless (uma vez)
 	docker build -f docker/blender.Dockerfile --build-arg BLENDER_VERSION=$(BLENDER_VERSION) -t interiores-blender:$(BLENDER_VERSION) .
 
-render: ## Renders 3D: make render P=casa C=quarto [V=variação|todas] [F=1]
-	@test -n "$(P)" -a -n "$(C)" || { echo "informe: make render P=<projeto> C=<cômodo> [V=<variação>|todas]"; exit 2; }
-	uv run interiores render $(P) $(C) $(if $(V),--variacao $(V)) $(if $(F),--forcar)
+render: ## Renders 3D: make render P=casa [C=quarto [V=variação|todas]] [A=terreo] [F=1]; sem C = pavimento inteiro
+	@test -n "$(P)" || { echo "informe: make render P=<projeto> [C=<cômodo> [V=<variação>|todas]] [A=<pavimento>]"; exit 2; }
+	uv run interiores render $(P) $(C) $(if $(V),--variacao $(V)) $(if $(A),--pavimento $(A)) $(if $(F),--forcar)
 
 wiki: ## Sobe só a wiki de documentação (http://localhost:3000)
 	docker compose up -d wiki

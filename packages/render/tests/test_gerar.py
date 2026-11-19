@@ -24,7 +24,8 @@ for i, cam in ((1, "perspectiva"), (2, "superior")):
     print("Fra:1 Mem:12M | Time:00:01.00 | Remaining:00:03.50 | Sample 48/96", flush=True)
 if cena["comodo"] == "banheiro":
     sys.exit(3)
-for nome in ("render-perspectiva.png", "render-superior.png", cena["comodo"] + ".glb"):
+for nome in ("render-perspectiva.png", "render-superior.png",
+             (cena.get("modelo") or cena["comodo"]) + ".glb"):
     (pasta / nome).write_bytes(b"ok")
 """
 
@@ -56,6 +57,24 @@ def test_rascunho_nao_sobrescreve_o_final(blender_falso: Path, tmp_path: Path) -
     rascunho = gerar.renderizar(c, tmp_path, "quarto", amostras=16, subpasta="rascunho")
     assert rascunho.arquivos[0].parent == final.arquivos[0].parent / "rascunho"
     assert all(a.exists() for a in (*final.arquivos, *rascunho.arquivos))
+
+
+def test_render_do_pavimento(blender_falso: Path, tmp_path: Path) -> None:
+    c = carregar(DADOS)
+    r = gerar.renderizar_pavimento(c, tmp_path, "terreo")
+    pasta = tmp_path / "casa/terreo/_geral"
+    assert r.gerado and r.preliminar
+    assert [a.name for a in r.arquivos] == [
+        "render-perspectiva.png",
+        "render-superior.png",
+        "terreo.glb",
+    ]
+    assert all(a.parent == pasta and a.exists() for a in r.arquivos)
+    assert not gerar.renderizar_pavimento(c, tmp_path, "terreo").gerado  # cache
+    rascunho = gerar.renderizar_pavimento(c, tmp_path, "terreo", subpasta="rascunho")
+    assert rascunho.arquivos[0].parent == pasta / "rascunho"
+    with pytest.raises(KeyError, match="nao-existe"):
+        gerar.renderizar_pavimento(c, tmp_path, "nao-existe")
 
 
 def test_progresso_ao_vivo(blender_falso: Path, tmp_path: Path) -> None:
