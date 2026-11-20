@@ -104,6 +104,16 @@ mensagem do cálculo. Tudo entra no rascunho (Desfazer volta cada passo). No 3D 
 portas, as frentes de gaveta com puxador e, nos vãos sem porta, os nichos e as prateleiras.
 Pia, cuba, torneira, fogão e geladeira chegam com a cozinha e o banheiro.
 
+### Formas
+
+Mesa, escrivaninha, banco/puff, berço e móvel sob medida têm **forma** no painel do móvel:
+**retangular**, **cantos arredondados** (raio; sem raio, 10 cm), **redondo / oval** (círculo
+quando largura = profundidade, oval quando diferentes) e **em L** (largura do braço — sem
+medida, 40 % do lado menor — e o lado do braço que vem para a frente, olhando de frente). Largura
+e profundidade continuam sendo a caixa em volta. A forma vale na planta (e no DXF), nas
+checagens (passagem, colisão) e no 3D: a mesa ganha tampo na forma e pés por dentro dela.
+Cama, sofá, guarda-roupa e móveis planejados ficam retangulares.
+
 ## Imagens 3D
 
 Com um cômodo selecionado, o painel "Imagens 3D" mostra as **vistas** que fazem sentido no
