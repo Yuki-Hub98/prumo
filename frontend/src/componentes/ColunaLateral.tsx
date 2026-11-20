@@ -124,7 +124,14 @@ export function ColunaLateral({ titulo, children }: { titulo: string; children: 
   );
 }
 
-export type Aba<T extends string> = { id: T; titulo: string; marca?: number };
+/** ``marca``: contador depois do rótulo; ``tom``: cor dele (a pior gravidade presente). */
+export type Aba<T extends string> = { id: T; titulo: string; marca?: number; tom?: "erro" | "aviso" | "info" | null };
+
+const TOM = {
+  erro: "bg-erro text-erro-sobre",
+  aviso: "bg-aviso-fundo text-aviso",
+  info: "bg-superficie-2 text-tinta-suave",
+} as const;
 
 /** Abas da coluna: uma coisa por vez, a barra fica fixa no topo enquanto o conteúdo rola. */
 export function Abas<T extends string>({
@@ -144,13 +151,13 @@ export function Abas<T extends string>({
           role="tab"
           aria-selected={a.id === ativa}
           className={`flex-1 border-b-2 px-2 py-2 text-sm ${
-            a.id === ativa ? "border-tinta font-semibold text-tinta" : "border-transparent text-tinta-suave hover:text-tinta"
+            a.id === ativa ? "border-tinta font-medium text-tinta" : "border-transparent font-medium text-tinta-suave hover:text-tinta"
           }`}
           onClick={() => aoTrocar(a.id)}
         >
           {a.titulo}
           {a.marca ? (
-            <span className="ml-1 rounded-full bg-aviso-fundo px-1.5 text-xs font-normal text-aviso">{a.marca}</span>
+            <span className={`ml-1 rounded-full px-1.5 text-xs font-semibold ${TOM[a.tom ?? "info"]}`}>{a.marca}</span>
           ) : null}
         </button>
       ))}

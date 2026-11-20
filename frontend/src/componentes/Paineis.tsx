@@ -1,9 +1,11 @@
+import { EscolhaOrigem } from "./Origem";
 import { btn, opcao } from "../estilo";
 import { maiuscula } from "../texto";
-import { useState } from "react";
+import { Crosshair, Info, OctagonAlert, TriangleAlert } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { api, ou, type Medida, type PavimentoTela, type Problema } from "../api/cliente";
 import { useCatalogo, useEditar, useEstimadas, useProjeto } from "../dados";
-import { formatar, ORIGENS, type Origem, paraMm, type Unidade } from "../unidades";
+import { formatar, type Origem, paraMm, type Unidade } from "../unidades";
 import { CampoMedida } from "./CampoMedida";
 import { EditorPlanejado } from "./EditorPlanejado";
 
@@ -334,19 +336,7 @@ function CriarDoZero({
           </label>
         ))}
       </div>
-      <div className="flex flex-wrap items-center gap-1 text-xs">
-        <span className="text-tinta-suave">As medidas são:</span>
-        {ORIGENS.map((o) => (
-          <button
-            key={o.valor}
-            type="button"
-            className={`rounded-md px-1.5 py-0.5 ${opcao(origem === o.valor)}`}
-            onClick={() => setOrigem(o.valor)}
-          >
-            {o.rotulo}
-          </button>
-        ))}
-      </div>
+      <EscolhaOrigem rotulo="As medidas são:" valor={origem} aoEscolher={setOrigem} />
       <button className={botao} disabled={!pronto || editar.isPending}>
         Criar no centro do cômodo
       </button>
@@ -446,35 +436,96 @@ export function AdicionarMovel({
 
 // ------------------------------------------------------------------ problemas e falta medir
 
-const COR_SEV: Record<string, string> = {
-  erro: "text-erro",
-  aviso: "text-aviso",
-  info: "text-tinta-suave",
+type Gravidade = "erro" | "aviso" | "info";
+
+const SEV: Record<Gravidade, { Icone: typeof Info; cls: string; nome: string }> = {
+  erro: { Icone: OctagonAlert, cls: "bg-erro-fundo text-erro", nome: "Erro" },
+  aviso: { Icone: TriangleAlert, cls: "bg-aviso-fundo text-aviso", nome: "Aviso" },
+  info: { Icone: Info, cls: "bg-info-fundo text-info", nome: "Info" },
 };
 
-export function PainelProblemas({ problemas, novos }: { problemas: Problema[]; novos: Problema[] }) {
+/** A pior gravidade presente (para a cor do contador da aba). */
+export function piorGravidade(problemas: Problema[]): Gravidade | null {
+  for (const g of ["erro", "aviso", "info"] as const) if (problemas.some((p) => p.severidade === g)) return g;
+  return null;
+}
+
+/** Lista de problemas: ícone e cor da gravidade, mensagem, cômodo e "Ver na planta". */
+export function PainelProblemas({
+  problemas,
+  novos,
+  aoVer,
+}: {
+  problemas: Problema[];
+  novos: Problema[];
+  aoVer?: (p: Problema) => void;
+}) {
   const chave = (p: Problema) => `${p.codigo}|${p.comodo}|${p.elemento}`;
   const recentes = new Set(novos.map(chave));
   return (
     <Caixa titulo={`Problemas (${problemas.length})`}>
       {problemas.length === 0 && <p className="text-sm text-tinta-suave">Nenhum</p>}
-      <ul className="space-y-1 text-sm">
-        {problemas.map((p, i) => (
-          <li key={i} className={COR_SEV[p.severidade]}>
-            {recentes.has(chave(p)) && <span className="mr-1 rounded-md bg-erro-fundo px-1 text-xs">Novo</span>}
-            <b>{maiuscula(p.severidade)}</b> {maiuscula(p.mensagem)}
-            {p.comodo && <span className="text-tinta-suave"> · {p.comodo}</span>}
-          </li>
-        ))}
+      <ul className="space-y-1.5 text-sm">
+        {problemas.map((p, i) => {
+          const g = SEV[(p.severidade as Gravidade) in SEV ? (p.severidade as Gravidade) : "info"];
+          const naPlanta = !!(p.posicao || p.regiao?.length);
+          return (
+            <li key={i} className={`flex gap-2 rounded-md px-2 py-1.5 ${g.cls}`}>
+              <g.Icone size={16} className="mt-0.5 shrink-0" aria-label={g.nome} />
+              <div className="min-w-0 flex-1">
+                <p>
+                  {recentes.has(chave(p)) && (
+                    <span className="mr-1 rounded-sm bg-superficie px-1 text-xs font-semibold text-tinta">Novo</span>
+                  )}
+                  {maiuscula(p.mensagem)}
+                </p>
+                {(p.comodo || (naPlanta && aoVer)) && (
+                  <p className="mt-0.5 flex items-center justify-between gap-2 text-xs">
+                    <span className="text-tinta-suave">{p.comodo ?? ""}</span>
+                    {naPlanta && aoVer && (
+                      <button className={btn("fantasma", "xs")} onClick={() => aoVer(p)}>
+                        <Crosshair size={12} /> Ver na planta
+                      </button>
+                    )}
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </Caixa>
   );
 }
 
-export function FaltaMedir({ codigo, unidade }: { codigo: string; unidade: Unidade }) {
+/** Faixa fixa embaixo da barra do topo enquanto houver medida "Chute". */
+export function FaixaPreliminar({ codigo, aoVer }: { codigo: string; aoVer: () => void }) {
+  const n = useEstimadas(codigo).data?.length ?? 0;
+  if (!n) return null;
+  return (
+    <div className="flex shrink-0 items-center gap-3 border-b border-linha bg-superficie px-4 py-1.5">
+      <span className="border-[3px] border-double border-erro px-2 py-0.5 font-cond text-xs font-semibold uppercase tracking-[0.08em] text-erro">
+        Preliminar — não usar para obra
+      </span>
+      <button className="link text-sm" onClick={aoVer}>
+        Ver o que falta medir ({n})
+      </button>
+    </div>
+  );
+}
+
+export function FaltaMedir({ codigo, unidade, pedido = 0 }: { codigo: string; unidade: Unidade; pedido?: number }) {
   const estimadas = useEstimadas(codigo).data ?? [];
   const [aberto, setAberto] = useState(false);
+  const caixa = useRef<HTMLDivElement>(null);
+  // "Ver o que falta medir" na faixa PRELIMINAR: abre a lista e rola até ela
+  useEffect(() => {
+    if (!pedido) return;
+    setAberto(true);
+    caixa.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [pedido]);
   return (
+    <div ref={caixa}>
     <Caixa titulo={`Falta medir (${estimadas.length})`}>
       {estimadas.length === 0 ? (
         <p className="text-sm text-medido">Tudo medido: os desenhos saem sem PRELIMINAR</p>
@@ -498,5 +549,6 @@ export function FaltaMedir({ codigo, unidade }: { codigo: string; unidade: Unida
         </>
       )}
     </Caixa>
+    </div>
   );
 }
