@@ -146,3 +146,48 @@ def test_catalogo_de_portas_e_janelas_e_tipo_gravado(api: TestClient, projetos: 
     assert (j["abertura"], j["folhas"], j["modelo"]) == ("basculante", 1, "basculante-60x60")
     p = next(a for a in dados["pavimentos"][0]["aberturas"] if a["id"] == "porta-quarto")
     assert "estilo" not in p and "modelo" not in p  # campo vazio não aparece no JSON
+
+
+def test_modelo_proprio_salvar_usar_e_apagar(api: TestClient) -> None:
+    r = api.post(
+        "/modelos-proprios",
+        json={"projeto": "casa", "comodo": "quarto", "movel": "cama", "nome": "Cama do casal"},
+    )
+    assert r.status_code == 201, r.text
+    modelo = r.json()
+    assert modelo["codigo"] == "cama-do-casal" and modelo["tipo"] == "cama"
+    assert modelo["estimadas"] > 0  # a cama da casa é chute: o modelo diz isso
+    # mesmo nome de novo: código não repete
+    r2 = api.post(
+        "/modelos-proprios",
+        json={"projeto": "casa", "comodo": "quarto", "movel": "cama", "nome": "Cama do casal"},
+    )
+    assert r2.json()["codigo"] == "cama-do-casal-2"
+    assert [m["codigo"] for m in api.get("/modelos-proprios").json()] == [
+        "cama-do-casal",
+        "cama-do-casal-2",
+    ]
+    # usar: o móvel novo sai igual (tipo do pedido é ignorado)
+    r = api.post(
+        MOVEIS, params={"versao": 1},
+        json={"tipo": "qualquer", "modelo_proprio": "cama-do-casal", "centro": [1500, 1500]},
+    )  # fmt: skip
+    assert r.status_code == 200, r.text
+    assert r.json()["alteracoes"][0]["caminho"].startswith("comodos.quarto.moveis[cama")
+    assert (
+        api.post(
+            MOVEIS,
+            params={"versao": 2},
+            json={"tipo": "x", "modelo_proprio": "nao-tem", "centro": [0, 0]},
+        ).status_code
+        == 404
+    )
+    assert api.delete("/modelos-proprios/cama-do-casal-2").status_code == 204
+    assert api.delete("/modelos-proprios/cama-do-casal-2").status_code == 404
+    assert (
+        api.post(
+            "/modelos-proprios",
+            json={"projeto": "casa", "comodo": "quarto", "movel": "nao-tem", "nome": "x"},
+        ).status_code
+        == 404
+    )

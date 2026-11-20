@@ -164,6 +164,16 @@ neste navegador; sem escolha, segue o sistema. As cores vêm dos tokens da ident
 (Medi / Quero assim / Chute, este também tracejado), vermelho/âmbar é problema e amarelo é ação
 principal ou o que está selecionado.
 
+## Meus modelos
+
+Com um móvel selecionado (aba **Móvel**), **Salvar como modelo** guarda ele como está agora —
+medidas, forma (arredondado, redondo, em L), portas e a montagem por dentro do planejado — com
+um nome. Ele aparece em **Adicionar móvel → Meus modelos**, em qualquer cômodo e em qualquer
+projeto, e sai igual ao original: cada medida vem com a origem que tinha (um chute continua
+chute e entra em "Falta medir"). **Apagar modelo** tira da lista sem mexer nos móveis já
+colocados. Os modelos ficam no banco (por enquanto valem para todos; com login, cada pessoa
+terá os seus).
+
 ## Andares
 
 No topo, a lista mostra o andar aberto; **+ Andar** cria um andar novo (sobrado, mezanino):

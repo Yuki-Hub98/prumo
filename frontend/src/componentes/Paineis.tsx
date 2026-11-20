@@ -1,10 +1,11 @@
 import { EscolhaOrigem } from "./Origem";
 import { btn, opcao } from "../estilo";
 import { maiuscula } from "../texto";
-import { Crosshair, Info, OctagonAlert, TriangleAlert } from "lucide-react";
+import { BookmarkPlus, Crosshair, Info, OctagonAlert, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, ou, type Medida, type PavimentoTela, type Problema } from "../api/cliente";
-import { useCatalogo, useEditar, useEstimadas, useProjeto } from "../dados";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCatalogo, useEditar, useEstimadas, useModelosProprios, useProjeto } from "../dados";
 import { formatar, type Origem, paraMm, type Unidade } from "../unidades";
 import { CampoMedida } from "./CampoMedida";
 import { EditorPlanejado } from "./EditorPlanejado";
@@ -105,6 +106,7 @@ export function PainelMovel({
           Remover
         </button>
       </div>
+      <SalvarComoModelo codigo={codigo} comodo={comodo} movel={id} nomeAtual={movel.nome ?? ""} />
       <form
         className="mb-2 flex flex-wrap items-center gap-1 text-sm"
         onSubmit={(e) => {
@@ -345,6 +347,45 @@ function CriarDoZero({
   );
 }
 
+/** "Salvar como modelo": guarda o móvel (como está agora) em Meus modelos. */
+function SalvarComoModelo({ codigo, comodo, movel, nomeAtual }: { codigo: string; comodo: string; movel: string; nomeAtual: string }) {
+  const cliente = useQueryClient();
+  const [nome, setNome] = useState<string | null>(null);
+  const [salvo, setSalvo] = useState<string | null>(null);
+  const salvar = useMutation({
+    mutationFn: (n: string) => ou(api.POST("/modelos-proprios", { body: { projeto: codigo, comodo, movel, nome: n } })),
+    onSuccess: (m) => {
+      setSalvo(m.nome);
+      setNome(null);
+      cliente.invalidateQueries({ queryKey: ["modelos-proprios"] });
+    },
+  });
+  if (nome === null)
+    return (
+      <p className="mb-2 flex items-center gap-2 text-xs">
+        <button className={btn("fantasma", "xs")} onClick={() => (setNome(nomeAtual), setSalvo(null))}>
+          <BookmarkPlus size={14} /> Salvar como modelo
+        </button>
+        {salvo && <span className="text-medido">“{salvo}” está em Meus modelos (Adicionar móvel).</span>}
+      </p>
+    );
+  return (
+    <form
+      className="mb-2 flex flex-wrap items-center gap-1 text-sm"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (nome.trim()) salvar.mutate(nome.trim());
+      }}
+    >
+      <input autoFocus className="min-w-0 flex-1 rounded-md border px-1" value={nome} placeholder="Nome do modelo" onChange={(e) => setNome(e.target.value)} />
+      <button className={btn("primario", "xs")} disabled={!nome.trim() || salvar.isPending}>Salvar</button>
+      <button type="button" className={btn("fantasma", "xs")} onClick={() => setNome(null)}>Cancelar</button>
+      {salvar.error && <p className="w-full text-xs text-erro">{salvar.error.message}</p>}
+      <p className="w-full text-xs text-tinta-suave">Guarda medidas, forma e montagem por dentro, com a origem de cada medida; vale para todos os projetos.</p>
+    </form>
+  );
+}
+
 export function AdicionarMovel({
   codigo,
   geometria,
@@ -362,6 +403,16 @@ export function AdicionarMovel({
   const [comodo, setComodo] = useState("");
   const [tipo, setTipo] = useState("");
   const [modelo, setModelo] = useState("");
+  const proprios = useModelosProprios().data ?? [];
+  const cliente = useQueryClient();
+  const proprio = tipo.startsWith("proprio:") ? proprios.find((m) => `proprio:${m.codigo}` === tipo) : undefined;
+  const apagar = useMutation({
+    mutationFn: (c: string) => ou(api.DELETE("/modelos-proprios/{codigo_modelo}", { params: { path: { codigo_modelo: c } } })),
+    onSuccess: () => {
+      setTipo("");
+      cliente.invalidateQueries({ queryKey: ["modelos-proprios"] });
+    },
+  });
   const item = catalogo?.itens.find((i) => i.tipo === tipo);
   const alvo = comodo || comodos[0]?.id || "";
   const centro = comodos.find((c) => c.id === alvo)?.centro;
@@ -385,12 +436,37 @@ export function AdicionarMovel({
           }}
         >
           <option value="">Tipo…</option>
-          {catalogo?.itens.map((i) => (
-            <option key={i.tipo} value={i.tipo}>
-              {i.nome}
-            </option>
-          ))}
+          {proprios.length > 0 && (
+            <optgroup label="Meus modelos">
+              {proprios.map((m) => (
+                <option key={m.codigo} value={`proprio:${m.codigo}`}>
+                  {m.nome}
+                </option>
+              ))}
+            </optgroup>
+          )}
+          <optgroup label="Catálogo">
+            {catalogo?.itens.map((i) => (
+              <option key={i.tipo} value={i.tipo}>
+                {i.nome}
+              </option>
+            ))}
+          </optgroup>
         </select>
+        {proprio && (
+          <p className="flex items-center justify-between gap-2 text-xs text-tinta-suave">
+            <span>
+              <span className="num">
+                {formatar(proprio.largura, unidade)} × {formatar(proprio.profundidade, unidade)} × {formatar(proprio.altura, unidade)}
+              </span>
+              {proprio.planejado && " · planejado"}
+              {proprio.estimadas > 0 && <span className="text-chute"> · {proprio.estimadas} medida(s) chute</span>}
+            </span>
+            <button className="link text-erro" disabled={apagar.isPending} onClick={() => apagar.mutate(proprio.codigo)}>
+              Apagar modelo
+            </button>
+          </p>
+        )}
         {item && (
           <select className="rounded-md border" value={modelo || item.modelo_padrao} onChange={(e) => setModelo(e.target.value)}>
             {item.modelos.map((m) => (
@@ -402,17 +478,19 @@ export function AdicionarMovel({
         )}
         <button
           className={botao}
-          disabled={!item || !centro || editar.isPending}
+          disabled={!(item || proprio) || !centro || editar.isPending}
           onClick={() =>
             editar.mutate((versao) =>
               ou(
                 api.POST("/projetos/{codigo}/comodos/{comodo}/moveis", {
                   params: { path: { codigo, comodo: alvo }, query: { versao } },
-                  body: {
-                    tipo,
-                    modelo: modelo || null,
-                    centro: [Math.round(centro![0]), Math.round(centro![1])],
-                  },
+                  body: proprio
+                    ? { tipo: proprio.tipo, modelo_proprio: proprio.codigo, centro: [Math.round(centro![0]), Math.round(centro![1])] }
+                    : {
+                        tipo,
+                        modelo: modelo || null,
+                        centro: [Math.round(centro![0]), Math.round(centro![1])],
+                      },
                 }),
               ),
             )
@@ -420,7 +498,11 @@ export function AdicionarMovel({
         >
           Pôr no centro do cômodo
         </button>
-        <p className="text-xs text-tinta-suave">As medidas do catálogo entram como chute; ajuste depois.</p>
+        <p className="text-xs text-tinta-suave">
+          {proprio
+            ? "O móvel sai igual ao modelo, com a origem que cada medida tinha."
+            : "As medidas do catálogo entram como chute; ajuste depois."}
+        </p>
         {editar.error && <p className="text-erro">{editar.error.message}</p>}
       </div>
       <CriarDoZero

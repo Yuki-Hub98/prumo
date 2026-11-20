@@ -336,6 +336,25 @@ class Render(Base):
     fim: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class ModeloProprio(Base):
+    """Móvel editado guardado para reaproveitar (vale para todos os projetos).
+
+    Sem dono por ora (um usuário só, CLAUDE.md §13); com login, ganha ``dono`` por migração
+    e o ``codigo`` passa a ser único por dono.
+    """
+
+    __tablename__ = "modelo_proprio"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    codigo: Mapped[str] = mapped_column(Codigo, unique=True)
+    nome: Mapped[str] = mapped_column(String(120))
+    tipo: Mapped[str] = mapped_column(String(40), comment="tipo do catálogo (cama, sob_medida...)")
+    dados: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, comment="o móvel sem id/centro/rotacao (interiores_core.modelos_proprios)"
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Preferencia(Base):
     """Preferências do usuário (por ora um só: CLAUDE.md §13)."""
 
