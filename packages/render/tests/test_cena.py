@@ -251,3 +251,27 @@ def test_pavimento_inexistente_e_vistas_erradas() -> None:
         montar_cena_pavimento(c, "superior")
     with pytest.raises(KeyError, match="porta"):
         montar_cena_pavimento(c, "terreo", vistas=("porta",))
+
+
+def test_cor_por_parte_do_movel() -> None:
+    """Portas e puxadores com cor própria; o corpo fica com a cor do móvel."""
+    from interiores_core.modelo import Variacao
+
+    c = carregar(DADOS)
+    c.variacoes.setdefault("quarto", {})["partes"] = Variacao.model_validate(
+        {"schema_version": 1, "comodo": "quarto", "nome": "Partes",
+         "cores": {"moveis": {"guarda-roupa": "#111111"},
+                   "pecas": {"guarda-roupa": {"portas": "#fafafa"},
+                             "guarda_roupa": {"puxadores": "#c0a060"}}}}
+    )  # fmt: skip
+    cena = montar_cena(c, "quarto", "partes")
+    gr = {cx["nome"]: cx for cx in cena["caixas"] if cx["nome"].startswith("guarda-roupa-")}
+    mats = cena["materiais"]
+    assert mats[gr["guarda-roupa-corpo"]["material"]]["cor"] == "#111111"
+    porta = gr["guarda-roupa-folha0"]
+    assert porta["extras"] == {"movel": "guarda-roupa", "parte": "portas"}
+    assert porta["material"] == "movel-guarda-roupa@guarda-roupa@portas"
+    assert mats[porta["material"]]["cor"] == "#fafafa"
+    puxador = mats[gr["guarda-roupa-puxador0"]["material"]]
+    assert puxador["cor"] == "#c0a060" and puxador["metal"]  # pelo tipo; segue metal
+    assert all("extras" in cx for cx in gr.values())
