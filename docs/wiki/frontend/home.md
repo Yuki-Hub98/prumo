@@ -97,7 +97,7 @@ abre o editor:
 - **espaços** de cada vão, de baixo para cima: gaveta, nicho/prateleira ou cabideiro, altura
   (vazio = automático), ↑↓ para trocar de lugar, ✕ para tirar, **+ gaveta / + nicho /
   + cabideiro** põe em cima;
-- resumo: peças de chapa, chapas necessárias e ferragens; **desmontar** volta a ser uma caixa.
+- resumo: peças de chapa, chapas necessárias e ferragens; **Desmontar** volta a ser uma caixa.
 
 O que não cabe (vãos mais largos que o móvel, gavetas que não entram) é recusado com a
 mensagem do cálculo. Tudo entra no rascunho (Desfazer volta cada passo). No 3D aparecem as
@@ -118,7 +118,7 @@ Cama, sofá, guarda-roupa e móveis planejados ficam retangulares.
 
 No fim da aba **Cores**, **Tinta do pavimento** mostra o que comprar com a variação escolhida em
 cada cômodo: látex de paredes e teto e esmalte de portas e rodapé, por cor (amostra, m², litros
-e latas). Parede de destaque conta à parte. **baixar planilha (.xlsx)** traz a mesma planilha do
+e latas). Parede de destaque conta à parte. **Baixar planilha (.xlsx)** traz a mesma planilha do
 `make tinta`. Na aba **Imagens**, **comparar variações lado a lado** abre em tela cheia a imagem
 pronta mais recente de cada variação, na vista escolhida (marque quais comparar; Esc fecha).
 
@@ -149,7 +149,7 @@ as vistas de lado cortam a parede externa do lado da câmera.
 ### Pintar no 3D
 
 O cômodo da lista fica selecionado, e o painel **Cores** abre ao lado. Na "base", o botão
-**pintar este cômodo** cria a variação "Minhas cores" (o projeto base não muda). Cada cor
+**Pintar este cômodo** cria a variação "Minhas cores" (o projeto base não muda). Cada cor
 mudada (paredes em geral ou uma por uma, piso, teto, rodapé, cada móvel) aparece **na hora**
 no modelo, sem render, e entra no rascunho; as imagens do Blender com as cores novas saem no
 próximo render (rascunho ou final). O móvel selecionado ganha um contorno quase transparente
@@ -158,12 +158,12 @@ do cômodo da lista; as paredes não, porque cada parede é uma peça só entre 
 
 ## Andares
 
-No topo, a lista mostra o andar aberto; **+ andar** cria um andar novo (sobrado, mezanino):
+No topo, a lista mostra o andar aberto; **+ Andar** cria um andar novo (sobrado, mezanino):
 nome, pé-direito e cota do piso, com a origem das medidas. A cota vem sugerida em cima do
 andar mais alto (piso + pé-direito + laje de 15 cm, como chute se não mudar) e o pé-direito
 copiado do andar aberto. O andar novo abre no **Editar planta**: as paredes do andar de baixo
 aparecem **apagadas ao fundo** e os cantos delas atraem o ponto ao desenhar, para o de cima
-sair alinhado. **remover este andar** (no editor, com confirmação) leva junto paredes, cômodos e
+sair alinhado. **Remover este andar** (no editor, com confirmação) leva junto paredes, cômodos e
 móveis; o único andar não sai. Tudo entra no rascunho. Os andares ainda não aparecem
 empilhados no 3D (escadas e lajes ficam para depois).
 
@@ -174,10 +174,10 @@ No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagad
 - **Desenhar paredes:** escolha a espessura (e a origem), clique canto a canto; o ponto gruda
   nos cantos existentes e alinha na horizontal/vertical. Botão direito termina a sequência.
 - **Cantos:** arraste os círculos azuis; as paredes que se encontram no canto vão junto.
-- **Clique para editar:** parede (espessura, dividir, + porta, + janela, + tomada/ponto,
+- **Clique para editar:** parede (espessura, dividir, + Porta, + Janela, + Tomada/ponto,
   remover), porta/janela (medidas, para onde abre, dobradiça), tomada/ponto (altura, posição),
   cômodo (nome, tipo, pé-direito, remover).
-- **Novo cômodo:** "escolher as paredes…", clique nas paredes em volta, dê nome e tipo.
+- **Novo cômodo:** "Escolher as paredes…", clique nas paredes em volta, dê nome e tipo.
 - Toda medida nova pergunta a origem ("Medi", "Quero assim", "Chute"). As edições vão em fila,
   uma de cada vez, para desenhar rápido sem conflito de versão.
 - Link direto: `#/p/<projeto>?modo=planta&sel=parede:p2`.
