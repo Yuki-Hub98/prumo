@@ -208,7 +208,7 @@ export function TelaProjeto({
             <p className="p-4 text-stone-500">{geometria.error?.message ?? "carregando…"}</p>
           )}
         </main>
-        <ColunaLateral>
+        <ColunaLateral titulo={modo === "planta" ? "Editar planta" : "Painel de edição"}>
           {historico && (
             <div className="max-h-[50%] shrink-0 overflow-y-auto border-b border-stone-200">
               <PainelHistorico codigo={codigo} aoFechar={() => setHistorico(false)} />

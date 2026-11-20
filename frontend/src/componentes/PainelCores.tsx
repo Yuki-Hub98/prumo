@@ -10,6 +10,14 @@ export const PADRAO = { parede: "#eeeae3", piso: "#a67c52", teto: "#f7f5f0", rod
 
 const vazio = (): Cores => ({ paredes: {}, moveis: {}, pecas: {} });
 
+/** Detalhes abertos depois de a seleção passar de ``antes`` para ``agora``. */
+export function trocarAberto(abertos: Set<string>, antes: string | null, agora: string | null): Set<string> {
+  const n = new Set(abertos);
+  if (antes) n.delete(antes);
+  if (agora) n.add(agora);
+  return n;
+}
+
 /** ``minhas-cores``, ``minhas-cores-2``, ... o primeiro nome de variação livre. */
 export function nomeLivre(existentes: string[]): string {
   let n = 1;
@@ -156,7 +164,16 @@ export function PainelCores({
   const [estado, setEstado] = useState<"salvo" | "pendente" | "salvando">("salvo");
   const [marcados, setMarcados] = useState<Set<Chave>>(new Set());
   // móveis com as partes abertas ("detalhes")
-  const [abertos, setAbertos] = useState<Set<string>>(new Set());
+  const [abertos, setAbertos] = useState<Set<string>>(() => new Set(destaque ? [destaque] : []));
+  // seleção manda nos detalhes: o móvel selecionado abre, o que deixou de ser fecha (os que
+  // a pessoa abriu na mão continuam abertos)
+  const destaqueAnterior = useRef(destaque);
+  useEffect(() => {
+    const antes = destaqueAnterior.current;
+    destaqueAnterior.current = destaque;
+    if (antes === destaque) return;
+    setAbertos((a) => trocarAberto(a, antes, destaque));
+  }, [destaque]);
   const [novoNome, setNovoNome] = useState("");
   const [formato, setFormato] = useState<Formato>(() => {
     try {
@@ -374,7 +391,7 @@ export function PainelCores({
           {moveis.length > 0 && <h3 className="mt-2 text-xs text-stone-500">Móveis (clique no nome para selecionar)</h3>}
           {moveis.map((m) => {
             const partes = m.partes ?? [];
-            const aberto = abertos.has(m.id) || m.id === destaque;
+            const aberto = abertos.has(m.id);
             const corpo = valorDe(rascunho, `m:${m.id}`, tipos) ?? "#d6d3d1";
             const comCor = partes.filter((pt) => valorDe(rascunho, `q:${m.id}:${pt.id}`, tipos)).length;
             return (
