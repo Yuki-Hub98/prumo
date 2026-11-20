@@ -34,11 +34,12 @@ export function useProjeto(codigo: string) {
   });
 }
 
-export function useGeometria(codigo: string, pavimento: string) {
+export function useGeometria(codigo: string, pavimento: string, ativo = true) {
   return useQuery({
     queryKey: [...chaves.projeto(codigo), "geometria", pavimento],
     queryFn: () => buscar.geometria(codigo, pavimento),
     placeholderData: (anterior) => anterior,
+    enabled: ativo,
   });
 }
 

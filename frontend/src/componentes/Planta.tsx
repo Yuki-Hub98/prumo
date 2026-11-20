@@ -58,8 +58,12 @@ export function Planta({
   aoSelecionarComodo,
   cores,
   editor,
+  fundo = null,
 }: {
   editor?: ModoEditor;
+  /** Andar de baixo, apagado ao fundo: referência para desenhar o de cima (os cantos dele
+   * também atraem o ponto ao desenhar). */
+  fundo?: PavimentoTela | null;
   comodoSelecionado: string | null;
   aoSelecionarComodo: (id: string) => void;
   /** Cores (rascunho da variação) do cômodo selecionado; os outros ficam no padrão. */
@@ -77,14 +81,16 @@ export function Planta({
   const [canto, setCanto] = useState<{ de: Pt; para: Pt } | null>(null);
   const [trilha, setTrilha] = useState<Pt | null>(null);
   const [cursor, setCursor] = useState<Pt | null>(null);
+  // cantos deste andar (alças de arrastar) e, para o ímã ao desenhar, também os do andar de baixo
   const cantos = vertices(geometria.paredes.map((p) => p.eixo));
+  const ima = fundo ? vertices([...geometria.paredes, ...fundo.paredes].map((p) => p.eixo)) : cantos;
   const desenhando = editor?.desenhando ?? false;
   useEffect(() => {
     if (!desenhando) setTrilha(null); // parou de desenhar: a próxima sequência começa do zero
   }, [desenhando]);
   const ehSel = (tipo: Item["tipo"], id: string) => editor?.item?.tipo === tipo && editor.item.id === id;
 
-  const lim = geometria.limites ?? [
+  const lim = geometria.limites ?? fundo?.limites ?? [
     [0, 0],
     [4000, 3000],
   ];
@@ -110,7 +116,7 @@ export function Planta({
       onPointerDown={(e) => {
         if (editor?.desenhando) {
           if (e.button !== 0) return;
-          const p = encaixar(emMm(e), cantos, trilha);
+          const p = encaixar(emMm(e), ima, trilha);
           if (trilha && (p[0] !== trilha[0] || p[1] !== trilha[1])) editor.aoNovaParede(trilha, p);
           setTrilha(p);
           return;
@@ -128,11 +134,11 @@ export function Planta({
       }}
       onPointerMove={(e) => {
         if (editor?.desenhando) {
-          setCursor(encaixar(emMm(e), cantos, trilha));
+          setCursor(encaixar(emMm(e), ima, trilha));
           return;
         }
         if (canto) {
-          setCanto({ ...canto, para: encaixar(emMm(e), cantos, null, canto.de) });
+          setCanto({ ...canto, para: encaixar(emMm(e), ima, null, canto.de) });
           return;
         }
         if (!arrasto) return;
@@ -156,6 +162,10 @@ export function Planta({
         setArrasto(null);
       }}
     >
+      {/* andar de baixo, de referência */}
+      {fundo?.paredes.map((p) => (
+        <polygon key={`fundo-${p.id}`} points={pontos(p.corpo)} fill="#a8a29e" fillOpacity={0.3} pointerEvents="none" />
+      ))}
       {/* cômodos */}
       {geometria.comodos.map((c) => {
         const pintado = c.id === comodoSelecionado && cores;

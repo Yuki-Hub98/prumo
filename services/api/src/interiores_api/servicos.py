@@ -486,6 +486,9 @@ class Servico:
             pasta=Path(), projeto=c.projeto, dados_comodos=c.comodos, variacoes=c.variacoes
         )
         if pavimento is not None:
+            pav = next((p for p in c.projeto.pavimentos if p.id == pavimento), None)
+            if pav is not None and not pav.comodos:  # andar novo, ainda sem cômodos: 3D vazio
+                return Cena3D(versao=versao, prismas=[], caixas=[], materiais={})
             cena = montar_cena_pavimento(carregado, pavimento, vistas=())
         else:
             assert comodo is not None
