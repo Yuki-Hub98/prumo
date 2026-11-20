@@ -273,6 +273,12 @@ pia_ponto_max = 300           # água fria e esgoto até a pia
 altura_bancada = 900
 altura_bancada_tolerancia = 50
 fogao_janela = 300            # fogão mais perto que isto da janela = "embaixo"
+
+[banheiro]
+frente_vaso = 600
+frente_lavatorio = 600
+tomada_box = 600              # tomada mais perto que isto do box = erro
+ponto_max = 300               # água/esgoto até o vaso e o lavatório
 ```
 
 ---
