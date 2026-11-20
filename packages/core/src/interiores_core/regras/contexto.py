@@ -7,12 +7,19 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from functools import cached_property
 
-from shapely import LineString, Polygon, box
+from shapely import LineString, Point, Polygon, box
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from interiores_core import geometria
-from interiores_core.modelo import Comodo, Movel, Pavimento, Porta
+from interiores_core.modelo import (
+    Comodo,
+    Movel,
+    Pavimento,
+    PontoInstalacao,
+    Porta,
+    TrechoInstalacao,
+)
 from interiores_core.validacao import Problema, Severidade
 
 Ponto = tuple[float, float]
@@ -65,6 +72,18 @@ class Contexto:
             for a in self.pavimento.aberturas
             if isinstance(a, Porta) and a.parede in ids and self.comodo.id in (a.de, a.para)
         ]
+
+    def instalacoes(self, tipo: str) -> list[BaseGeometry]:
+        """Pontos e trechos de instalação do pavimento desse tipo (água, esgoto, ralo...)."""
+        achados: list[BaseGeometry] = []
+        for i in self.pavimento.instalacoes:
+            if i.tipo != tipo:
+                continue
+            if isinstance(i, PontoInstalacao):
+                achados.append(Point(i.posicao))
+            elif isinstance(i, TrechoInstalacao):
+                achados.append(LineString(i.caminho))
+        return achados
 
     def obstaculos(self, exceto: str | None = None) -> BaseGeometry:
         """Paredes/exterior e os móveis apoiados no piso, menos o indicado."""
