@@ -9,6 +9,7 @@ existe, versão em que o pedido foi feito, formato) e se traduz o resultado.
 
 from __future__ import annotations
 
+import re
 import tomllib
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
@@ -29,7 +30,9 @@ from interiores_api.esquemas import (
     ItemHistorico,
     Lata,
     MedidaEstimada,
+    ModeloProprioResumo,
     Mudanca,
+    NovoModeloProprio,
     NovoProjeto,
     PedidoRender,
     PedidoRenderPavimento,
@@ -53,7 +56,9 @@ from interiores_core.carregar import ProjetoCarregado
 from interiores_core.edicao import Alteracao, Edicao, diferencas, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
 from interiores_core.edicao_variacoes import validar_variacao
-from interiores_core.modelo import DadosComodo, Projeto, Variacao
+from interiores_core.medidas import medidas_estimadas
+from interiores_core.modelo import DadosComodo, Movel, Projeto, Variacao
+from interiores_core.modelos_proprios import modelo_do_movel
 from interiores_core.regras import checar
 from interiores_core.tela import (
     PavimentoTela,
@@ -376,6 +381,41 @@ class Servico:
             novos=ed.novos,
             problemas=ed.problemas,
         )
+
+    # ------------------------------------------------------------ modelos próprios
+
+    def modelos_proprios(self) -> list[ModeloProprioResumo]:
+        linhas = self.sessao.scalars(select(t.ModeloProprio).order_by(t.ModeloProprio.nome))
+        return [_resumo_modelo(m) for m in linhas]
+
+    def modelo_proprio(self, codigo: str) -> t.ModeloProprio:
+        m = self.sessao.scalar(select(t.ModeloProprio).where(t.ModeloProprio.codigo == codigo))
+        if m is None:
+            raise KeyError(f"modelo próprio '{codigo}' não existe")
+        return m
+
+    def criar_modelo_proprio(self, pedido: NovoModeloProprio) -> ModeloProprioResumo:
+        """Guarda o móvel (como está agora, rascunho incluído) como modelo próprio."""
+        c, _ = repositorio.ler(self.sessao, pedido.projeto)
+        dados = c.comodos.get(pedido.comodo)
+        movel = next((m for m in dados.moveis if m.id == pedido.movel), None) if dados else None
+        if movel is None:
+            raise KeyError(f"móvel '{pedido.movel}' não existe em '{pedido.comodo}'")
+        base = slug_modelo(pedido.nome)
+        existentes = set(self.sessao.scalars(select(t.ModeloProprio.codigo)))
+        codigo, n = base, 2
+        while codigo in existentes:
+            codigo, n = f"{base}-{n}", n + 1
+        linha = t.ModeloProprio(
+            codigo=codigo, nome=pedido.nome.strip(), tipo=movel.tipo, dados=modelo_do_movel(movel)
+        )
+        self.sessao.add(linha)
+        self.sessao.flush()
+        return _resumo_modelo(linha)
+
+    def apagar_modelo_proprio(self, codigo: str) -> None:
+        self.sessao.delete(self.modelo_proprio(codigo))
+        self.sessao.flush()
 
     # ------------------------------------------------------------ variações
 
@@ -720,3 +760,26 @@ class Servico:
             pasta.rename(destino)
         log.info("projeto apagado", projeto=codigo, pasta_movida_para=str(destino))
         return str(destino) if destino else None
+
+
+def slug_modelo(nome: str) -> str:
+    """Código do modelo pelo nome: minúsculas, sem acento, hífens."""
+    import unicodedata
+
+    s = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode().lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return (s or "modelo")[:60]
+
+
+def _resumo_modelo(m: t.ModeloProprio) -> ModeloProprioResumo:
+    movel = Movel.model_validate({**m.dados, "id": "x", "centro": [0, 0]})
+    return ModeloProprioResumo(
+        codigo=m.codigo,
+        nome=m.nome,
+        tipo=m.tipo,
+        largura=movel.largura.valor,
+        profundidade=movel.profundidade.valor,
+        altura=movel.altura.valor,
+        planejado=movel.construcao is not None,
+        estimadas=len(medidas_estimadas(movel)),
+    )

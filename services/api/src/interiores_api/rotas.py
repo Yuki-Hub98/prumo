@@ -25,12 +25,14 @@ from interiores_api.esquemas import (
     InfoRender,
     ItemHistorico,
     MedidaEstimada,
+    ModeloProprioResumo,
     MoverMovel,
     MoverVertice,
     NovaAbertura,
     NovaInstalacao,
     NovaVariacao,
     NovoComodo,
+    NovoModeloProprio,
     NovoMovel,
     NovoProjeto,
     PedidoRender,
@@ -84,6 +86,23 @@ def salvar_preferencias(svc: Svc, novas: Preferencias) -> Preferencias:
 def ver_catalogo() -> dict[str, object]:
     """Tipos de móvel, modelos com medidas padrão, lados de uso e símbolo na planta."""
     return catalogo.exportar()
+
+
+@geral.get("/modelos-proprios")
+def listar_modelos_proprios(svc: Svc) -> list[ModeloProprioResumo]:
+    """Móveis guardados como modelo próprio (valem para todos os projetos)."""
+    return svc.modelos_proprios()
+
+
+@geral.post("/modelos-proprios", status_code=201)
+def criar_modelo_proprio(svc: Svc, pedido: NovoModeloProprio) -> ModeloProprioResumo:
+    """Guarda um móvel de um projeto (como está agora) como modelo próprio."""
+    return svc.criar_modelo_proprio(pedido)
+
+
+@geral.delete("/modelos-proprios/{codigo_modelo}", status_code=204)
+def apagar_modelo_proprio(svc: Svc, codigo_modelo: str) -> None:
+    svc.apagar_modelo_proprio(codigo_modelo)
 
 
 @geral.get("/catalogo/aberturas")
@@ -393,13 +412,14 @@ def remover_instalacao(
 def adicionar_movel(
     svc: Svc, codigo: str, comodo: str, versao: Versao, pedido: NovoMovel
 ) -> ResultadoEdicao:
-    """Do catálogo; pelo centro ou preso numa parede (virado para o cômodo)."""
+    """Do catálogo (ou de um modelo próprio); pelo centro ou preso numa parede."""
+    base = svc.modelo_proprio(pedido.modelo_proprio).dados if pedido.modelo_proprio else None
     return svc.editar_moveis(
         codigo, versao, comodo, "adicionar_movel",
         lambda p, d, r: em.adicionar_movel(
             p, comodo, d, pedido.tipo, modelo=pedido.modelo, id_=pedido.id, nome=pedido.nome,
             centro=pedido.centro, rotacao=pedido.rotacao, parede=pedido.parede,
-            distancia=pedido.distancia, medidas=pedido.medidas, regras=r,
+            distancia=pedido.distancia, medidas=pedido.medidas, regras=r, base=base,
         ),
     )  # fmt: skip
 

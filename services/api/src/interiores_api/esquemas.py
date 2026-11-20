@@ -358,6 +358,32 @@ class NovoMovel(_Esquema):
     medidas: dict[str, Medida] = Field(
         default_factory=dict, description="largura, profundidade, altura, elevacao, largura_porta"
     )
+    modelo_proprio: str | None = Field(
+        None,
+        description="Código de um modelo próprio: o móvel sai igual a ele (``tipo`` é ignorado).",
+    )
+
+
+class NovoModeloProprio(_Esquema):
+    """Guardar um móvel de um projeto como modelo próprio."""
+
+    projeto: str
+    comodo: str
+    movel: str
+    nome: str = Field(min_length=1, max_length=120)
+
+
+class ModeloProprioResumo(_Esquema):
+    codigo: str
+    nome: str
+    tipo: str
+    largura: int
+    profundidade: int
+    altura: int
+    planejado: bool
+    """Tem montagem por dentro (gavetas, prateleiras...)."""
+    estimadas: int
+    """Quantas medidas do modelo são chute (vão assim para o móvel novo)."""
 
 
 class DefinirConstrucao(_Esquema):
@@ -389,6 +415,7 @@ __all__ = [
     "InfoRender",
     "ItemHistorico",
     "MedidaEstimada",
+    "ModeloProprioResumo",
     "MoverMovel",
     "MoverVertice",
     "Mudanca",
@@ -396,6 +423,7 @@ __all__ = [
     "NovaInstalacao",
     "NovaVariacao",
     "NovoComodo",
+    "NovoModeloProprio",
     "NovoMovel",
     "NovoPavimento",
     "NovoProjeto",

@@ -27,6 +27,7 @@ from interiores_core.edicao import (
 )
 from interiores_core.medidas import Medida
 from interiores_core.modelo import DadosComodo, Movel, Projeto
+from interiores_core.modelos_proprios import movel_do_modelo
 from interiores_core.regras import checar
 from interiores_core.validacao import Problema, Severidade, validar
 
@@ -152,12 +153,14 @@ def adicionar_movel(
     distancia: int = 0,
     medidas: Mapping[str, Medida | Mapping[str, Any]] | None = None,
     regras: Mapping[str, object] | None = None,
+    base: Mapping[str, Any] | None = None,
 ) -> EdicaoMoveis:
     """Põe um móvel do catálogo no cômodo, pelo centro (e giro) ou preso numa parede.
 
     As medidas vêm do modelo do catálogo como ``estimada``; as de ``medidas``
     (largura, profundidade, altura, elevacao, largura_porta) as substituem, cada
-    uma com a sua origem.
+    uma com a sua origem. ``base``: um modelo próprio (``modelos_proprios``) no lugar do
+    catálogo — o móvel sai igual a ele, com as medidas e as origens que ele tinha.
     """
     if (centro is None) == (parede is None):
         raise EdicaoInvalidaError("informe a posição: centro (x, y) ou parede")
@@ -165,11 +168,18 @@ def adicionar_movel(
     fora = set(medidas) - CAMPOS_MEDIDA
     if fora:
         raise EdicaoInvalidaError(f"medida(s) desconhecida(s): {', '.join(sorted(fora))}")
+    if base is not None:
+        tipo = str(base.get("tipo", tipo))
     novo_id = id_ or id_livre(dados, tipo.replace("_", "-"))
     try:
-        movel = catalogo.novo_movel(tipo, novo_id, centro or (0, 0), modelo, rotacao or 0, nome)
+        if base is not None:
+            movel = movel_do_modelo(base, novo_id, centro or (0, 0), rotacao or 0, nome)
+        else:
+            movel = catalogo.novo_movel(tipo, novo_id, centro or (0, 0), modelo, rotacao or 0, nome)
     except KeyError as e:  # tipo/modelo fora do catálogo: pedido inválido, não "não encontrado"
         raise EdicaoInvalidaError(str(e.args[0])) from e
+    except ValidationError as e:  # modelo próprio que não vale mais (schema mudou)
+        raise EdicaoInvalidaError(f"modelo inválido: {e.errors()[0]['msg']}") from e
     for campo, m in medidas.items():
         valor = m.model_dump(mode="json", exclude_none=True) if isinstance(m, Medida) else dict(m)
         movel[campo] = registrar_anterior(movel.get(campo), valor)
