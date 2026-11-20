@@ -1024,5 +1024,25 @@
       ],
       "modelo_padrao": "padrao"
     }
-  ]
+  ],
+  "acabamentos": {
+    "madeira_clara": "Madeira clara",
+    "madeira_escura": "Madeira escura",
+    "amadeirado": "MDF amadeirado",
+    "branco_fosco": "Branco fosco",
+    "laca_brilho": "Laca com brilho",
+    "preto_fosco": "Preto fosco"
+  },
+  "puxadores": {
+    "barra": "Barra",
+    "botao": "Botão",
+    "perfil": "Perfil de alumínio",
+    "cava": "Cava (sem puxador)"
+  },
+  "pes": {
+    "quadrado": "Quadrado",
+    "palito": "Palito",
+    "metalico": "Metálico fino",
+    "rodape": "Sem pé (rodapé recuado)"
+  }
 }
