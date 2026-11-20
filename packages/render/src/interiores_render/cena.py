@@ -27,6 +27,7 @@ from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
 from interiores_core import catalogo, geometria, planejado
+from interiores_core.acabamentos import ACABAMENTOS
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.catalogo import Simbolo
 from interiores_core.modelo import (
@@ -40,7 +41,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 13
+VERSAO_CENA = 14
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -643,8 +644,7 @@ class _Cena:
 
     def moveis_(self) -> None:
         for m in self.moveis:
-            textura = {"textura": TEXTURA_MOVEL[m.tipo]} if m.tipo in TEXTURA_MOVEL else {}
-            mat = self.material(f"movel-{m.id}", self.cor_movel(m), rugosidade=0.55, **textura)
+            mat = self.material_movel(m)
             if m.forma is not None and len(geometria.formas_possiveis(m)) > 1:
                 self.movel_com_forma(m, mat)
                 continue
@@ -661,6 +661,23 @@ class _Cena:
                     peca.chanfro,
                     extras={"movel": m.id, "parte": parte},
                 )
+
+    def material_movel(self, m: Movel) -> str:
+        """Material da caixa: o acabamento escolhido (textura, brilho e cor padrão) ou o
+        padrão do tipo. A cor da variação vale por cima dos dois."""
+        acab = ACABAMENTOS.get(m.acabamento) if m.acabamento else None
+        if acab is None:
+            textura = {"textura": TEXTURA_MOVEL[m.tipo]} if m.tipo in TEXTURA_MOVEL else {}
+            return self.material(f"movel-{m.id}", self.cor_movel(m), rugosidade=0.55, **textura)
+        pintada = self.cores_moveis.get(m.id) or self.cores_moveis.get(m.tipo)
+        extra: dict[str, Any] = {}
+        if acab.textura == "madeira":
+            extra["textura"] = "madeira"
+        elif acab.textura == "madeira_lisa":
+            extra.update(textura="madeira", tabuas=False)
+        return self.material(
+            f"movel-{m.id}", pintada or acab.cor, rugosidade=acab.rugosidade, **extra
+        )
 
     def movel_com_forma(self, m: Movel, mat: str) -> None:
         """Móvel arredondado, redondo ou em L: o corpo (ou o tampo, na mesa) é a forma
@@ -968,10 +985,43 @@ class _Feitio:
         return self._mat("metal", rugosidade=0.3, metal=True)
 
     def pes(self, altura: float, lado: float = 40.0, recuo: float = 60.0) -> None:
-        w, d = self.w, self.d
+        """Quatro pés no estilo escolhido: quadrado (metal, o padrão), palito (fino, na cor
+        do móvel), metálico fino ou nenhum (rodapé recuado escuro)."""
+        w, d, estilo = self.w, self.d, self.m.pes or "quadrado"
+        if estilo == "rodape":
+            self.p("rodape", -w + recuo, -d + recuo, self.base, w - recuo, d - recuo,
+                   self.base + altura, self.sombra)  # fmt: skip
+            return
+        mat, chanfro = self.metal, 0.0
+        if estilo == "palito":
+            lado, recuo, mat, chanfro = lado * 0.7, recuo + 10, self.mat, lado * 0.3
+        elif estilo == "metalico":
+            lado = 18.0
         xs, ys = (-w + recuo, w - recuo - lado), (-d + recuo, d - recuo - lado)
         for i, (x, y) in enumerate((x, y) for y in ys for x in xs):
-            self.p(f"pe{i}", x, y, self.base, x + lado, y + lado, self.base + altura, self.metal)
+            self.p(f"pe{i}", x, y, self.base, x + lado, y + lado, self.base + altura, mat,
+                   chanfro=chanfro)  # fmt: skip
+
+    def puxador(
+        self, nome: str, x: float, y: float, z: float, comprido: float, deitado: bool
+    ) -> None:
+        """Puxador centrado em (x, z) na face ``y`` da frente, no estilo escolhido: barra
+        (metal), botão, perfil de alumínio (longo e fino) ou cava (recorte escuro, sem
+        puxador saliente)."""
+        estilo = self.m.puxador or "barra"
+        if estilo == "botao":
+            self.p(nome, x - 14, y, z - 14, x + 14, y + 22, z + 14, self.metal, chanfro=12)
+            return
+        if estilo == "cava":
+            c, e, mat, sai = comprido * 1.4, 12.0, self.sombra, 1.0
+        elif estilo == "perfil":
+            c, e, mat, sai = comprido * 1.6, 10.0, self.metal, 12.0
+        else:
+            c, e, mat, sai = comprido, 16.0, self.metal, 25.0
+        if deitado:
+            self.p(nome, x - c / 2, y, z - e / 2, x + c / 2, y + sai, z + e / 2, mat)
+        else:
+            self.p(nome, x - e / 2, y, z - c / 2, x + e / 2, y + sai, z + c / 2, mat)
 
     # -- tipos
 
@@ -1053,6 +1103,10 @@ class _Feitio:
     def mesa(self) -> None:
         w, d, base, topo = self.w, self.d, self.base, self.topo
         self.p("tampo", -w, -d, topo - 30, w, d, topo, chanfro=6)
+        estilo = self.m.pes or "quadrado"
+        if estilo != "quadrado":
+            self.pes(topo - 30 - base, lado=50, recuo=30)
+            return
         for i, (x, y) in enumerate(
             ((-w + 30, -d + 30), (w - 80, -d + 30), (-w + 30, d - 80), (w - 80, d - 80))
         ):
@@ -1078,7 +1132,7 @@ class _Feitio:
             self.p("folha1", -fr, d - 20, alto, w, d, topo - fr, chanfro=3)
             for i, x in enumerate((-w + 60, w - 75)):
                 y = d - 40 if i == 0 else d - 20
-                self.p(f"puxador{i}", x, y + 20, meio - 250, x + 15, y + 35, meio + 250, self.metal)
+                self.puxador(f"puxador{i}", x + 7.5, y + 20, meio, 500, deitado=False)
             return
         n = max(1, round(2 * w / 500))
         larg = 2 * w / n
@@ -1089,7 +1143,7 @@ class _Feitio:
             )
             # puxador do lado que abre: as folhas abrem aos pares, a partir do meio do par
             x = x0 + larg - 50 if i % 2 == 0 else x0 + 35
-            self.p(f"puxador{i}", x, d, meio - 150, x + 15, d + 25, meio + 150, self.metal)
+            self.puxador(f"puxador{i}", x + 7.5, d, meio, 300, deitado=False)
 
     def gavetas(self) -> None:
         w, d, base, topo, fr = self.w, self.d, self.base, self.topo, self.FRESTA
@@ -1102,9 +1156,7 @@ class _Feitio:
         for i in range(n):
             z0 = base + pe + i * alt
             self.p(f"gaveta{i}", -w + fr, d - 18, z0 + fr, w - fr, d, z0 + alt - fr, chanfro=3)
-            self.p(
-                f"puxador{i}", -60, d, z0 + alt / 2 - 8, 60, d + 22, z0 + alt / 2 + 8, self.metal
-            )
+            self.puxador(f"puxador{i}", 0, d, z0 + alt / 2, 120, deitado=True)
 
     def pia(self) -> None:
         """Gabinete com portas, bancada de pedra, cuba embutida e torneira atrás dela."""
@@ -1120,7 +1172,7 @@ class _Feitio:
             self.p(f"folha{i}", x0 + fr / 2, d - 40, baixo, x0 + larg - fr / 2, d - 20, alto,
                    chanfro=3)  # fmt: skip
             x = x0 + larg - 50 if i % 2 == 0 else x0 + 35
-            self.p(f"puxador{i}", x, d - 20, alto - 200, x + 15, d + 5, alto - 50, self.metal)
+            self.puxador(f"puxador{i}", x + 7.5, d - 20, alto - 125, 150, deitado=False)
         pedra = self._mat("pedra", rugosidade=0.25)
         self.p("bancada", -w, -d, topo - tampo, w, d + 20, topo, pedra, chanfro=3)
         cw, cd = min(250.0, w * 0.4), min(200.0, d * 0.4)
@@ -1237,13 +1289,7 @@ class _Feitio:
 
         def puxador(u: float, z: float, comprido: float, deitado: bool) -> None:
             nonlocal n_pux
-            x = w - u
-            if deitado:
-                self.p(f"puxador{n_pux}", x - comprido / 2, d, z - 8, x + comprido / 2, d + 25,
-                       z + 8, self.metal)  # fmt: skip
-            else:
-                self.p(f"puxador{n_pux}", x - 8, d, z - comprido / 2, x + 8, d + 25,
-                       z + comprido / 2, self.metal)  # fmt: skip
+            self.puxador(f"puxador{n_pux}", w - u, d, z, comprido, deitado)
             n_pux += 1
 
         for i, r in enumerate(portas):  # folhas um pouco afastadas: mostram as divisões
