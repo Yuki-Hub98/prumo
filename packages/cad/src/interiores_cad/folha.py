@@ -7,6 +7,7 @@ o enquadramento exato da folha.
 
 from __future__ import annotations
 
+import math
 import re
 import textwrap
 from collections.abc import Sequence
@@ -192,6 +193,65 @@ def _retangulo(
     msp.add_lwpolyline(pontos, close=True, dxfattribs={"layer": camada})
 
 
+def _carimbo_preliminar(
+    msp: Modelspace, folha: Folha, x0: float, y_topo: float, largura: float
+) -> float:
+    """Carimbo "PRELIMINAR — NÃO USAR PARA OBRA" da identidade visual: borda dupla, inclinado
+    -8°, 60 % de opacidade, na camada AVISO. Devolve o ``y`` logo abaixo dele."""
+    alt = Texto.AVISO * 2 + 7
+    cx, cy = x0 + largura / 2, y_topo - alt / 2 - largura * math.sin(math.radians(8)) / 2 - 1
+    ang = math.radians(-8)
+
+    def girar(x: float, y: float) -> tuple[float, float]:
+        dx, dy = x - cx, y - cy
+        return folha.modelo(
+            cx + dx * math.cos(ang) - dy * math.sin(ang),
+            cy + dx * math.sin(ang) + dy * math.cos(ang),
+        )
+
+    for folga in (0.0, 1.0):  # borda dupla
+        meia_l, meia_a = largura / 2 - folga, alt / 2 - folga
+        pts = [
+            girar(cx + sx * meia_l, cy + sy * meia_a)
+            for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))
+        ]
+        borda = msp.add_lwpolyline(pts, close=True, dxfattribs={"layer": "AVISO"})
+        borda.transparency = 0.4
+    for texto, dy in (
+        ("PRELIMINAR", Texto.AVISO * 0.55),
+        ("NÃO USAR PARA OBRA", -Texto.AVISO * 0.95),
+    ):
+        t = msp.add_text(
+            texto,
+            height=folha.mm(Texto.AVISO),
+            dxfattribs={"layer": "AVISO", "style": ESTILO_TEXTO, "rotation": -8.0, "width": 0.85},
+        )
+        t.set_placement(girar(cx, cy + dy), align=TextEntityAlignment.MIDDLE_CENTER)
+        t.transparency = 0.4
+    return cy - alt / 2 - largura * math.sin(math.radians(8)) / 2 - 3
+
+
+def _logo(msp: Modelspace, folha: Folha, x: float, y: float, altura: float) -> None:
+    """Logo PRUMO em versão mono (só traço, na camada TEXTO): fio, nó e o peso do prumo,
+    mais o nome. ``(x, y)``: canto de baixo à esquerda; ``altura`` em mm de papel."""
+    k = altura / 48  # a marca é desenhada num quadro de 32 × 48
+
+    def p(u: float, v: float) -> tuple[float, float]:
+        return folha.modelo(x + u * k, y + (48 - v) * k)
+
+    msp.add_line(p(16, 0), p(16, 14.5), dxfattribs={"layer": "TEXTO"})
+    msp.add_circle(p(16, 17), folha.mm(2.5 * k), dxfattribs={"layer": "TEXTO"})
+    peso = [p(16, 20), p(25, 27), p(25, 35), p(16, 47), p(7, 35), p(7, 27)]
+    msp.add_lwpolyline(peso, close=True, dxfattribs={"layer": "TEXTO"})
+    msp.add_text(
+        "PRUMO",
+        height=folha.mm(altura * 0.5),
+        dxfattribs={"layer": "TEXTO", "style": ESTILO_TEXTO, "width": 0.85},
+    ).set_placement(
+        folha.modelo(x + 32 * k + 1.5, y + altura * 0.2), align=TextEntityAlignment.BOTTOM_LEFT
+    )
+
+
 def _caixa_checagens(
     msp: Modelspace, folha: Folha, checagens: Sequence[str], px0: float, px1: float, y: float
 ) -> float:
@@ -247,6 +307,18 @@ def desenhar_folha(msp: Modelspace, folha: Folha, dados: DadosCarimbo) -> None:
     _retangulo(msp, folha, px0, y, px1, y + 12, "TEXTO")
     _texto(msp, folha, dados.desenho, x, y + 4, Texto.CARIMBO_TITULO)
     y += 12
+    _retangulo(msp, folha, px0, y, px1, y + 10, "TEXTO")
+    _logo(msp, folha, x, y + 1.5, 7.0)
+    _texto(
+        msp,
+        folha,
+        "Medido é diferente de chutado.",
+        px1 - 3,
+        y + 3.5,
+        Texto.CARIMBO_PEQUENO,
+        alinhamento=TextEntityAlignment.BOTTOM_RIGHT,
+    )
+    y += 10
     if dados.legenda:
         passo_leg = Texto.CARIMBO_PEQUENO * 1.6
         altura_leg = passo_leg * (len(dados.legenda) + 1) + 3
@@ -263,11 +335,7 @@ def desenhar_folha(msp: Modelspace, folha: Folha, dados: DadosCarimbo) -> None:
     # aviso + estimadas (de cima para baixo)
     y = alt - MARGEM - 3
     if dados.estimadas:
-        y -= Texto.AVISO
-        _texto(msp, folha, "PRELIMINAR", x, y, Texto.AVISO, "AVISO")
-        y -= Texto.AVISO + 2
-        _texto(msp, folha, "NÃO USAR PARA OBRA", x, y, Texto.AVISO, "AVISO")
-        y -= 6
+        y = _carimbo_preliminar(msp, folha, x, y, LARGURA_PAINEL - 6)
         _texto(msp, folha, AVISO_OBRA, x, y, Texto.CARIMBO_PEQUENO, "AVISO")
         y -= 4
         _texto(

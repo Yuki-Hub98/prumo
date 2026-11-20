@@ -48,7 +48,7 @@ def montar_figura(desenho: Desenho) -> Figure:
             0.5,
             AVISO_OBRA,
             fontsize=folha.formato.largura / 420 * 40,
-            color=(0.82, 0, 0),
+            color=(192 / 255, 43 / 255, 34 / 255),  # --erro da identidade visual
             alpha=0.16,
             rotation=32,
             ha="center",

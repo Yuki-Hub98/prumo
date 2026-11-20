@@ -1676,11 +1676,104 @@
    ],
    [
     8312,
-    960
+    862
    ],
    [
     5438,
-    960
+    862
+   ]
+  ]
+ },
+ {
+  "tipo": "LINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5571,
+    772
+   ],
+   [
+    5571,
+    825
+   ]
+  ]
+ },
+ {
+  "tipo": "CIRCLE",
+  "camada": "TEXTO",
+  "centro": [
+   5571,
+   763
+  ],
+  "raio": 9
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5571,
+    752
+   ],
+   [
+    5604,
+    727
+   ],
+   [
+    5604,
+    697
+   ],
+   [
+    5571,
+    654
+   ],
+   [
+    5538,
+    697
+   ],
+   [
+    5538,
+    727
+   ]
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "PRUMO",
+  "ponto": [
+   5667,
+   685
+  ]
+ },
+ {
+  "tipo": "TEXT",
+  "camada": "TEXTO",
+  "texto": "Medido é diferente de chutado.",
+  "ponto": [
+   8238,
+   700
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "TEXTO",
+  "pontos": [
+   [
+    5438,
+    862
+   ],
+   [
+    8312,
+    862
+   ],
+   [
+    8312,
+    1210
+   ],
+   [
+    5438,
+    1210
    ]
   ]
  },
@@ -1690,7 +1783,7 @@
   "texto": "LEGENDA",
   "ponto": [
    5512,
-   867
+   1117
   ]
  },
  {
@@ -1699,7 +1792,7 @@
   "texto": "T tomada · S interruptor · luz ponto de luz",
   "ponto": [
    5512,
-   799
+   1049
   ]
  },
  {
@@ -1708,7 +1801,7 @@
   "texto": "AF água fria · AQ água quente · ES esgoto · ralo",
   "ponto": [
    5512,
-   731
+   981
   ]
  },
  {
@@ -1717,7 +1810,7 @@
   "texto": "h = altura do piso (mm)",
   "ponto": [
    5512,
-   663
+   913
   ]
  },
  {
@@ -1726,19 +1819,19 @@
   "pontos": [
    [
     5438,
-    960
+    1210
    ],
    [
     8312,
-    960
+    1210
    ],
    [
     8312,
-    1496
+    1746
    ],
    [
     5438,
-    1496
+    1746
    ]
   ]
  },
@@ -1748,7 +1841,7 @@
   "texto": "CHECAGENS (números = marcas no desenho)",
   "ponto": [
    5512,
-   1403
+   1653
   ]
  },
  {
@@ -1757,7 +1850,7 @@
   "texto": "1. [aviso] não há passagem de 700 mm da porta até o lado de uso (da frente) de",
   "ponto": [
    5512,
-   1337
+   1587
   ]
  },
  {
@@ -1766,7 +1859,7 @@
   "texto": "    'Guarda-roupa'",
   "ponto": [
    5512,
-   1271
+   1521
   ]
  },
  {
@@ -1775,7 +1868,7 @@
   "texto": "2. [aviso] lateral de 'Cama de casal' abaixo na planta tem 560 mm livres; mínimo 600",
   "ponto": [
    5512,
-   1205
+   1455
   ]
  },
  {
@@ -1784,7 +1877,7 @@
   "texto": "3. [aviso] lateral de 'Cama de casal' acima na planta tem 560 mm livres; mínimo 600",
   "ponto": [
    5512,
-   1140
+   1390
   ]
  },
  {
@@ -1793,7 +1886,7 @@
   "texto": "4. [info] tipo de porta de 'Guarda-roupa' não informado; considerado de abrir",
   "ponto": [
    5512,
-   1074
+   1324
   ]
  },
  {
@@ -1802,7 +1895,51 @@
   "texto": "    (informe `portas`: abrir ou correr)",
   "ponto": [
    5512,
-   1008
+   1258
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "AVISO",
+  "pontos": [
+   [
+    5498,
+    5339
+   ],
+   [
+    8196,
+    4960
+   ],
+   [
+    8252,
+    5356
+   ],
+   [
+    5554,
+    5736
+   ]
+  ]
+ },
+ {
+  "tipo": "LWPOLYLINE",
+  "camada": "AVISO",
+  "pontos": [
+   [
+    5526,
+    5361
+   ],
+   [
+    8175,
+    4988
+   ],
+   [
+    8224,
+    5335
+   ],
+   [
+    5575,
+    5707
+   ]
   ]
  },
  {
@@ -1810,8 +1947,8 @@
   "camada": "AVISO",
   "texto": "PRELIMINAR",
   "ponto": [
-   5512,
-   5650
+   6884,
+   5409
   ]
  },
  {
@@ -1819,8 +1956,8 @@
   "camada": "AVISO",
   "texto": "NÃO USAR PARA OBRA",
   "ponto": [
-   5512,
-   5488
+   6860,
+   5242
   ]
  },
  {
@@ -1829,7 +1966,7 @@
   "texto": "PRELIMINAR — NÃO USAR PARA OBRA",
   "ponto": [
    5512,
-   5338
+   4883
   ]
  },
  {
@@ -1838,7 +1975,7 @@
   "texto": "28 medida(s) estimada(s) usada(s) neste desenho:",
   "ponto": [
    5512,
-   5238
+   4783
   ]
  },
  {
@@ -1847,7 +1984,7 @@
   "texto": "terreo: pe_direito, rodape",
   "ponto": [
    5512,
-   5138
+   4683
   ]
  },
  {
@@ -1856,7 +1993,7 @@
   "texto": "p1: espessura",
   "ponto": [
    5512,
-   5072
+   4617
   ]
  },
  {
@@ -1865,7 +2002,7 @@
   "texto": "p2: espessura",
   "ponto": [
    5512,
-   5006
+   4552
   ]
  },
  {
@@ -1874,7 +2011,7 @@
   "texto": "p3: espessura",
   "ponto": [
    5512,
-   4940
+   4486
   ]
  },
  {
@@ -1883,7 +2020,7 @@
   "texto": "p6: espessura",
   "ponto": [
    5512,
-   4874
+   4420
   ]
  },
  {
@@ -1892,7 +2029,7 @@
   "texto": "p7: espessura",
   "ponto": [
    5512,
-   4808
+   4354
   ]
  },
  {
@@ -1901,7 +2038,7 @@
   "texto": "p8: espessura",
   "ponto": [
    5512,
-   4742
+   4288
   ]
  },
  {
@@ -1910,7 +2047,7 @@
   "texto": "porta-quarto: distancia_inicio, largura, altura",
   "ponto": [
    5512,
-   4676
+   4222
   ]
  },
  {
@@ -1919,7 +2056,7 @@
   "texto": "porta-banheiro: distancia_inicio, largura, altura",
   "ponto": [
    5512,
-   4611
+   4156
   ]
  },
  {
@@ -1928,7 +2065,7 @@
   "texto": "janela-quarto: distancia_inicio, largura, altura, peitoril",
   "ponto": [
    5512,
-   4545
+   4090
   ]
  },
  {
@@ -1937,7 +2074,7 @@
   "texto": "tomada-cama-esq: altura",
   "ponto": [
    5512,
-   4479
+   4025
   ]
  },
  {
@@ -1946,7 +2083,7 @@
   "texto": "tomada-cama-dir: altura",
   "ponto": [
    5512,
-   4413
+   3959
   ]
  },
  {
@@ -1955,7 +2092,7 @@
   "texto": "interruptor-quarto: altura",
   "ponto": [
    5512,
-   4347
+   3893
   ]
  },
  {
@@ -1964,7 +2101,7 @@
   "texto": "luz-quarto: altura",
   "ponto": [
    5512,
-   4281
+   3827
   ]
  },
  {
@@ -1973,7 +2110,7 @@
   "texto": "cama: largura, profundidade, altura",
   "ponto": [
    5512,
-   4215
+   3761
   ]
  },
  {
@@ -1982,7 +2119,7 @@
   "texto": "guarda-roupa: largura, profundidade, altura",
   "ponto": [
    5512,
-   4149
+   3695
   ]
  }
 ]
