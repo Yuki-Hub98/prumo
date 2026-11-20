@@ -57,7 +57,9 @@ Mudou alguma rota ou esquema da API? `make frontend-tipos` regera `openapi.json`
 
 ## Coluna lateral
 
-Em "Móveis e cores" a coluna da direita tem **abas**: **Móvel** (o móvel selecionado e
+No topo da coluna da direita fica o título (**Painel de edição**, ou **Editar planta** no
+editor) e o botão **☰**, que fecha a coluna (sobra uma faixa com o ☰ para reabrir; fica
+lembrado no navegador). Em "Móveis e cores" a coluna tem **abas**: **Móvel** (o móvel selecionado e
 adicionar do catálogo; clicar num móvel na planta abre esta aba), **Cores**, **Imagens** e
 **Problemas** (com a contagem, e o que falta medir). A **largura é ajustável**: arraste a faixa
 cinza da borda esquerda (ou use ← → com ela em foco; clique duplo volta ao padrão); fica
@@ -69,7 +71,8 @@ já usadas no cômodo), à esquerda do botão para não sair da tela.
 Cada cor mudada entra no **rascunho** (~0,6 s depois de parar de mexer): **Desfazer** / Ctrl+Z
 volta a cor anterior, passo a passo; **Salvar** no topo grava. **Marque várias linhas**
 (caixinhas) e uma cor só pinta todas (barra "N marcados"; mudar uma linha marcada também
-pinta as outras). Em cada móvel, **▸ detalhes** abre as partes com cor própria (portas,
+pinta as outras). Em cada móvel, **▸ detalhes** abre as partes com cor própria (abre sozinho ao selecionar o
+móvel e fecha quando outro é selecionado; dá para abrir os de outros na mão): portas,
 gavetas, puxadores, travesseiros, roupa de cama, colchão, pés...); sem cor, a parte fica com a
 do móvel. No 3D as partes pintam ao vivo em modelos gerados a partir desta versão (peça um
 rascunho em "Imagens" se o modelo for antigo). Clicar no **nome de um móvel** no painel, ou **no móvel no 3D**, seleciona o
