@@ -174,11 +174,20 @@ class ResumoVersao(_Esquema):
     caminhos: list[str] = Field(description="Até 5 caminhos alterados (resumo).")
 
 
+class InfoRascunho(_Esquema):
+    desde: int = Field(description="Versão salva onde o rascunho começou.")
+    passos: int = Field(description="Mudanças ainda não salvas.")
+    refazer: bool = Field(description="Há passo desfeito para refazer.")
+
+
 class Versoes(_Esquema):
     atual: int
     desfazer: int | None = Field(description="Versão que o desfazer restaura (None: nada).")
     refazer: int | None = Field(description="Versão que o refazer restaura (None: nada).")
     versoes: list[ResumoVersao] = Field(description="Da mais nova para a mais velha.")
+    rascunho: InfoRascunho | None = Field(
+        None, description="Rascunho aberto (mudanças não salvas), se houver."
+    )
 
 
 class MedidaEstimada(_Esquema):

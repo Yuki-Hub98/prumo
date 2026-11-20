@@ -23,6 +23,7 @@ from interiores_core.modelo import (
     PontoInstalacao,
     Porta,
 )
+from interiores_core.partes import PARTES, partes_do_movel
 
 Pt = tuple[float, float]
 
@@ -72,6 +73,11 @@ class ComodoTela(_Tela):
     """Faces das paredes voltadas para o cômodo (cor por parede)."""
 
 
+class ParteTela(_Tela):
+    id: str
+    nome: str
+
+
 class MovelTela(_Tela):
     id: str
     comodo: str
@@ -84,6 +90,8 @@ class MovelTela(_Tela):
     frente: tuple[int, int]
     elevado: bool
     """Não ocupa o piso (TV na parede, armário aéreo)."""
+    partes: list[ParteTela] = []
+    """Partes com cor própria (portas, gavetas...), além do corpo."""
 
 
 class InstalacaoTela(_Tela):
@@ -203,6 +211,7 @@ def pavimento_para_tela(
             cantos=_pts(geometria.cantos_movel(m)),
             frente=geometria.frente_movel(m),
             elevado=not m.ocupa_piso,
+            partes=[ParteTela(id=p, nome=PARTES[p]) for p in partes_do_movel(m)],
         )
         for c in pav.comodos
         for m in (dados_comodos[c.id].moveis if c.id in dados_comodos else [])

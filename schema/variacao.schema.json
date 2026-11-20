@@ -79,6 +79,19 @@
           "description": "Cor por id de móvel ou por tipo (o id tem prioridade).",
           "title": "Moveis",
           "type": "object"
+        },
+        "pecas": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "description": "Cor em hexadecimal: #RRGGBB.",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "description": "Cor por parte do móvel, por id ou tipo: {\"guarda-roupa\": {\"portas\": \"#ffffff\", \"puxadores\": \"#222222\"}} (o id tem prioridade). Partes: ver ``interiores_core.partes``; o que não tiver cor usa a do móvel.",
+          "title": "Pecas",
+          "type": "object"
         }
       },
       "title": "CoresVariacao",

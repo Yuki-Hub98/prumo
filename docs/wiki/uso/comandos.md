@@ -192,10 +192,18 @@ Crie `projetos/casa/variacoes/quarto/<nome>.json`, por exemplo `escura.json`:
     "piso": "#5C3D24",
     "teto": "#FAFAFA",
     "rodape": "#FFFFFF",
-    "moveis": {"guarda_roupa": "#2F3B45", "cama": "#3E2C20"}
+    "moveis": {"guarda_roupa": "#2F3B45", "cama": "#3E2C20"},
+    "pecas": {"guarda_roupa": {"portas": "#F2EFE8", "puxadores": "#C9A227"},
+              "cama": {"travesseiros": "#C0392B", "roupa_de_cama": "#2E5E8C"}}
   }
 }
 ```
+
+`pecas` dá cor a uma parte do móvel (por id ou tipo); o resto do móvel fica com a cor de
+`moveis`. Partes: portas, gavetas, puxadores, prateleiras, cabeceira, colchão
+(`colchao`), roupa de cama (`roupa_de_cama`, o edredom), travesseiros, almofadas, encosto,
+braços (`bracos`), assento, tampo, pés (`pes`) e moldura; quais cada móvel tem depende do
+tipo (`interiores_core.partes`).
 
 Em `moveis`, vale o id de um móvel (`"guarda-roupa"`) ou o tipo (`"guarda_roupa"`, todos
 daquele tipo). Tudo é opcional: o que faltar usa a cor padrão.

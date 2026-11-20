@@ -69,6 +69,11 @@ class Projeto(Base):
     endereco_apelido: Mapped[str | None] = mapped_column(Text)
     regras_toml: Mapped[str | None] = mapped_column(Text, comment="regras.toml original")
     versao: Mapped[int] = mapped_column(Integer, comment="sobe a cada gravação")
+    rascunho_desde: Mapped[int | None] = mapped_column(
+        Integer,
+        comment="versão salva onde o rascunho começou (None: sem rascunho); "
+        "as versões acima dela são passos ainda não salvos",
+    )
     hash_conteudo: Mapped[str] = mapped_column(String(64))
     versao_exportada: Mapped[int | None] = mapped_column(
         Integer, comment="versão gravada em projetos/ pela última exportação/importação"

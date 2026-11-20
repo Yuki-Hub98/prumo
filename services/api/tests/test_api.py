@@ -32,6 +32,8 @@ def test_editar_parede_grava_versao_e_exporta(api: TestClient, projetos: Path) -
     corpo = r.json()
     assert corpo["versao"] == 2
     assert corpo["alteracoes"][0]["caminho"] == "projeto.pavimentos[terreo].paredes[p1].espessura"
+    # a edição é um passo de rascunho: o JSON só muda ao salvar
+    assert api.post("/projetos/casa/rascunho/salvar", params={"versao": 2}).status_code == 200
     exportado = json.loads((projetos / "casa" / "projeto.json").read_text())
     p1 = next(w for w in exportado["pavimentos"][0]["paredes"] if w["id"] == "p1")
     assert p1["espessura"] == {"valor": 140, "origem": "trena", "obs": "antes: 150 mm (estimada)"}
@@ -85,6 +87,8 @@ def test_remover_comodo_leva_o_mobiliario(api: TestClient, projetos: Path) -> No
     r = api.delete(f"{PAV}/comodos/quarto", params={"versao": 1})
     assert r.status_code == 200, r.text
     assert "quarto" not in api.get("/projetos/casa").json()["comodos"]
+    assert (projetos / "casa" / "comodos" / "quarto.json").exists()  # rascunho: ainda não
+    api.post("/projetos/casa/rascunho/salvar", params={"versao": 2})
     assert not (projetos / "casa" / "comodos" / "quarto.json").exists()
 
 

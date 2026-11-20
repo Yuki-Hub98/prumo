@@ -1,12 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, ou, type Cores, type PavimentoTela } from "../api/cliente";
 import { lerCor, rgbTexto } from "../cores";
 import { useEditar, useVariacoes } from "../dados";
+import { aplicar, type Chave, valorDe } from "../variacao";
+import { SeletorCor } from "./SeletorCor";
 
 /** Cores padrão do render (para o seletor mostrar algo quando a variação não define). */
 export const PADRAO = { parede: "#eeeae3", piso: "#a67c52", teto: "#f7f5f0", rodape: "#ffffff" };
 
-const vazio = (): Cores => ({ paredes: {}, moveis: {} });
+const vazio = (): Cores => ({ paredes: {}, moveis: {}, pecas: {} });
+
+/** Detalhes abertos depois de a seleção passar de ``antes`` para ``agora``. */
+export function trocarAberto(abertos: Set<string>, antes: string | null, agora: string | null): Set<string> {
+  const n = new Set(abertos);
+  if (antes) n.delete(antes);
+  if (agora) n.add(agora);
+  return n;
+}
+
+/** ``minhas-cores``, ``minhas-cores-2``, ... o primeiro nome de variação livre. */
+export function nomeLivre(existentes: string[]): string {
+  let n = 1;
+  const nome = () => (n === 1 ? "minhas-cores" : `minhas-cores-${n}`);
+  while (existentes.includes(nome())) n++;
+  return nome();
+}
 
 export type Formato = "rgb" | "hex";
 
@@ -53,26 +71,51 @@ function Cor({
   valor,
   padrao,
   formato,
+  usadas,
+  destacar = false,
+  marcado,
+  aoMarcar,
+  aoRotulo,
   aoMudar,
 }: {
   rotulo: string;
   valor?: string | null;
   padrao: string;
   formato: Formato;
+  usadas: string[];
+  destacar?: boolean;
+  marcado: boolean;
+  aoMarcar: () => void;
+  /** Clicar no nome (móvel: seleciona o móvel). */
+  aoRotulo?: () => void;
   aoMudar: (v: string | null) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 py-0.5 text-sm">
-      <span className={valor ? "" : "text-stone-500"}>{rotulo}</span>
-      <span className="flex items-center gap-1">
+    <div
+      className={`flex items-center justify-between gap-2 py-0.5 text-sm ${destacar ? "-mx-1 rounded bg-sky-50 px-1 ring-1 ring-sky-300" : ""}`}
+    >
+      <label className="flex min-w-0 items-center gap-1.5">
+        <input type="checkbox" checked={marcado} onChange={aoMarcar} aria-label={`marcar ${rotulo}`} className="accent-stone-800" />
+        {aoRotulo ? (
+          <button
+            type="button"
+            className={`truncate text-left hover:underline ${valor ? "" : "text-stone-500"}`}
+            title="selecionar este móvel"
+            onClick={(e) => {
+              e.preventDefault();
+              aoRotulo();
+            }}
+          >
+            {rotulo}
+          </button>
+        ) : (
+          <span className={`truncate ${valor ? "" : "text-stone-500"}`}>{rotulo}</span>
+        )}
+        {destacar && <span className="text-xs text-sky-700">selecionado</span>}
+      </label>
+      <span className="flex shrink-0 items-center gap-1">
         <CampoCodigo hex={valor ?? padrao} formato={formato} aoMudar={aoMudar} />
-        <input
-          type="color"
-          aria-label={`cor de ${rotulo}`}
-          className="h-6 w-8 cursor-pointer rounded border"
-          value={valor ?? padrao}
-          onChange={(e) => aoMudar(e.target.value)}
-        />
+        <SeletorCor valor={valor ?? padrao} rotulo={rotulo} usadas={usadas} aoMudar={aoMudar} />
         {valor ? (
           <button type="button" className="w-10 text-left text-xs text-stone-500 hover:underline" onClick={() => aoMudar(null)}>
             limpar
@@ -85,10 +128,15 @@ function Cor({
   );
 }
 
+/** Espera depois da última mudança antes de mandar o passo (arrastar no degradê vira um passo só). */
+const ESPERA_MS = 600;
+
 /**
  * Cores de um cômodo. "Base" = cores padrão (não editável); as outras são variações
- * guardadas à parte, que nunca mudam o projeto base. Enquanto edita, a planta já mostra
- * o rascunho (``aoRascunho``); "salvar" grava a variação inteira.
+ * guardadas à parte, que nunca mudam o projeto base. Cada mudança aparece na hora (planta e
+ * 3D) e entra no rascunho logo depois (um passo; arrastar o degradê conta como um só): o
+ * Desfazer volta passo a passo, e o Salvar do topo grava.
+ * Marcando várias linhas, uma cor só pinta todas.
  */
 export function PainelCores({
   codigo,
@@ -97,6 +145,8 @@ export function PainelCores({
   ativa,
   aoAtivar,
   aoRascunho,
+  destaque = null,
+  aoSelecionarMovel,
 }: {
   codigo: string;
   comodo: string;
@@ -104,11 +154,26 @@ export function PainelCores({
   ativa: string;
   aoAtivar: (nome: string) => void;
   aoRascunho: (cores: Cores | null) => void;
+  /** Móvel selecionado (planta ou 3D): a linha dele fica marcada. */
+  destaque?: string | null;
+  aoSelecionarMovel?: (id: string) => void;
 }) {
   const variacoes = useVariacoes(codigo, comodo).data ?? {};
   const editar = useEditar(codigo);
   const [rascunho, setRascunho] = useState<Cores>(vazio);
-  const [mudou, setMudou] = useState(false);
+  const [estado, setEstado] = useState<"salvo" | "pendente" | "salvando">("salvo");
+  const [marcados, setMarcados] = useState<Set<Chave>>(new Set());
+  // móveis com as partes abertas ("detalhes")
+  const [abertos, setAbertos] = useState<Set<string>>(() => new Set(destaque ? [destaque] : []));
+  // seleção manda nos detalhes: o móvel selecionado abre, o que deixou de ser fecha (os que
+  // a pessoa abriu na mão continuam abertos)
+  const destaqueAnterior = useRef(destaque);
+  useEffect(() => {
+    const antes = destaqueAnterior.current;
+    destaqueAnterior.current = destaque;
+    if (antes === destaque) return;
+    setAbertos((a) => trocarAberto(a, antes, destaque));
+  }, [destaque]);
   const [novoNome, setNovoNome] = useState("");
   const [formato, setFormato] = useState<Formato>(() => {
     try {
@@ -130,35 +195,105 @@ export function PainelCores({
     a.localeCompare(b, undefined, { numeric: true }),
   );
   const moveis = geometria.moveis.filter((m) => m.comodo === comodo);
+  const tipos = Object.fromEntries(moveis.map((m) => [m.id, m.tipo]));
   const salva = variacoes[ativa];
+  // cores já escolhidas neste cômodo, para repetir com um clique
+  const usadas = [
+    ...new Set(
+      [
+        rascunho.parede, rascunho.piso, rascunho.teto, rascunho.rodape,
+        ...Object.values(rascunho.paredes ?? {}), ...Object.values(rascunho.moveis ?? {}),
+        ...Object.values(rascunho.pecas ?? {}).flatMap((p) => Object.values(p)),
+      ]
+        .filter((x): x is string => !!x)
+        .map((x) => x.toLowerCase()),
+    ),
+  ];
 
-  useEffect(() => {
-    setRascunho(salva ? { ...vazio(), ...salva.cores } : vazio());
-    setMudou(false);
-  }, [ativa, salva]);
-  useEffect(() => aoRascunho(ativa === "base" ? null : rascunho), [ativa, rascunho, aoRascunho]);
+  // gravação automática: ``ultimo`` = rascunho mais novo; ``geracao`` > 0 = mudança local
+  // ainda não confirmada pelo servidor (aí o que vem do servidor não pode apagar o rascunho)
+  const ultimo = useRef<Cores>(vazio());
+  const geracao = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gravarAgora = useRef<(() => void) | null>(null);
 
-  const mudar = (f: (r: Cores) => Cores) => {
-    setRascunho((r) => f({ ...r, paredes: { ...r.paredes }, moveis: { ...r.moveis } }));
-    setMudou(true);
-  };
-  const tirarNulos = (o: Record<string, string>, k: string, v: string | null) => {
-    if (v === null) delete o[k];
-    else o[k] = v;
-    return o;
-  };
-
-  const gravar = (nome: string, cores: Cores, apelido?: string | null) =>
+  const gravar = (nome: string, cores: Cores, apelido?: string | null, depois?: () => void) =>
     editar.mutate(
       (versao) =>
         ou(
           api.PUT("/projetos/{codigo}/comodos/{comodo}/variacoes/{nome}", {
             params: { path: { codigo, comodo, nome }, query: { versao } },
-            body: { nome: apelido ?? salva?.nome ?? nome, cores },
+            body: { nome: apelido ?? variacoes[nome]?.nome ?? nome, cores },
           }),
         ),
-      { onSuccess: () => aoAtivar(nome) },
+      { onSuccess: () => aoAtivar(nome), onSettled: depois },
     );
+
+  const ativaAnterior = useRef(ativa);
+  useEffect(() => {
+    const trocou = ativaAnterior.current !== ativa;
+    ativaAnterior.current = ativa;
+    if (!trocou && geracao.current > 0) return; // ainda gravando: não volta a cor no meio
+    const cores = salva ? { ...vazio(), ...salva.cores } : vazio();
+    ultimo.current = cores;
+    setRascunho(cores);
+    setMarcados(new Set());
+  }, [ativa, salva]);
+  useEffect(() => aoRascunho(ativa === "base" ? null : rascunho), [ativa, rascunho, aoRascunho]);
+  // saiu do painel (outra aba, outro cômodo) com mudança esperando: grava já
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+      gravarAgora.current?.();
+    },
+    [],
+  );
+
+  const mudar = (chaves: Iterable<Chave>, valor: string | null) => {
+    const novo = aplicar(ultimo.current, chaves, valor);
+    ultimo.current = novo;
+    setRascunho(novo);
+    const g = ++geracao.current;
+    setEstado("pendente");
+    if (timer.current) clearTimeout(timer.current);
+    const nome = ativa;
+    gravarAgora.current = () => {
+      gravarAgora.current = null;
+      setEstado("salvando");
+      gravar(nome, novo, null, () => {
+        if (geracao.current === g) {
+          geracao.current = 0;
+          setEstado("salvo");
+        }
+      });
+    };
+    timer.current = setTimeout(() => gravarAgora.current?.(), ESPERA_MS);
+  };
+  const marcar = (k: Chave) =>
+    setMarcados((m) => {
+      const n = new Set(m);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
+  // mudar uma linha marcada pinta todas as marcadas
+  const mudarLinha = (k: Chave) => (v: string | null) => mudar(marcados.has(k) ? marcados : [k], v);
+
+  const linha = (k: Chave, rotulo: string, padrao: string, extra: Partial<Parameters<typeof Cor>[0]> = {}) => (
+    <Cor
+      key={k}
+      formato={formato}
+      usadas={usadas}
+      rotulo={rotulo}
+      valor={valorDe(rascunho, k, tipos)}
+      padrao={padrao}
+      marcado={marcados.has(k)}
+      aoMarcar={() => marcar(k)}
+      aoMudar={mudarLinha(k)}
+      {...extra}
+    />
+  );
+  const primeiro = [...marcados][0];
 
   return (
     <section className="border-b border-stone-200 p-3">
@@ -196,55 +331,109 @@ export function PainelCores({
         </button>
       </form>
 
-      {ativa !== "base" && (
-        <div className="mb-2 flex items-center gap-2 text-xs text-stone-500">
-          código da cor
-          {(["rgb", "hex"] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => trocarFormato(f)}
-              className={`rounded px-1.5 py-0.5 uppercase ${f === formato ? "bg-stone-800 text-white" : "border border-stone-300"}`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      )}
       {ativa === "base" ? (
-        <p className="text-sm text-stone-500">
-          "base" são as cores padrão. Crie uma variação para pintar (o projeto base não muda).
-        </p>
+        <div className="text-sm text-stone-500">
+          <button
+            className="mb-1 rounded bg-stone-800 px-3 py-1 text-sm text-white disabled:opacity-40"
+            disabled={editar.isPending}
+            onClick={() => gravar(nomeLivre(Object.keys(variacoes)), vazio(), "Minhas cores")}
+          >
+            pintar este cômodo
+          </button>
+          <p>
+            "base" são as cores padrão. Pintar cria uma variação ("Minhas cores"): o projeto base não muda e
+            dá para comparar depois.
+          </p>
+        </div>
       ) : (
         <>
-          <Cor formato={formato} rotulo="paredes (geral)" valor={rascunho.parede} padrao={PADRAO.parede}
-               aoMudar={(v) => mudar((r) => ({ ...r, parede: v }))} />
-          <Cor formato={formato} rotulo="piso" valor={rascunho.piso} padrao={PADRAO.piso} aoMudar={(v) => mudar((r) => ({ ...r, piso: v }))} />
-          <Cor formato={formato} rotulo="teto" valor={rascunho.teto} padrao={PADRAO.teto} aoMudar={(v) => mudar((r) => ({ ...r, teto: v }))} />
-          <Cor formato={formato} rotulo="rodapé" valor={rascunho.rodape} padrao={PADRAO.rodape}
-               aoMudar={(v) => mudar((r) => ({ ...r, rodape: v }))} />
+          <div className="mb-2 flex items-center gap-2 text-xs text-stone-500">
+            código da cor
+            {(["rgb", "hex"] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => trocarFormato(f)}
+                className={`rounded px-1.5 py-0.5 uppercase ${f === formato ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+              >
+                {f}
+              </button>
+            ))}
+            <span className="ml-auto" aria-live="polite">
+              {estado === "salvo" ? "" : "aplicando…"}
+            </span>
+          </div>
+          {marcados.size > 0 ? (
+            <div className="sticky top-0 z-10 -mx-1 mb-2 flex items-center gap-2 rounded border border-stone-300 bg-white px-2 py-1 text-sm shadow-sm">
+              <span className="font-medium">{marcados.size} marcados</span>
+              <SeletorCor
+                valor={valorDe(rascunho, primeiro, tipos) ?? "#d6d3d1"}
+                rotulo={`${marcados.size} marcados`}
+                usadas={usadas}
+                aoMudar={(v) => mudar(marcados, v)}
+              />
+              <button type="button" className="text-xs text-stone-500 hover:underline" onClick={() => mudar(marcados, null)}>
+                padrão
+              </button>
+              <button type="button" className="ml-auto text-xs text-stone-500 hover:underline" onClick={() => setMarcados(new Set())}>
+                desmarcar
+              </button>
+            </div>
+          ) : (
+            <p className="mb-1 text-xs text-stone-500">Marque várias linhas para pintar todas com a mesma cor.</p>
+          )}
+          {linha("parede", "paredes (geral)", PADRAO.parede)}
+          {linha("piso", "piso", PADRAO.piso)}
+          {linha("teto", "teto", PADRAO.teto)}
+          {linha("rodape", "rodapé", PADRAO.rodape)}
           <h3 className="mt-2 text-xs text-stone-500">Cada parede (face deste cômodo)</h3>
-          {paredes.map((p) => (
-            <Cor formato={formato} key={p} rotulo={p} valor={rascunho.paredes?.[p]} padrao={rascunho.parede ?? PADRAO.parede}
-                 aoMudar={(v) => mudar((r) => ({ ...r, paredes: tirarNulos(r.paredes!, p, v) }))} />
-          ))}
-          {moveis.length > 0 && <h3 className="mt-2 text-xs text-stone-500">Móveis</h3>}
-          {moveis.map((m) => (
-            <Cor formato={formato} key={m.id} rotulo={m.nome ?? m.id} valor={rascunho.moveis?.[m.id] ?? rascunho.moveis?.[m.tipo]}
-                 padrao="#d6d3d1" aoMudar={(v) => mudar((r) => ({ ...r, moveis: tirarNulos(r.moveis!, m.id, v) }))} />
-          ))}
-          <div className="mt-3 flex gap-2">
-            <button
-              className="rounded bg-stone-800 px-3 py-1 text-sm text-white disabled:opacity-40"
-              disabled={!mudou || editar.isPending}
-              onClick={() => gravar(ativa, rascunho)}
-            >
-              salvar
-            </button>
+          {paredes.map((p) => linha(`p:${p}`, p, rascunho.parede ?? PADRAO.parede))}
+          {moveis.length > 0 && <h3 className="mt-2 text-xs text-stone-500">Móveis (clique no nome para selecionar)</h3>}
+          {moveis.map((m) => {
+            const partes = m.partes ?? [];
+            const aberto = abertos.has(m.id);
+            const corpo = valorDe(rascunho, `m:${m.id}`, tipos) ?? "#d6d3d1";
+            const comCor = partes.filter((pt) => valorDe(rascunho, `q:${m.id}:${pt.id}`, tipos)).length;
+            return (
+              <div key={m.id}>
+                {linha(`m:${m.id}`, m.nome ?? m.id, "#d6d3d1", {
+                  destacar: m.id === destaque,
+                  aoRotulo: aoSelecionarMovel ? () => aoSelecionarMovel(m.id) : undefined,
+                })}
+                {partes.length > 0 && (
+                  <button
+                    type="button"
+                    aria-expanded={aberto}
+                    className="ml-6 text-xs text-stone-500 hover:underline"
+                    onClick={() =>
+                      setAbertos((a) => {
+                        const n = new Set(a);
+                        if (n.has(m.id)) n.delete(m.id);
+                        else n.add(m.id);
+                        return n;
+                      })
+                    }
+                  >
+                    {aberto ? "▾" : "▸"} detalhes ({partes.map((pt) => pt.nome.toLowerCase()).join(", ")})
+                    {comCor > 0 && ` · ${comCor} com cor própria`}
+                  </button>
+                )}
+                {aberto && (
+                  <div className="ml-6 border-l border-stone-200 pl-2">
+                    {partes.map((pt) => linha(`q:${m.id}:${pt.id}`, pt.nome, corpo))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div className="mt-3">
             <button
               className="text-sm text-red-700 hover:underline"
               disabled={editar.isPending}
-              onClick={() =>
+              onClick={() => {
+                if (timer.current) clearTimeout(timer.current);
+                gravarAgora.current = null;
+                geracao.current = 0;
                 editar.mutate(
                   (versao) =>
                     ou(
@@ -253,8 +442,8 @@ export function PainelCores({
                       }),
                     ),
                   { onSuccess: () => aoAtivar("base") },
-                )
-              }
+                );
+              }}
             >
               apagar variação
             </button>

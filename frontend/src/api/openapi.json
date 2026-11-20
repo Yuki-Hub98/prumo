@@ -480,6 +480,116 @@
         }
       }
     },
+    "/projetos/{codigo}/rascunho/salvar": {
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Salvar Rascunho",
+        "description": "Salva o rascunho: cada mudança vira uma versão e ``projetos/<p>`` é reexportado.",
+        "operationId": "salvar_rascunho_projetos__codigo__rascunho_salvar_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/rascunho/descartar": {
+      "post": {
+        "tags": [
+          "projetos"
+        ],
+        "summary": "Descartar Rascunho",
+        "description": "Joga fora as mudanças não salvas: volta para a versão salva.",
+        "operationId": "descartar_rascunho_projetos__codigo__rascunho_descartar_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/versoes/{para}/restaurar": {
       "post": {
         "tags": [
@@ -3622,6 +3732,19 @@
             "type": "object",
             "title": "Moveis",
             "description": "Cor por id de móvel ou por tipo (o id tem prioridade)."
+          },
+          "pecas": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "description": "Cor em hexadecimal: #RRGGBB."
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Pecas",
+            "description": "Cor por parte do móvel, por id ou tipo: {\"guarda-roupa\": {\"portas\": \"#ffffff\", \"puxadores\": \"#222222\"}} (o id tem prioridade). Partes: ver ``interiores_core.partes``; o que não tiver cor usa a do móvel."
           }
         },
         "additionalProperties": false,
@@ -3802,6 +3925,33 @@
           "tipo"
         ],
         "title": "Imovel"
+      },
+      "InfoRascunho": {
+        "properties": {
+          "desde": {
+            "type": "integer",
+            "title": "Desde",
+            "description": "Versão salva onde o rascunho começou."
+          },
+          "passos": {
+            "type": "integer",
+            "title": "Passos",
+            "description": "Mudanças ainda não salvas."
+          },
+          "refazer": {
+            "type": "boolean",
+            "title": "Refazer",
+            "description": "Há passo desfeito para refazer."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "desde",
+          "passos",
+          "refazer"
+        ],
+        "title": "InfoRascunho"
       },
       "InfoRender": {
         "properties": {
@@ -4502,6 +4652,14 @@
           "elevado": {
             "type": "boolean",
             "title": "Elevado"
+          },
+          "partes": {
+            "items": {
+              "$ref": "#/components/schemas/ParteTela"
+            },
+            "type": "array",
+            "title": "Partes",
+            "default": []
           }
         },
         "type": "object",
@@ -5086,6 +5244,24 @@
           "lado_b"
         ],
         "title": "ParedeTela"
+      },
+      "ParteTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nome"
+        ],
+        "title": "ParteTela"
       },
       "Pavimento": {
         "properties": {
@@ -6199,6 +6375,17 @@
             "type": "array",
             "title": "Versoes",
             "description": "Da mais nova para a mais velha."
+          },
+          "rascunho": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InfoRascunho"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rascunho aberto (mudanças não salvas), se houver."
           }
         },
         "additionalProperties": false,

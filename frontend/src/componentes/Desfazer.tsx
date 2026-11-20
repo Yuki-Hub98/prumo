@@ -11,7 +11,11 @@ function digitando(alvo: EventTarget | null): boolean {
   return !!el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName));
 }
 
-/** Desfazer / refazer no topo da tela, com Ctrl+Z e Ctrl+Shift+Z (ou Ctrl+Y). */
+/** Desfazer / refazer no topo da tela, com Ctrl+Z e Ctrl+Shift+Z (ou Ctrl+Y).
+ *
+ * Toda edição da tela entra num **rascunho**: dá para testar à vontade e desfazer passo a
+ * passo; **Salvar** (Ctrl+S) grava cada mudança como versão e atualiza ``projetos/``;
+ * **Descartar** volta para o que estava salvo. */
 export function BotoesDesfazer({
   codigo,
   aoProblemas,
@@ -35,6 +39,18 @@ export function BotoesDesfazer({
     );
   const podeDesfazer = versoes?.desfazer != null && !editar.isPending;
   const podeRefazer = versoes?.refazer != null && !editar.isPending;
+  const rascunho = versoes?.rascunho ?? null;
+  const [confirmar, setConfirmar] = useState(false);
+  const fechar = (como: "salvar" | "descartar") => {
+    setConfirmar(false);
+    editar.mutate((versao) =>
+      ou(
+        como === "salvar"
+          ? api.POST("/projetos/{codigo}/rascunho/salvar", { params: { path: { codigo }, query: { versao } } })
+          : api.POST("/projetos/{codigo}/rascunho/descartar", { params: { path: { codigo }, query: { versao } } }),
+      ),
+    );
+  };
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
@@ -42,6 +58,7 @@ export function BotoesDesfazer({
       const k = e.key.toLowerCase();
       if (k === "z" && !e.shiftKey && podeDesfazer) voltar("desfazer");
       else if (((k === "z" && e.shiftKey) || k === "y") && podeRefazer) voltar("refazer");
+      else if (k === "s" && rascunho && rascunho.passos > 0 && !editar.isPending) fechar("salvar");
       else return;
       e.preventDefault();
     };
@@ -60,6 +77,41 @@ export function BotoesDesfazer({
       <button className={botao} onClick={aoHistorico} title="Ver e voltar para uma versão">
         Histórico
       </button>
+      {rascunho && rascunho.passos > 0 && (
+        <span className="ml-2 flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-sm text-amber-900">
+          {rascunho.passos === 1 ? "1 mudança não salva" : `${rascunho.passos} mudanças não salvas`}
+          {confirmar ? (
+            <>
+              <span className="ml-1">descartar tudo?</span>
+              <button className="rounded bg-red-700 px-2 text-white" onClick={() => fechar("descartar")}>
+                sim
+              </button>
+              <button className="rounded border border-amber-300 bg-white px-2" onClick={() => setConfirmar(false)}>
+                não
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                className="ml-1 rounded bg-stone-800 px-2 text-white disabled:opacity-40"
+                disabled={editar.isPending}
+                onClick={() => fechar("salvar")}
+                title="Salvar (Ctrl+S): cada mudança vira uma versão"
+              >
+                Salvar
+              </button>
+              <button
+                className="rounded border border-amber-300 bg-white px-2 disabled:opacity-40"
+                disabled={editar.isPending}
+                onClick={() => setConfirmar(true)}
+                title="Voltar para o que estava salvo"
+              >
+                Descartar
+              </button>
+            </>
+          )}
+        </span>
+      )}
       {editar.error && <span className="text-sm text-red-700">{editar.error.message}</span>}
     </div>
   );
@@ -93,7 +145,9 @@ export function PainelHistorico({ codigo, aoFechar }: { codigo: string; aoFechar
         </button>
       </div>
       <p className="mb-2 text-xs text-stone-500">
-        Voltar para uma versão grava o conteúdo dela como versão nova: nada é apagado e dá para desfazer.
+        {versoes?.rascunho
+          ? "Há mudanças não salvas: salve ou descarte para voltar a uma versão antiga. Enquanto isso, Desfazer volta um passo de cada vez."
+          : "Voltar para uma versão grava o conteúdo dela como versão nova: nada é apagado e dá para desfazer."}
       </p>
       {editar.error && <p className="mb-2 text-sm text-red-700">{editar.error.message}</p>}
       <ol className="space-y-1 text-sm">
@@ -103,7 +157,12 @@ export function PainelHistorico({ codigo, aoFechar }: { codigo: string; aoFechar
             <li key={v.versao} className={`rounded px-2 py-1 ${atual ? "bg-stone-200" : "hover:bg-stone-100"}`}>
               <div className="flex items-baseline gap-2">
                 <span className="w-8 shrink-0 text-xs text-stone-400">v{v.versao}</span>
-                <span className="flex-1">{nomeOperacao(v.operacao)}</span>
+                <span className="flex-1">
+                  {nomeOperacao(v.operacao)}
+                  {versoes.rascunho && v.versao > versoes.rascunho.desde && (
+                    <span className="ml-1 rounded bg-amber-100 px-1 text-xs text-amber-800">não salva</span>
+                  )}
+                </span>
                 <span className="text-xs text-stone-400">{quando(v.quando)}</span>
               </div>
               {v.caminhos.length > 0 && (
@@ -126,7 +185,7 @@ export function PainelHistorico({ codigo, aoFechar }: { codigo: string; aoFechar
                       não
                     </button>
                   </span>
-                ) : (
+                ) : versoes.rascunho ? null : (
                   <button className="text-xs text-sky-700 hover:underline" onClick={() => setConfirmar(v.versao)}>
                     voltar para esta
                   </button>

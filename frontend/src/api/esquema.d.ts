@@ -163,6 +163,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/rascunho/salvar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Salvar Rascunho
+         * @description Salva o rascunho: cada mudança vira uma versão e ``projetos/<p>`` é reexportado.
+         */
+        post: operations["salvar_rascunho_projetos__codigo__rascunho_salvar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/rascunho/descartar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Descartar Rascunho
+         * @description Joga fora as mudanças não salvas: volta para a versão salva.
+         */
+        post: operations["descartar_rascunho_projetos__codigo__rascunho_descartar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/versoes/{para}/restaurar": {
         parameters: {
             query?: never;
@@ -994,6 +1034,15 @@ export interface components {
             moveis?: {
                 [key: string]: string;
             };
+            /**
+             * Pecas
+             * @description Cor por parte do móvel, por id ou tipo: {"guarda-roupa": {"portas": "#ffffff", "puxadores": "#222222"}} (o id tem prioridade). Partes: ver ``interiores_core.partes``; o que não tiver cor usa a do móvel.
+             */
+            pecas?: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
         };
         /**
          * DadosComodo
@@ -1065,6 +1114,24 @@ export interface components {
             tipo: "casa" | "apartamento";
             /** Endereco Apelido */
             endereco_apelido?: string | null;
+        };
+        /** InfoRascunho */
+        InfoRascunho: {
+            /**
+             * Desde
+             * @description Versão salva onde o rascunho começou.
+             */
+            desde: number;
+            /**
+             * Passos
+             * @description Mudanças ainda não salvas.
+             */
+            passos: number;
+            /**
+             * Refazer
+             * @description Há passo desfeito para refazer.
+             */
+            refazer: boolean;
         };
         /** InfoRender */
         InfoRender: {
@@ -1324,6 +1391,11 @@ export interface components {
             ];
             /** Elevado */
             elevado: boolean;
+            /**
+             * Partes
+             * @default []
+             */
+            partes?: components["schemas"]["ParteTela"][];
         };
         /**
          * MoverMovel
@@ -1544,6 +1616,13 @@ export interface components {
             lado_a: string;
             /** Lado B */
             lado_b: string;
+        };
+        /** ParteTela */
+        ParteTela: {
+            /** Id */
+            id: string;
+            /** Nome */
+            nome: string;
         };
         /** Pavimento */
         Pavimento: {
@@ -1962,6 +2041,8 @@ export interface components {
              * @description Da mais nova para a mais velha.
              */
             versoes: components["schemas"]["ResumoVersao"][];
+            /** @description Rascunho aberto (mudanças não salvas), se houver. */
+            rascunho?: components["schemas"]["InfoRascunho"] | null;
         };
         /** Viga */
         Viga: {
@@ -2283,6 +2364,74 @@ export interface operations {
         };
     };
     refazer_projetos__codigo__refazer_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    salvar_rascunho_projetos__codigo__rascunho_salvar_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    descartar_rascunho_projetos__codigo__rascunho_descartar_post: {
         parameters: {
             query: {
                 /** @description Versão do projeto que a tela estava vendo. */

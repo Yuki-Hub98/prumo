@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Caixa, ehPiso, ehTeto, enquadrar } from "./enquadrar";
+import { arestas, type Caixa, ehPiso, ehTeto, enquadrar } from "./enquadrar";
 
 // quarto de 4,6 × 3,35 m (piso) com paredes de 15 cm, pé-direito 2,7 m
 const piso: Caixa = { min: [0, -0.02, -3.35], max: [4.6, 0, 0] };
@@ -49,5 +49,18 @@ describe("ehPiso", () => {
     expect(ehPiso("piso-quarto")).toBe(true);
     expect(ehPiso("teto-quarto")).toBe(false);
     expect(ehPiso("pisoteado")).toBe(false);
+  });
+});
+
+describe("arestas", () => {
+  it("12 arestas da caixa, cada uma mudando um eixo só", () => {
+    const pares = arestas({ min: [0, 0, 0], max: [2, 1, 3] });
+    expect(pares).toHaveLength(24);
+    for (let i = 0; i < 24; i += 2) {
+      const mudam = [0, 1, 2].filter((k) => pares[i][k] !== pares[i + 1][k]);
+      expect(mudam).toHaveLength(1);
+    }
+    const chaves = new Set(pares.map((p) => p.join()));
+    expect(chaves.size).toBe(8); // os 8 cantos
   });
 });

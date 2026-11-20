@@ -86,3 +86,21 @@ export function ehTeto(nome: string, extras: Record<string, unknown> | undefined
   if (typeof oculto === "string") return oculto.split(",").includes("superior");
   return nome === "teto";
 }
+
+/** As 12 arestas da caixa, como pares de pontos (para ``<Line segments>``). */
+export function arestas(c: Caixa): [number, number, number][] {
+  const v = (i: number, j: number, k: number): [number, number, number] => [
+    i ? c.max[0] : c.min[0],
+    j ? c.max[1] : c.min[1],
+    k ? c.max[2] : c.min[2],
+  ];
+  const pares: [number, number, number][] = [];
+  for (const [a, b] of [
+    [0, 1], [2, 3], [4, 5], [6, 7], // ao longo de z
+    [0, 2], [1, 3], [4, 6], [5, 7], // ao longo de y
+    [0, 4], [1, 5], [2, 6], [3, 7], // ao longo de x
+  ]) {
+    pares.push(v(a >> 2, (a >> 1) & 1, a & 1), v(b >> 2, (b >> 1) & 1, b & 1));
+  }
+  return pares;
+}

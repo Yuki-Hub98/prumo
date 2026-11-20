@@ -1,14 +1,93 @@
-import { OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Line, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas, type ThreeEvent, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { Box3, Plane, Vector3, type Object3D } from "three";
-import { type Caixa, ehPiso, ehTeto, enquadrar, VISTAS_3D, type Vista3D } from "./enquadrar";
+import { Box3, Color, Mesh, MeshStandardMaterial, Plane, Vector3, type Object3D } from "three";
+import type { Cores } from "../api/cliente";
+import { arestas, type Caixa, ehPiso, ehTeto, enquadrar, VISTAS_3D, type Vista3D } from "./enquadrar";
+import { type Contexto, corDo, movelDaPeca, papel } from "./pintar";
+
+/** Cores do painel aplicadas ao vivo (``cores`` nulo = as cores com que o modelo saiu). */
+export type Pintura = { cores: Cores | null; ctx: Contexto };
+
+/** Cada malha com material próprio e a cor original guardada (uma vez por modelo). */
+function prepararPintura(scene: Object3D) {
+  scene.traverse((o) => {
+    if (!(o instanceof Mesh) || o.userData.corOriginal) return;
+    const mat = o.material;
+    if (!(mat instanceof MeshStandardMaterial)) return;
+    // material próprio: cada parede pode ter a sua cor, mesmo saindo do mesmo material
+    o.material = mat.clone();
+    o.userData.corOriginal = mat.color.clone();
+    o.userData.material = mat.name;
+  });
+}
+
+function pintar(scene: Object3D, pintura: Pintura | null) {
+  scene.traverse((o) => {
+    if (!(o instanceof Mesh) || !o.userData.corOriginal) return;
+    const original = o.userData.corOriginal as Color;
+    const p = pintura ? papel(o.name, o.userData.material as string, pintura.ctx, o.userData) : null;
+    const cor = p && pintura?.cores ? corDo(p, pintura.cores, pintura.ctx) : null;
+    const mat = o.material as MeshStandardMaterial;
+    mat.color.copy(cor ? new Color(cor) : original);
+  });
+}
+
+/** Folga do contorno em volta do móvel (m). */
+const FOLGA_CONTORNO = 0.03;
+
+/** Móvel selecionado: uma linha grossa e quase transparente em volta, sem mudar a cor
+ * dele (a cor escolhida continua aparecendo como é). */
+function Contorno({ scene, selecionado }: { scene: Object3D; selecionado: string | null }) {
+  const pontos = useMemo(() => {
+    if (!selecionado) return null;
+    const caixa = new Box3();
+    scene.traverse((o) => {
+      if (
+        o instanceof Mesh &&
+        (o.userData.movel === selecionado || movelDaPeca(o.name, (o.userData.material as string) ?? "", [selecionado]))
+      )
+        caixa.expandByObject(o);
+    });
+    if (caixa.isEmpty()) return null;
+    caixa.expandByScalar(FOLGA_CONTORNO);
+    return arestas({ min: caixa.min.toArray(), max: caixa.max.toArray() });
+  }, [scene, selecionado]);
+  if (!pontos) return null;
+  return <Line points={pontos} segments lineWidth={5} color="#0ea5e9" transparent opacity={0.35} depthWrite={false} />;
+}
+
+/** Id do móvel de uma malha clicada, subindo até achar. */
+function movelDe(o: Object3D | null, ids: string[]): string | null {
+  for (let x = o; x; x = x.parent) {
+    if (typeof x.userData.movel === "string" && ids.includes(x.userData.movel)) return x.userData.movel;
+    const id = movelDaPeca(x.name, (x.userData.material as string | undefined) ?? "", ids);
+    if (id) return id;
+  }
+  return null;
+}
 
 type Controles = { target: Vector3; update: () => void };
 
 const caixa = (b: Box3): Caixa => ({ min: b.min.toArray(), max: b.max.toArray() });
 
-function Modelo({ url, vista, teto }: { url: string; vista: Vista3D; teto: boolean }) {
+function Modelo({
+  url,
+  vista,
+  teto,
+  pintura,
+  selecionado,
+  aoMovel,
+  moveis,
+}: {
+  moveis: string[];
+  url: string;
+  vista: Vista3D;
+  teto: boolean;
+  pintura: Pintura | null;
+  selecionado: string | null;
+  aoMovel?: (id: string) => void;
+}) {
   const { scene } = useGLTF(url);
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
@@ -25,6 +104,11 @@ function Modelo({ url, vista, teto }: { url: string; vista: Vista3D; teto: boole
     for (const o of pisos) p.expandByObject(o);
     return [caixa(t), pisos.length ? caixa(p) : caixa(t)];
   }, [scene]);
+
+  useEffect(() => {
+    prepararPintura(scene);
+    pintar(scene, pintura);
+  }, [scene, pintura]);
 
   // teto e luminárias: escondidos por padrão, para ver o cômodo por dentro de cima
   useEffect(() => {
@@ -44,15 +128,46 @@ function Modelo({ url, vista, teto }: { url: string; vista: Vista3D; teto: boole
     gl.clippingPlanes = e.corte ? [new Plane(new Vector3(...e.corte.normal), e.corte.constante)] : [];
   }, [vista, todo, piso, camera, controles, gl]);
 
-  return <primitive object={scene} />;
+  return (
+    <>
+    <Contorno scene={scene} selecionado={selecionado} />
+    <primitive
+      object={scene}
+      onClick={(e: ThreeEvent<MouseEvent>) => {
+        if (e.delta > 4 || !aoMovel) return; // arrastou para girar: não é clique
+        const id = movelDe(e.object, moveis);
+        if (id) {
+          e.stopPropagation();
+          aoMovel(id);
+        }
+      }}
+    />
+    </>
+  );
 }
 
 const botao = (ativo: boolean) =>
   `rounded border px-2 py-0.5 text-sm ${ativo ? "border-stone-800 bg-stone-800 text-white" : "border-stone-300 bg-white hover:bg-stone-100"}`;
 
 /** Visor do .glb do cômodo ou do pavimento: girar (arrastar), zoom (roda), mover (botão direito),
- * vistas prontas com corte da parede do lado da câmera e teto liga/desliga. */
-export default function Visor3D({ url }: { url: string }) {
+ * vistas prontas com corte da parede do lado da câmera, teto liga/desliga e as cores do
+ * painel aplicadas ao vivo (``pintura``). */
+export default function Visor3D({
+  url,
+  pintura = null,
+  selecionado = null,
+  aoMovel,
+  moveis = [],
+}: {
+  /** Ids de todos os móveis (para achar o móvel de uma peça clicada). */
+  moveis?: string[];
+  url: string;
+  pintura?: Pintura | null;
+  /** Móvel selecionado: aparece com um contorno em volta. */
+  selecionado?: string | null;
+  /** Clique num móvel do modelo. */
+  aoMovel?: (id: string) => void;
+}) {
   const [vista, setVista] = useState<Vista3D>("cima");
   const [teto, setTeto] = useState(false);
   return (
@@ -69,15 +184,15 @@ export default function Visor3D({ url }: { url: string }) {
         </label>
       </div>
       <p className="absolute bottom-3 left-3 z-10 text-xs text-stone-500">
-        arraste para girar · roda para zoom · botão direito para mover
+        clique num móvel para selecionar · arraste para girar · roda para zoom · botão direito para mover
         {vista !== "cima" && vista !== "perspectiva" && " · parede da frente cortada"}
       </p>
-      <Canvas camera={{ fov: 45, near: 0.05, far: 200 }} gl={{ localClippingEnabled: true }}>
+      <Canvas camera={{ fov: 45, near: 0.05, far: 200 }} gl={{ localClippingEnabled: true, logarithmicDepthBuffer: true }}>
         <ambientLight intensity={0.7} />
         <hemisphereLight args={["#ffffff", "#b9a88f", 0.6]} />
         <directionalLight position={[4, 9, 6]} intensity={1.4} />
         <Suspense fallback={null}>
-          <Modelo url={url} vista={vista} teto={teto} />
+          <Modelo url={url} vista={vista} teto={teto} pintura={pintura} selecionado={selecionado} aoMovel={aoMovel} moveis={moveis} />
         </Suspense>
         <OrbitControls makeDefault enableDamping={false} />
       </Canvas>

@@ -38,8 +38,9 @@ from interiores_core.modelo import (
     Porta,
     Variacao,
 )
+from interiores_core.partes import CORPO, parte_da_peca
 
-VERSAO_CENA = 7
+VERSAO_CENA = 8
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -160,6 +161,7 @@ class _Cena:
         self.cores = dict(CORES_PADRAO)
         self.cores_moveis: dict[str, str] = {}
         self.cores_paredes: dict[str, str] = {}
+        self.cores_pecas: dict[str, dict[str, str]] = {}
         self.textura_piso = textura_piso(comodo)
         if self.textura_piso == "porcelanato":  # padrão do piso frio (madeira seria marrom)
             self.cores["piso"] = CORES_PADRAO["piso_frio"]
@@ -171,6 +173,7 @@ class _Cena:
                     self.cores[chave] = valor
             self.cores_moveis = dict(c.moveis)
             self.cores_paredes = dict(c.paredes)
+            self.cores_pecas = {k: dict(v) for k, v in c.pecas.items()}
         self.prismas: list[dict[str, Any]] = []
         self.caixas: list[dict[str, Any]] = []
         self.materiais: dict[str, dict[str, Any]] = {}
@@ -222,7 +225,9 @@ class _Cena:
         material: str,
         chanfro: float = 0.0,
         oculto_em: list[str] | None = None,
+        extras: dict[str, str] | None = None,
     ) -> None:
+        """``extras``: vão para o .glb (ex.: ``movel`` e ``parte``, para o visor pintar)."""
         if min(tamanho) <= 0:
             return
         self.caixas.append(
@@ -234,6 +239,7 @@ class _Cena:
                 "material": material,
                 **({"chanfro": chanfro} if chanfro else {}),
                 **({"oculto_em": oculto_em} if oculto_em else {}),
+                **({"extras": extras} if extras else {}),
             }
         )
 
@@ -459,14 +465,30 @@ class _Cena:
             for peca in self.pecas_movel(m, mat):
                 x0, y0, z0, x1, y1, z1 = peca.caixa
                 cx, cy = geometria.girar_movel(m, (x0 + x1) / 2, (y0 + y1) / 2)
+                parte = parte_da_peca(peca.nome)
                 self.caixa(
                     self._n(f"{m.id}-{peca.nome}"),
                     (cx, cy, (z0 + z1) / 2),
                     (x1 - x0, y1 - y0, z1 - z0),
                     float(m.rotacao),
-                    peca.material,
+                    self.material_da_parte(m, parte, peca.material),
                     peca.chanfro,
+                    extras={"movel": m.id, "parte": parte},
                 )
+
+    def material_da_parte(self, m: Movel, parte: str, base: str) -> str:
+        """Material da peça: o dela, ou uma cópia com a cor da parte na variação (o id do
+        móvel vale mais que o tipo). Mantém textura e acabamento do original."""
+        if parte == CORPO:
+            return base
+        cor = self.cores_pecas.get(m.id, {}).get(parte) or self.cores_pecas.get(m.tipo, {}).get(
+            parte
+        )
+        if not cor:
+            return base
+        props = {k: v for k, v in self.materiais[base].items() if k != "cor"}
+        # ``base@móvel@parte``: o visor 3D lê a base para voltar à cor dela
+        return self.material(f"{base}@{m.id}@{parte}", cor, **props)
 
     def pecas_movel(self, m: Movel, mat: str) -> list[Peca]:
         """Peças no referencial do móvel (costas em -y, frente em +y), com z a partir do piso.
@@ -807,9 +829,12 @@ class _Feitio:
     def portas(self) -> None:
         w, d, base, topo, r, fr = self.w, self.d, self.base, self.topo, self.RODAPE, self.FRESTA
         self.p("rodape", -w + 40, -d, base, w - 40, d - 60, base + r, self.sombra)
-        self.p("corpo", -w, -d, base + r, w, d - 20, topo, chanfro=4)
+        correr = self.m.portas == "correr"
+        # de correr, a folha de trás fica na frente do corpo (1 mm de folga): com a face no
+        # mesmo plano da frente do corpo ela "piscava" no 3D quando tinha outra cor
+        self.p("corpo", -w, -d, base + r, w, d - (41 if correr else 20), topo, chanfro=4)
         alto, meio = base + r + fr, (base + r + topo) / 2
-        if self.m.portas == "correr":  # duas folhas, uma na frente da outra
+        if correr:  # duas folhas, uma na frente da outra
             self.p("folha0", -w, d - 40, alto, fr, d - 20, topo - fr, chanfro=3)
             self.p("folha1", -fr, d - 20, alto, w, d, topo - fr, chanfro=3)
             for i, x in enumerate((-w + 60, w - 75)):

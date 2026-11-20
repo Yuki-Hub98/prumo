@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from interiores_api.config import Config
 from interiores_api.esquemas import (
+    InfoRascunho,
     InfoRender,
     ItemHistorico,
     MedidaEstimada,
@@ -37,12 +38,12 @@ from interiores_api.esquemas import (
     Vista,
 )
 from interiores_api.fila import Fila
-from interiores_banco import arquivos, renders, repositorio
+from interiores_banco import arquivos, rascunho, renders, repositorio
 from interiores_banco import tabelas as t
 from interiores_banco import versoes as volta
 from interiores_banco.mapear import Conteudo
 from interiores_core.carregar import ProjetoCarregado
-from interiores_core.edicao import Alteracao, Edicao, renomear_projeto
+from interiores_core.edicao import Alteracao, Edicao, diferencas, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
 from interiores_core.edicao_variacoes import validar_variacao
 from interiores_core.modelo import DadosComodo, Projeto, Variacao
@@ -159,11 +160,17 @@ class Servico:
                     caminhos=v.caminhos,
                 )
             )
+        aberto = rascunho.estado(self.sessao, codigo)
+        if aberto is None:
+            desfazer, refazer = volta.alvo_desfazer(ops, atual), volta.alvo_refazer(ops, atual)
+            info = None
+        else:
+            # no rascunho: um passo para trás/frente; sem passos, o desfazer das versões
+            desfazer = atual - 1 if aberto.passos > 0 else volta.alvo_desfazer(ops, atual)
+            refazer = atual + 1 if aberto.refazer else None
+            info = InfoRascunho(desde=aberto.desde, passos=aberto.passos, refazer=aberto.refazer)
         return Versoes(
-            atual=atual,
-            desfazer=volta.alvo_desfazer(ops, atual),
-            refazer=volta.alvo_refazer(ops, atual),
-            versoes=resumos,
+            atual=atual, desfazer=desfazer, refazer=refazer, versoes=resumos, rascunho=info
         )
 
     def geometria(self, codigo: str, pavimento: str) -> PavimentoTela:
@@ -218,9 +225,15 @@ class Servico:
         ]
 
     def historico(self, codigo: str, desde: int = 0) -> list[ItemHistorico]:
+        projeto_id = self._id(codigo)
+        atual = self.sessao.scalar(select(t.Projeto.versao).where(t.Projeto.id == projeto_id))
         linhas = self.sessao.scalars(
             select(t.Historico)
-            .where(t.Historico.projeto_id == self._id(codigo), t.Historico.versao > desde)
+            .where(
+                t.Historico.projeto_id == projeto_id,
+                t.Historico.versao > desde,
+                t.Historico.versao <= (atual or 0),  # sem os passos de rascunho desfeitos
+            )
             .order_by(t.Historico.versao, t.Historico.id)
         )
         return [
@@ -244,7 +257,10 @@ class Servico:
         operacao: str,
         versao: int | None,
         alteracoes: list[Alteracao] | None = None,
+        em_rascunho: bool = True,
     ) -> int:
+        """Grava a versão nova. Pela tela, toda edição é um passo de rascunho (só vai para
+        ``projetos/`` ao salvar o rascunho); ``em_rascunho=False`` grava direto."""
         codigo = conteudo.projeto.projeto
         gravado = repositorio.gravar(
             self.sessao,
@@ -253,8 +269,10 @@ class Servico:
             operacao=operacao,
             versao_esperada=versao,
             alteracoes=alteracoes,
+            rascunho=em_rascunho,
         )
-        if self.config.exportar and gravado.alteracoes:
+        aberto = rascunho.estado(self.sessao, codigo) is not None
+        if self.config.exportar and gravado.alteracoes and not aberto:
             arquivos.exportar(self.sessao, codigo, self.config.pasta_projetos / codigo)
         log.info(
             "projeto gravado",
@@ -483,10 +501,33 @@ class Servico:
         self, codigo: str, versao: int, tipo: volta.Tipo, para: int | None = None
     ) -> ResultadoEdicao:
         """Desfaz, refaz ou volta para a versão ``para`` gravando o conteúdo dela como
-        versão nova (nada é apagado). O código do projeto atual é mantido."""
+        versão nova (nada é apagado). O código do projeto atual é mantido.
+
+        Com rascunho aberto, desfazer/refazer andam um passo no rascunho (o passo
+        desfeito fica para o refazer até a próxima edição); voltar para uma versão do
+        histórico pede para salvar ou descartar antes.
+        """
         atual, na_base = repositorio.ler(self.sessao, codigo)
         if versao != na_base:
             raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)
+        aberto = rascunho.estado(self.sessao, codigo)
+        if aberto is not None:
+            if tipo == "reverter":
+                raise ValueError(
+                    "há mudanças não salvas: salve ou descarte o rascunho antes de voltar "
+                    "para uma versão do histórico"
+                )
+            if tipo == "desfazer" and aberto.passos > 0:
+                return self._passo(
+                    codigo, atual, rascunho.desfazer_passo(self.sessao, codigo, versao)
+                )
+            if tipo == "refazer":
+                if not aberto.refazer:
+                    raise ValueError("nada para refazer")
+                return self._passo(
+                    codigo, atual, rascunho.refazer_passo(self.sessao, codigo, versao)
+                )
+            rascunho.descartar(self.sessao, codigo, versao)  # rascunho vazio: fecha e segue
         if tipo == "reverter":
             if para is None or para == na_base:
                 raise ValueError("escolha uma versão diferente da atual para voltar")
@@ -501,7 +542,7 @@ class Servico:
         novo = Conteudo(projeto, antigo.comodos, antigo.variacoes, antigo.regras_toml)
         if novo.hash == atual.hash:
             raise ValueError(f"a versão {para} é igual à atual: nada para {tipo}")
-        nova_versao = self._gravar(novo, volta.operacao(tipo, para), versao)
+        nova_versao = self._gravar(novo, volta.operacao(tipo, para), versao, em_rascunho=False)
         hist = self.historico(codigo, versao)
         probs = sorted(
             validar(novo.projeto, novo.comodos), key=lambda p: ORDEM_SEVERIDADE[p.severidade]
@@ -513,8 +554,40 @@ class Servico:
             problemas=probs,
         )
 
+    def _passo(self, codigo: str, antes: Conteudo, nova_versao: int) -> ResultadoEdicao:
+        """Resultado de andar um passo no rascunho (o que mudou e os problemas)."""
+        depois, _ = repositorio.ler(self.sessao, codigo)
+        mudancas = list(diferencas(antes.como_dict(), depois.como_dict()))
+        probs = sorted(
+            validar(depois.projeto, depois.comodos), key=lambda p: ORDEM_SEVERIDADE[p.severidade]
+        )
+        log.info("passo de rascunho", projeto=codigo, versao=nova_versao)
+        return ResultadoEdicao(
+            versao=nova_versao, alteracoes=_mudancas(mudancas), novos=[], problemas=probs
+        )
+
+    def salvar_rascunho(self, codigo: str, versao: int) -> ResultadoEdicao:
+        """Fecha o rascunho (cada passo vira uma versão) e exporta ``projetos/<codigo>``."""
+        atual, _ = repositorio.ler(self.sessao, codigo)
+        nova = rascunho.salvar(self.sessao, codigo, versao)
+        if self.config.exportar:
+            arquivos.exportar(self.sessao, codigo, self.config.pasta_projetos / codigo)
+        log.info("rascunho salvo", projeto=codigo, versao=nova)
+        return self._passo(codigo, atual, nova)
+
+    def descartar_rascunho(self, codigo: str, versao: int) -> ResultadoEdicao:
+        """Volta para a versão salva e apaga os passos do rascunho."""
+        atual, _ = repositorio.ler(self.sessao, codigo)
+        nova = rascunho.descartar(self.sessao, codigo, versao)
+        log.info("rascunho descartado", projeto=codigo, versao=nova)
+        return self._passo(codigo, atual, nova)
+
     def renomear(self, codigo: str, versao: int, novo: str) -> ResultadoEdicao:
         """Troca o código; a pasta ``projetos/<codigo>`` (com as referências) vai junto."""
+        if rascunho.estado(self.sessao, codigo) is not None:
+            raise ValueError(
+                "há mudanças não salvas: salve ou descarte o rascunho antes de renomear"
+            )
         atual, na_base = repositorio.ler(self.sessao, codigo)
         if versao != na_base:
             raise repositorio.ConflitoDeVersaoError(codigo, versao, na_base)

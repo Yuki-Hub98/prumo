@@ -6,7 +6,8 @@ import { BotoesDesfazer, PainelHistorico } from "./Desfazer";
 import { PainelCores } from "./PainelCores";
 import { PainelImagens } from "./PainelImagens";
 import { Tela3D } from "./Tela3D";
-import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade } from "../dados";
+import { Abas, ColunaLateral } from "./ColunaLateral";
+import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade, useVariacoes } from "../dados";
 import { AdicionarMovel, FaltaMedir, PainelMovel, PainelProblemas } from "./Paineis";
 import { Planta, type Item } from "./Planta";
 
@@ -35,6 +36,15 @@ export function TelaProjeto({
   const unidade = useUnidade();
   const editar = useEditar(codigo);
   const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [aba, setAba] = useState<"movel" | "cores" | "imagens" | "problemas">("cores");
+  // clicar num móvel abre a aba Móvel e seleciona o cômodo dele (a aba Cores já pinta o móvel)
+  const selecionar = (id: string | null) => {
+    setSelecionado(id);
+    if (!id) return;
+    if (aba !== "cores") setAba("movel"); // pintando: fica em Cores, com a linha do móvel marcada
+    const m = geometria.data?.moveis.find((x) => x.id === id);
+    if (m) setComodo(m.comodo);
+  };
   const [novos, setNovos] = useState<Problema[]>([]);
   const [comodo, setComodo] = useState<string | null>(comodoInicial ?? null);
   const [ativa, setAtiva] = useState<Record<string, string>>(
@@ -44,6 +54,7 @@ export function TelaProjeto({
   const [ver3d, setVer3d] = useState(false);
   const [rascunho, setRascunho] = useState<Cores | null>(null);
   const aoRascunho = useCallback((c: Cores | null) => setRascunho(c), []);
+  const variacoesComodo = useVariacoes(codigo, comodo).data;
 
   // editor de planta
   const [modo, setModo] = useState<"moveis" | "planta">(modoInicial);
@@ -95,6 +106,14 @@ export function TelaProjeto({
     );
 
   const sel = geometria.data?.moveis.find((m) => m.id === selecionado);
+  // com o painel Cores aberto, o rascunho (ao vivo); fechado, as cores salvas da variação ativa
+  const variacaoAtiva = comodo ? (ativa[comodo] ?? "base") : "base";
+  const coresVistas =
+    modo !== "moveis" || variacaoAtiva === "base"
+      ? null
+      : aba === "cores"
+        ? rascunho
+        : (variacoesComodo?.[variacaoAtiva]?.cores ?? null);
 
   return (
     <div className="flex h-screen flex-col">
@@ -155,6 +174,11 @@ export function TelaProjeto({
               comodos={pavimentos.find((p) => p.id === pavimento)?.comodos ?? []}
               versaoProjeto={projeto.data?.versao}
               aoComodo={setComodo}
+              variacao={(comodo && ativa[comodo]) || "base"}
+              cores={coresVistas}
+              geometria={geometria.data}
+              selecionado={selecionado}
+              aoSelecionarMovel={selecionar}
             />
           ) : geometria.data ? (
             <Planta
@@ -162,11 +186,11 @@ export function TelaProjeto({
               unidade={unidade}
               problemas={problemas}
               selecionado={selecionado}
-              aoSelecionar={setSelecionado}
+              aoSelecionar={selecionar}
               aoMover={mover}
               comodoSelecionado={comodo}
               aoSelecionarComodo={setComodo}
-              cores={modo === "moveis" ? rascunho : null}
+              cores={coresVistas}
               editor={
                 modo === "planta"
                   ? {
@@ -184,61 +208,99 @@ export function TelaProjeto({
             <p className="p-4 text-stone-500">{geometria.error?.message ?? "carregando…"}</p>
           )}
         </main>
-        <aside className="w-96 overflow-y-auto border-l border-stone-200 bg-stone-50">
-          {historico && <PainelHistorico codigo={codigo} aoFechar={() => setHistorico(false)} />}
-          {modo === "planta" && geometria.data && (
-            <PainelPlanta
-              codigo={codigo}
-              pavimento={pavimento}
-              geometria={geometria.data}
-              unidade={unidade}
-              item={item}
-              aoItem={setItem}
-              desenhando={espessura !== null}
-              aoDesenhar={(sim, m) => {
-                idsNovos.current.clear();
-                setEspessura(sim ? (m ?? null) : null);
-              }}
-              escolhendo={escolhendo}
-              aoEscolher={setEscolhendo}
-            />
+        <ColunaLateral titulo={modo === "planta" ? "Editar planta" : "Painel de edição"}>
+          {historico && (
+            <div className="max-h-[50%] shrink-0 overflow-y-auto border-b border-stone-200">
+              <PainelHistorico codigo={codigo} aoFechar={() => setHistorico(false)} />
+            </div>
           )}
-          {modo === "moveis" && <>
-          {sel && geometria.data && (
-            <PainelMovel
-              key={sel.id}
-              codigo={codigo}
-              comodo={sel.comodo}
-              id={sel.id}
-              geometria={geometria.data}
-              unidade={unidade}
-              aoRemovido={() => setSelecionado(null)}
-            />
+          {modo === "planta" ? (
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {geometria.data && (
+                <PainelPlanta
+                  codigo={codigo}
+                  pavimento={pavimento}
+                  geometria={geometria.data}
+                  unidade={unidade}
+                  item={item}
+                  aoItem={setItem}
+                  desenhando={espessura !== null}
+                  aoDesenhar={(sim, m) => {
+                    idsNovos.current.clear();
+                    setEspessura(sim ? (m ?? null) : null);
+                  }}
+                  escolhendo={escolhendo}
+                  aoEscolher={setEscolhendo}
+                />
+              )}
+              <PainelProblemas problemas={problemas} novos={novos} />
+              <FaltaMedir codigo={codigo} unidade={unidade} />
+            </div>
+          ) : (
+            <>
+              <Abas
+                abas={[
+                  { id: "movel", titulo: "Móvel" },
+                  { id: "cores", titulo: "Cores" },
+                  { id: "imagens", titulo: "Imagens" },
+                  { id: "problemas", titulo: "Problemas", marca: problemas.length },
+                ]}
+                ativa={aba}
+                aoTrocar={setAba}
+              />
+              <div className="min-h-0 flex-1 overflow-y-auto" role="tabpanel">
+                {aba === "movel" && (
+                  <>
+                    {sel && geometria.data ? (
+                      <PainelMovel
+                        key={sel.id}
+                        codigo={codigo}
+                        comodo={sel.comodo}
+                        id={sel.id}
+                        geometria={geometria.data}
+                        unidade={unidade}
+                        aoRemovido={() => setSelecionado(null)}
+                      />
+                    ) : (
+                      <p className="border-b border-stone-200 p-3 text-sm text-stone-500">
+                        Clique num móvel na planta para editar medidas, girar ou encostar na parede.
+                      </p>
+                    )}
+                    {geometria.data && <AdicionarMovel codigo={codigo} geometria={geometria.data} />}
+                  </>
+                )}
+                {aba === "cores" &&
+                  (comodo && geometria.data ? (
+                    <PainelCores
+                      key={comodo}
+                      codigo={codigo}
+                      comodo={comodo}
+                      geometria={geometria.data}
+                      ativa={ativa[comodo] ?? "base"}
+                      aoAtivar={(nome) => setAtiva((a) => ({ ...a, [comodo]: nome }))}
+                      aoRascunho={aoRascunho}
+                      destaque={sel?.comodo === comodo ? sel.id : null}
+                      aoSelecionarMovel={selecionar}
+                    />
+                  ) : (
+                    <p className="p-3 text-sm text-stone-500">Clique num cômodo para pintar paredes, piso e móveis.</p>
+                  ))}
+                {aba === "imagens" &&
+                  (comodo ? (
+                    <PainelImagens key={`img-${comodo}`} codigo={codigo} comodo={comodo} variacao={ativa[comodo] ?? "base"} />
+                  ) : (
+                    <p className="p-3 text-sm text-stone-500">Clique num cômodo para pedir as imagens 3D dele.</p>
+                  ))}
+                {aba === "problemas" && (
+                  <>
+                    <PainelProblemas problemas={problemas} novos={novos} />
+                    <FaltaMedir codigo={codigo} unidade={unidade} />
+                  </>
+                )}
+              </div>
+            </>
           )}
-          {comodo && geometria.data && (
-            <PainelCores
-              key={comodo}
-              codigo={codigo}
-              comodo={comodo}
-              geometria={geometria.data}
-              ativa={ativa[comodo] ?? "base"}
-              aoAtivar={(nome) => setAtiva((a) => ({ ...a, [comodo]: nome }))}
-              aoRascunho={aoRascunho}
-            />
-          )}
-          {comodo && (
-            <PainelImagens key={`img-${comodo}`} codigo={codigo} comodo={comodo} variacao={ativa[comodo] ?? "base"} />
-          )}
-          {!comodo && (
-            <p className="border-b border-stone-200 p-3 text-sm text-stone-500">
-              Clique num cômodo para pintar paredes, piso e móveis.
-            </p>
-          )}
-          {geometria.data && <AdicionarMovel codigo={codigo} geometria={geometria.data} />}
-          </>}
-          <PainelProblemas problemas={problemas} novos={novos} />
-          <FaltaMedir codigo={codigo} unidade={unidade} />
-        </aside>
+        </ColunaLateral>
       </div>
     </div>
   );

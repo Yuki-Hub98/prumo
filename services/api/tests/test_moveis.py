@@ -21,6 +21,7 @@ def test_tv_na_parede_e_exportada(api: TestClient, projetos: Path) -> None:
     corpo = r.json()
     assert corpo["versao"] == 2
     assert [a["caminho"] for a in corpo["alteracoes"]] == ["comodos.quarto.moveis[tv]"]
+    api.post("/projetos/casa/rascunho/salvar", params={"versao": 2})
     arq = json.loads((projetos / "casa" / "comodos" / "quarto.json").read_text())
     tv = next(m for m in arq["moveis"] if m["id"] == "tv")
     assert tv["rotacao"] == 90

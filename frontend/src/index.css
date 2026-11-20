@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* seletor de cor (react-colorful) dentro da janelinha */
+.seletor-cor .react-colorful {
+  width: 100%;
+  height: 150px;
+}
+.seletor-cor .react-colorful__hue {
+  height: 14px;
+}
