@@ -361,6 +361,14 @@ class CoresVariacao(_Modelo):
         default_factory=dict,
         description="Cor por id de móvel ou por tipo (o id tem prioridade).",
     )
+    pecas: dict[str, dict[str, Cor]] = Field(
+        default_factory=dict,
+        description=(
+            'Cor por parte do móvel, por id ou tipo: {"guarda-roupa": {"portas": '
+            '"#ffffff", "puxadores": "#222222"}} (o id tem prioridade). Partes: '
+            "ver ``interiores_core.partes``; o que não tiver cor usa a do móvel."
+        ),
+    )
 
 
 class Variacao(_Modelo):

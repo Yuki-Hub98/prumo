@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from interiores_core.edicao import EdicaoInvalidaError
 from interiores_core.modelo import Projeto, Variacao
+from interiores_core.partes import PARTES
 
 NOME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 """Nome da variação = nome do arquivo (``base`` é reservado: as cores padrão)."""
@@ -53,4 +54,11 @@ def validar_variacao(
             f"parede(s) {', '.join(fora)} não delimitam '{comodo}' "
             f"(paredes dele: {', '.join(c.paredes)})"
         )
+    for movel, partes in var.cores.pecas.items():
+        desconhecidas = sorted(set(partes) - set(PARTES))
+        if desconhecidas:
+            raise EdicaoInvalidaError(
+                f"parte(s) {', '.join(desconhecidas)} não existem (móvel '{movel}'; "
+                f"partes: {', '.join(PARTES)})"
+            )
     return var
