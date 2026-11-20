@@ -88,7 +88,7 @@ export function montarCena(cena: Cena3D): Group {
     Object.assign(o.userData, extras ?? {});
     grupo.add(o);
   };
-  for (const p of cena.prismas) marcar(prisma(p, mat(p.material)), p.nome, p.material, p.oculto_em);
+  for (const p of cena.prismas) marcar(prisma(p, mat(p.material)), p.nome, p.material, p.oculto_em, p.extras);
   for (const c of cena.caixas) marcar(caixa(c, mat(c.material)), c.nome, c.material, c.oculto_em, c.extras);
   return grupo;
 }

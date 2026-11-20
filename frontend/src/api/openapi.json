@@ -5118,6 +5118,61 @@
               }
             ],
             "description": "Móvel planejado: estrutura interna para desenho e lista de corte."
+          },
+          "forma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "arredondado",
+                  "redondo",
+                  "L"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forma",
+            "description": "Forma vista de cima (vazio = retangular): cantos arredondados (``raio``), redondo ou oval (círculo se largura = profundidade) ou em L (``braco``, ``lado_l``). Largura e profundidade continuam sendo a caixa em volta."
+          },
+          "raio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Raio dos cantos (forma arredondado)."
+          },
+          "braco": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Largura dos braços do L (forma L): a faixa das costas e a do lado."
+          },
+          "lado_l": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "esquerda",
+                  "direita"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lado L",
+            "description": "Lado do braço que vem para a frente, olhando de frente (padrão: esquerda)."
           }
         },
         "additionalProperties": false,
@@ -5223,6 +5278,37 @@
             "type": "boolean",
             "title": "Planejavel",
             "default": false
+          },
+          "contorno": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Contorno",
+            "default": []
+          },
+          "forma": {
+            "type": "string",
+            "title": "Forma",
+            "default": "retangular"
+          },
+          "formas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formas",
+            "default": []
           },
           "planejado": {
             "type": "boolean",
@@ -6449,6 +6535,14 @@
             },
             "type": "array",
             "title": "Oculto Em"
+          },
+          "extras": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Extras",
+            "description": "movel e parte (pintura)."
           }
         },
         "additionalProperties": false,

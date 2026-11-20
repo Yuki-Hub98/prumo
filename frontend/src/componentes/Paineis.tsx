@@ -135,6 +135,26 @@ export function PainelMovel({
           aoSalvar={(m) => alterar(campo, m)}
         />
       ))}
+      {(geometria.moveis.find((m) => m.id === id)?.formas?.length ?? 0) > 1 && (
+        <Forma
+          forma={movel.forma ?? null}
+          raio={movel.raio}
+          braco={movel.braco}
+          lado={movel.lado_l ?? "esquerda"}
+          unidade={unidade}
+          ocupado={editar.isPending}
+          aoMudar={(campos) =>
+            editar.mutate((versao) =>
+              ou(
+                api.PATCH("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}", {
+                  params: { path: caminho, query: { versao } },
+                  body: campos,
+                }),
+              ),
+            )
+          }
+        />
+      )}
       {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}
       {geometria.moveis.find((m) => m.id === id)?.planejavel && (
         <div className="-mx-3 mt-2 border-t border-stone-200">
@@ -149,6 +169,75 @@ export function PainelMovel({
         </div>
       )}
     </Caixa>
+  );
+}
+
+const FORMAS: { id: "arredondado" | "redondo" | "L" | null; nome: string }[] = [
+  { id: null, nome: "retangular" },
+  { id: "arredondado", nome: "cantos arredondados" },
+  { id: "redondo", nome: "redondo / oval" },
+  { id: "L", nome: "em L" },
+];
+
+/** Forma vista de cima: retangular, cantos arredondados (raio), redondo/oval ou em L. */
+function Forma({
+  forma,
+  raio,
+  braco,
+  lado,
+  unidade,
+  ocupado,
+  aoMudar,
+}: {
+  forma: "arredondado" | "redondo" | "L" | null;
+  raio?: Medida | null;
+  braco?: Medida | null;
+  lado: "esquerda" | "direita";
+  unidade: Unidade;
+  ocupado: boolean;
+  aoMudar: (campos: Record<string, unknown>) => void;
+}) {
+  return (
+    <div className="mt-2 border-t border-stone-200 pt-2 text-sm">
+      <span className="text-stone-500">forma</span>
+      <div className="mt-1 flex flex-wrap gap-1">
+        {FORMAS.map((f) => (
+          <button
+            key={f.nome}
+            type="button"
+            disabled={ocupado || forma === f.id}
+            onClick={() => aoMudar({ forma: f.id })}
+            className={`rounded px-2 py-0.5 text-xs ${forma === f.id ? "bg-stone-800 text-white" : "border border-stone-300 hover:bg-stone-100"}`}
+          >
+            {f.nome}
+          </button>
+        ))}
+      </div>
+      {forma === "arredondado" && (
+        <CampoMedida rotulo="raio dos cantos" medida={raio} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => aoMudar({ raio: m })} />
+      )}
+      {forma === "arredondado" && !raio && <p className="text-xs text-stone-400">sem raio: 10 cm</p>}
+      {forma === "L" && (
+        <>
+          <CampoMedida rotulo="largura do braço" medida={braco} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => aoMudar({ braco: m })} />
+          {!braco && <p className="text-xs text-stone-400">sem medida: 40 % do lado menor</p>}
+          <div className="mt-1 flex items-center gap-1 text-xs">
+            <span className="text-stone-500">braço para a frente do lado</span>
+            {(["esquerda", "direita"] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                disabled={ocupado || lado === l}
+                onClick={() => aoMudar({ lado_l: l })}
+                className={`rounded px-1.5 py-0.5 ${lado === l ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

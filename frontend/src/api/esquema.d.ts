@@ -1565,6 +1565,20 @@ export interface components {
             polegadas?: number | null;
             /** @description Móvel planejado: estrutura interna para desenho e lista de corte. */
             construcao?: components["schemas"]["Construcao"] | null;
+            /**
+             * Forma
+             * @description Forma vista de cima (vazio = retangular): cantos arredondados (``raio``), redondo ou oval (círculo se largura = profundidade) ou em L (``braco``, ``lado_l``). Largura e profundidade continuam sendo a caixa em volta.
+             */
+            forma?: ("arredondado" | "redondo" | "L") | null;
+            /** @description Raio dos cantos (forma arredondado). */
+            raio?: components["schemas"]["Medida"] | null;
+            /** @description Largura dos braços do L (forma L): a faixa das costas e a do lado. */
+            braco?: components["schemas"]["Medida"] | null;
+            /**
+             * Lado L
+             * @description Lado do braço que vem para a frente, olhando de frente (padrão: esquerda).
+             */
+            lado_l?: ("esquerda" | "direita") | null;
         };
         /** MovelTela */
         MovelTela: {
@@ -1605,6 +1619,24 @@ export interface components {
              * @default false
              */
             planejavel?: boolean;
+            /**
+             * Contorno
+             * @default []
+             */
+            contorno?: [
+                number,
+                number
+            ][];
+            /**
+             * Forma
+             * @default retangular
+             */
+            forma?: string;
+            /**
+             * Formas
+             * @default []
+             */
+            formas?: string[];
             /**
              * Planejado
              * @default false
@@ -2063,6 +2095,13 @@ export interface components {
             material: string;
             /** Oculto Em */
             oculto_em?: string[];
+            /**
+             * Extras
+             * @description movel e parte (pintura).
+             */
+            extras?: {
+                [key: string]: string;
+            };
         };
         /** Problema */
         Problema: {
