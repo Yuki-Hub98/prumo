@@ -228,10 +228,14 @@ function CriarDoZero({
       />
       <div className="grid grid-cols-3 gap-1">
         {(["largura", "profundidade", "altura"] as const).map((k) => (
-          <label key={k} className="grid text-xs text-stone-500">
-            {k} ({unidade})
+          // min-w-0 + w-full: o campo cabe no terço da grade (sem isso o input do navegador
+          // tem largura mínima própria, os três se sobrepõem e vazam do painel)
+          <label key={k} className="grid min-w-0 text-xs text-stone-500">
+            <span className="truncate" title={`${k} (${unidade})`}>
+              {k} ({unidade})
+            </span>
             <input
-              className={`rounded border px-1 text-sm ${medidas[k] && mm[k] === null ? "border-red-400" : ""}`}
+              className={`w-full min-w-0 rounded border px-1 text-sm ${medidas[k] && mm[k] === null ? "border-red-400" : ""}`}
               inputMode="decimal"
               value={medidas[k]}
               onChange={(e) => setMedidas((m) => ({ ...m, [k]: e.target.value }))}
