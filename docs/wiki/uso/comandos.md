@@ -279,6 +279,9 @@ frente_vaso = 600
 frente_lavatorio = 600
 tomada_box = 600              # tomada mais perto que isto do box = erro
 ponto_max = 300               # água/esgoto até o vaso e o lavatório
+
+[area_servico]
+ponto_max = 300               # água/esgoto até a máquina e o tanque
 ```
 
 ---

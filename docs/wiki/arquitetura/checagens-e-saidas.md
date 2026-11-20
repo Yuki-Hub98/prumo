@@ -35,6 +35,8 @@ são padrões configuráveis em `regras.toml`, não norma técnica.
 | Banheiro: tomada perto do box | 600 mm | erro |
 | Banheiro: box sem ralo dentro dele | — | erro |
 | Banheiro: vaso sem esgoto; lavatório sem água fria ou esgoto | 300 mm | erro |
+| Área de serviço: máquina de lavar e tanque sem água fria ou esgoto | 300 mm | erro |
+| Área de serviço sem máquina ou sem tanque | — | info |
 | Planejado: construção que não cabe | — | erro |
 | Planejado: prateleira sem apoio · cabideiro baixo · móvel raso · gaveta estreita | 900 · 1000 · 550 · 300 mm | aviso |
 

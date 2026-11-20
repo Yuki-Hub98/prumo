@@ -9,8 +9,10 @@ import pytest
 from shapely import Point, Polygon
 from shapely.ops import unary_union
 
-from interiores_core import geometria
+from interiores_core import catalogo, geometria
 from interiores_core.carregar import carregar
+from interiores_core.modelo import Movel
+from interiores_core.partes import parte_da_peca, partes_do_movel
 from interiores_render.cena import AVISO_OBRA, CORTE_SUPERIOR, montar_cena, montar_cena_pavimento
 
 DADOS = Path(__file__).resolve().parents[2] / "core" / "tests" / "dados" / "casa"
@@ -418,3 +420,26 @@ def test_acabamento_puxador_e_pes(copia: Path) -> None:
     assert all(p["material"] == "metal" for p in puxadores(cena))
     cava = puxadores(cena_com({"puxador": "cava"}, {}))
     assert cava and all(p["material"] == "sombra" and p["tamanho"][1] <= 2 for p in cava)
+
+
+@pytest.mark.parametrize("item", catalogo._ITENS, ids=lambda i: i.tipo)
+def test_todo_movel_do_catalogo_tem_as_partes_que_declara(item: Any) -> None:
+    """Cada parte com cor própria (aba Cores) tem pelo menos uma peça no 3D, em todo modelo."""
+    from interiores_render.cena import _Feitio
+
+    class _CenaFalsa:
+        def material(self, nome: str, cor: str, **extra: Any) -> str:
+            return nome
+
+    for mod in item.modelos:
+        m = Movel.model_validate(catalogo.novo_movel(item.tipo, "x", (0, 0), mod.id))
+        f = _Feitio(_CenaFalsa(), m, "mat")  # type: ignore[arg-type]
+        construtor = {"portas": "portas", "prateleiras": "prateleiras"}.get(
+            item.simbolo.value, item.simbolo.value
+        )
+        getattr(f, construtor, lambda: None)()
+        if item.simbolo.value == "generico":
+            continue
+        achadas = {parte_da_peca(p.nome) for p in f.pecas}
+        faltam = set(partes_do_movel(m)) - achadas
+        assert not faltam, f"{item.tipo}/{mod.id}: sem peça para {faltam}"

@@ -314,13 +314,14 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Acabamento, puxador e pés** (3ª parte dos Modelos prontos, 1º PR): madeira clara/escura,
       MDF amadeirado, branco fosco, laca com brilho e preto fosco; puxador de barra, botão,
       perfil ou cava; pés quadrados, palito, metálicos ou rodapé recuado — por móvel, no 3D
+- [x] **Mais móveis** (3ª parte, 2º PR): beliche, aparador, painel de TV, mesa de jantar
+      redonda e mesa lateral, cadeira de escritório, puff, máquina de lavar e tanque; checagens
+      da área de serviço (máquina e tanque com água e esgoto)
 - [ ] Modelos prontos — o que falta (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
       escolher e posicionar, com símbolo na planta e 3D detalhado. **Tudo editável pela
       pessoa**: partir de um modelo pronto e mudar medidas, acabamento/cor, número de
       portas/folhas/gavetas, puxador, sentido de abertura etc., podendo **salvar a versão
       editada como modelo próprio**:
-      - **mais móveis** no catálogo (beliche, aparador, painel de TV, sapateira, mesa de jantar
-        redonda, cadeira de escritório...) — 3ª parte, 2º PR;
       - portas: correr embutida, pivotante, guarnição; janelas com veneziana
 - [ ] Cotas na planta da tela (pedido do usuário, 2026-11-20, para depois): hoje só o DXF/PDF
       tem cotas. Desenhar as cotas das paredes e dos vãos na planta do frontend, em Mono, na cor
