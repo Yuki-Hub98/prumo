@@ -25,15 +25,15 @@ const mini = "rounded-sm px-1 text-xs text-tinta-suave hover:bg-superficie-2 hov
 
 /** Cor de cada elemento na vista de frente. */
 const PINTURA: Record<string, { fill: string; stroke: string }> = {
-  lateral: { fill: "#d6d3d1", stroke: "#78716c" },
-  base: { fill: "#d6d3d1", stroke: "#78716c" },
-  tampo: { fill: "#d6d3d1", stroke: "#78716c" },
-  divisoria: { fill: "#d6d3d1", stroke: "#78716c" },
-  prateleira: { fill: "#d6d3d1", stroke: "#78716c" },
-  rodape: { fill: "#a8a29e", stroke: "#57534e" },
-  gaveta: { fill: "#fde68a", stroke: "#b45309" },
-  nicho: { fill: "#fafaf9", stroke: "#e7e5e4" },
-  cabideiro: { fill: "#fafaf9", stroke: "#e7e5e4" },
+  lateral: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
+  base: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
+  tampo: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
+  divisoria: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
+  prateleira: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
+  rodape: { fill: "var(--linha-forte)", stroke: "var(--tinta-suave)" },
+  gaveta: { fill: "var(--superficie)", stroke: "var(--tinta)" },
+  nicho: { fill: "var(--papel)", stroke: "var(--linha)" },
+  cabideiro: { fill: "var(--papel)", stroke: "var(--linha)" },
 };
 
 /** Desenho da frente, em escala: estrutura, gavetas, nichos, cabideiros e (opcional) portas. */
@@ -45,12 +45,12 @@ function Frente({ vista, portas }: { vista: Vista; portas: boolean }) {
       {vista.retangulos
         .filter((r) => r.tipo !== "porta")
         .map((r, i) => {
-          const p = PINTURA[r.tipo] ?? { fill: "#e7e5e4", stroke: "#78716c" };
+          const p = PINTURA[r.tipo] ?? { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" };
           return (
             <g key={i}>
               <rect x={r.x} y={y(r)} width={r.largura} height={r.altura} fill={p.fill} stroke={p.stroke} strokeWidth={3} />
               {r.tipo === "cabideiro" && (
-                <line x1={r.x + 30} x2={r.x + r.largura - 30} y1={y(r) + 60} y2={y(r) + 60} stroke="#57534e" strokeWidth={14} />
+                <line x1={r.x + 30} x2={r.x + r.largura - 30} y1={y(r) + 60} y2={y(r) + 60} stroke="var(--tinta-suave)" strokeWidth={14} />
               )}
               {r.tipo === "gaveta" && (
                 <line
@@ -58,13 +58,13 @@ function Frente({ vista, portas }: { vista: Vista; portas: boolean }) {
                   x2={r.x + r.largura / 2 + Math.min(80, r.largura / 5)}
                   y1={y(r) + Math.min(50, r.altura / 3)}
                   y2={y(r) + Math.min(50, r.altura / 3)}
-                  stroke="#57534e"
+                  stroke="var(--tinta-suave)"
                   strokeWidth={12}
                   strokeLinecap="round"
                 />
               )}
               {r.rotulo && r.altura > 90 && r.tipo !== "gaveta" && (
-                <text x={r.x + r.largura / 2} y={y(r) + r.altura / 2} textAnchor="middle" dominantBaseline="middle" fontSize={Math.min(70, r.largura / 6)} fill="#78716c">
+                <text x={r.x + r.largura / 2} y={y(r) + r.altura / 2} textAnchor="middle" dominantBaseline="middle" fontSize={Math.min(70, r.largura / 6)} fill="var(--tinta-suave)">
                   {r.rotulo}
                 </text>
               )}
@@ -75,7 +75,7 @@ function Frente({ vista, portas }: { vista: Vista; portas: boolean }) {
         vista.retangulos
           .filter((r) => r.tipo === "porta")
           .map((r, i) => (
-            <rect key={`p${i}`} x={r.x + 4} y={y(r) + 4} width={r.largura - 8} height={r.altura - 8} fill="#bae6fd" fillOpacity={0.45} stroke="#0369a1" strokeWidth={4} strokeDasharray="30 18" />
+            <rect key={`p${i}`} x={r.x + 4} y={y(r) + 4} width={r.largura - 8} height={r.altura - 8} fill="var(--tinta)" fillOpacity={0.08} stroke="var(--tinta)" strokeWidth={4} strokeDasharray="30 18" />
           ))}
     </svg>
   );

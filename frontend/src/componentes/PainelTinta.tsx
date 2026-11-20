@@ -51,7 +51,7 @@ export function PainelTinta({
                   <td className="py-1 pr-2">
                     <span
                       className="inline-block h-4 w-6 rounded-md border border-linha-forte align-middle"
-                      style={{ background: g.cor ?? "repeating-linear-gradient(45deg,#f5f5f4,#f5f5f4 3px,#e7e5e4 3px,#e7e5e4 6px)" }}
+                      style={{ background: g.cor ?? "repeating-linear-gradient(45deg,var(--superficie-2),var(--superficie-2) 3px,var(--linha) 3px,var(--linha) 6px)" }}
                       title={g.cor ?? "Cor padrão"}
                     />
                   </td>
