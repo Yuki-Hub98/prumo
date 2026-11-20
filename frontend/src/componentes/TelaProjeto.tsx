@@ -5,6 +5,7 @@ import { PainelPlanta } from "../editor/PainelPlanta";
 import { BotoesDesfazer, PainelHistorico } from "./Desfazer";
 import { PainelCores } from "./PainelCores";
 import { PainelImagens } from "./PainelImagens";
+import { NovoAndar } from "./NovoAndar";
 import { PainelTinta } from "./PainelTinta";
 import { Tela3D } from "./Tela3D";
 import { Abas, ColunaLateral } from "./ColunaLateral";
@@ -31,8 +32,16 @@ export function TelaProjeto({
   const projeto = useProjeto(codigo);
   const pavimentos = projeto.data?.projeto.pavimentos ?? [];
   const [pav, setPav] = useState<string | null>(null);
-  const pavimento = pav ?? pavimentos[0]?.id ?? "terreo";
+  // o andar escolhido pode deixar de existir (removido, desfeito): volta para o primeiro
+  const pavimento = (pav && pavimentos.some((p) => p.id === pav) ? pav : pavimentos[0]?.id) ?? "terreo";
   const geometria = useGeometria(codigo, pavimento);
+  // andar de baixo mais próximo que tenha paredes, de referência ao desenhar o de cima
+  const abaixo =
+    pavimentos
+      .slice(0, Math.max(0, pavimentos.findIndex((p) => p.id === pavimento)))
+      .reverse()
+      .find((p) => (p.paredes?.length ?? 0) > 0)?.id ?? null;
+  const fundo = useGeometria(codigo, abaixo ?? "", !!abaixo).data;
   const problemas = useProblemas(codigo).data ?? [];
   const unidade = useUnidade();
   const editar = useEditar(codigo);
@@ -124,15 +133,37 @@ export function TelaProjeto({
         </button>
         <h1 className="font-semibold">{codigo}</h1>
         {projeto.data && <span className="text-xs text-stone-500">versão {projeto.data.versao}</span>}
-        {pavimentos.length > 1 && (
-          <select className="rounded border text-sm" value={pavimento} onChange={(e) => setPav(e.target.value)}>
+        <div className="flex items-center gap-1">
+          <select
+            className="rounded border text-sm"
+            value={pavimento}
+            onChange={(e) => {
+              setPav(e.target.value);
+              setComodo(null);
+              setSelecionado(null);
+            }}
+            aria-label="andar"
+          >
             {pavimentos.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nome ?? p.id}
               </option>
             ))}
           </select>
-        )}
+          <NovoAndar
+            codigo={codigo}
+            pavimentos={pavimentos}
+            atual={pavimento}
+            unidade={unidade}
+            aoCriado={(id) => {
+              setPav(id);
+              setComodo(null);
+              setSelecionado(null);
+              setVer3d(false);
+              setModo("planta");
+            }}
+          />
+        </div>
         <div className="ml-4 flex overflow-hidden rounded border border-stone-300 text-sm">
           {(["moveis", "planta"] as const).map((m) => (
             <button
@@ -190,6 +221,7 @@ export function TelaProjeto({
               comodoSelecionado={comodo}
               aoSelecionarComodo={setComodo}
               cores={coresVistas}
+              fundo={abaixo ? (fundo ?? null) : null}
               editor={
                 modo === "planta"
                   ? {

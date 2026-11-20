@@ -108,7 +108,8 @@ export function PainelPlanta(props: Props) {
   const base = { codigo, pavimento };
   const fazer = (f: (versao: number) => Promise<unknown>, depois?: () => void) =>
     editar.mutate((v) => f(v) as never, { onSuccess: depois });
-  const ctx = { ...props, pav, base, fazer, ocupado: editar.isPending };
+  const unicoAndar = (projeto?.projeto.pavimentos.length ?? 1) <= 1;
+  const ctx = { ...props, pav, base, fazer, ocupado: editar.isPending, unicoAndar };
 
   return (
     <>
@@ -128,11 +129,13 @@ type Ctx = Props & {
   base: { codigo: string; pavimento: string };
   fazer: (f: (versao: number) => Promise<unknown>, depois?: () => void) => void;
   ocupado: boolean;
+  /** O projeto só tem este andar (não dá para remover). */
+  unicoAndar: boolean;
 };
 
 // ------------------------------------------------------------------ sem seleção
 
-function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenhar, escolhendo, aoEscolher }: Ctx) {
+function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenhar, escolhendo, aoEscolher, unicoAndar }: Ctx) {
   const [espessura, setEspessura] = useState<Medida | null>(null);
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState<(typeof TIPOS_COMODO)[number]>("quarto");
@@ -228,8 +231,53 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
           Clique numa parede, porta, janela, tomada ou cômodo para editar. Arraste os cantos (círculos azuis)
           para mover paredes.
         </p>
+        <RemoverAndar pav={pav} sozinho={unicoAndar} base={base} fazer={fazer} ocupado={ocupado} />
       </Caixa>
     </>
+  );
+}
+
+/** Remover o andar aberto, com confirmação na tela; com paredes ou cômodos, vai tudo junto
+ * (inclusive os móveis). O único andar do projeto não sai. Entra no rascunho: dá para desfazer. */
+function RemoverAndar({
+  pav,
+  sozinho,
+  base,
+  fazer,
+  ocupado,
+}: Pick<Ctx, "pav" | "base" | "fazer" | "ocupado"> & { sozinho: boolean }) {
+  const [confirmar, setConfirmar] = useState(false);
+  if (sozinho) return null;
+  const cheio = (pav.paredes?.length ?? 0) + (pav.comodos?.length ?? 0) > 0;
+  return confirmar ? (
+    <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-xs text-red-900">
+      Remover o andar "{pav.nome ?? pav.id}"
+      {cheio && `, com ${pav.comodos?.length ?? 0} cômodo(s) e ${pav.paredes?.length ?? 0} parede(s) (e os móveis)`}?
+      <div className="mt-1 flex gap-2">
+        <button
+          className="rounded bg-red-700 px-2 py-0.5 text-white disabled:opacity-40"
+          disabled={ocupado}
+          onClick={() =>
+            fazer((versao) =>
+              ou(
+                api.DELETE("/projetos/{codigo}/pavimentos/{pavimento}", {
+                  params: { path: base, query: { versao, cascata: cheio } },
+                }),
+              ),
+            )
+          }
+        >
+          remover
+        </button>
+        <button className="rounded border border-red-200 bg-white px-2 py-0.5" onClick={() => setConfirmar(false)}>
+          cancelar
+        </button>
+      </div>
+    </div>
+  ) : (
+    <button className="mt-2 text-xs text-red-700 hover:underline" onClick={() => setConfirmar(true)}>
+      remover este andar
+    </button>
   );
 }
 
