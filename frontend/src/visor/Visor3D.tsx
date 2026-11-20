@@ -1,9 +1,10 @@
-import { Line, OrbitControls, useGLTF } from "@react-three/drei";
+import { Line, OrbitControls } from "@react-three/drei";
 import { Canvas, type ThreeEvent, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box3, Color, Mesh, MeshStandardMaterial, Plane, Vector3, type Object3D } from "three";
 import type { Cores } from "../api/cliente";
 import { arestas, type Caixa, ehPiso, ehTeto, enquadrar, VISTAS_3D, type Vista3D } from "./enquadrar";
+import { type Cena3D, descartar, montarCena } from "./montarCena";
 import { type Contexto, corDo, movelDaPeca, papel } from "./pintar";
 
 /** Cores do painel aplicadas ao vivo (``cores`` nulo = as cores com que o modelo saiu). */
@@ -72,7 +73,8 @@ type Controles = { target: Vector3; update: () => void };
 const caixa = (b: Box3): Caixa => ({ min: b.min.toArray(), max: b.max.toArray() });
 
 function Modelo({
-  url,
+  cena,
+  chave,
   vista,
   teto,
   pintura,
@@ -81,14 +83,17 @@ function Modelo({
   moveis,
 }: {
   moveis: string[];
-  url: string;
+  cena: Cena3D;
+  chave: string;
   vista: Vista3D;
   teto: boolean;
   pintura: Pintura | null;
   selecionado: string | null;
   aoMovel?: (id: string) => void;
 }) {
-  const { scene } = useGLTF(url);
+  // remontado a cada versão do projeto: muda junto com a planta, sem esperar render
+  const scene = useMemo(() => montarCena(cena), [cena]);
+  useEffect(() => () => descartar(scene), [scene]);
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
   const controles = useThree((s) => s.controls) as unknown as Controles | null;
@@ -117,16 +122,23 @@ function Modelo({
     });
   }, [scene, teto]);
 
+  // a câmera só volta para a vista pronta quando ela muda (ou outro cômodo): editar o projeto
+  // não pode tirar a câmera de onde a pessoa girou
+  const caixas = useRef({ todo, piso });
+  caixas.current = { todo, piso };
   useEffect(() => {
-    const e = enquadrar(vista, todo, piso);
+    const e = enquadrar(vista, caixas.current.todo, caixas.current.piso);
     camera.position.set(...e.posicao);
     camera.lookAt(...e.alvo);
     if (controles) {
       controles.target.set(...e.alvo);
       controles.update();
     }
+  }, [vista, chave, camera, controles]);
+  useEffect(() => {
+    const e = enquadrar(vista, todo, piso);
     gl.clippingPlanes = e.corte ? [new Plane(new Vector3(...e.corte.normal), e.corte.constante)] : [];
-  }, [vista, todo, piso, camera, controles, gl]);
+  }, [vista, todo, piso, gl]);
 
   return (
     <>
@@ -149,11 +161,12 @@ function Modelo({
 const botao = (ativo: boolean) =>
   `rounded border px-2 py-0.5 text-sm ${ativo ? "border-stone-800 bg-stone-800 text-white" : "border-stone-300 bg-white hover:bg-stone-100"}`;
 
-/** Visor do .glb do cômodo ou do pavimento: girar (arrastar), zoom (roda), mover (botão direito),
- * vistas prontas com corte da parede do lado da câmera, teto liga/desliga e as cores do
- * painel aplicadas ao vivo (``pintura``). */
+/** Visor 3D ao vivo do cômodo ou do pavimento (montado da cena do core): girar (arrastar),
+ * zoom (roda), mover (botão direito), vistas prontas com corte da parede do lado da câmera,
+ * teto liga/desliga e as cores do painel aplicadas ao vivo (``pintura``). */
 export default function Visor3D({
-  url,
+  cena,
+  chave,
   pintura = null,
   selecionado = null,
   aoMovel,
@@ -161,7 +174,9 @@ export default function Visor3D({
 }: {
   /** Ids de todos os móveis (para achar o móvel de uma peça clicada). */
   moveis?: string[];
-  url: string;
+  cena: Cena3D;
+  /** Cômodo ou pavimento mostrado: trocar recoloca a câmera na vista pronta. */
+  chave: string;
   pintura?: Pintura | null;
   /** Móvel selecionado: aparece com um contorno em volta. */
   selecionado?: string | null;
@@ -191,9 +206,16 @@ export default function Visor3D({
         <ambientLight intensity={0.7} />
         <hemisphereLight args={["#ffffff", "#b9a88f", 0.6]} />
         <directionalLight position={[4, 9, 6]} intensity={1.4} />
-        <Suspense fallback={null}>
-          <Modelo url={url} vista={vista} teto={teto} pintura={pintura} selecionado={selecionado} aoMovel={aoMovel} moveis={moveis} />
-        </Suspense>
+        <Modelo
+          cena={cena}
+          chave={chave}
+          vista={vista}
+          teto={teto}
+          pintura={pintura}
+          selecionado={selecionado}
+          aoMovel={aoMovel}
+          moveis={moveis}
+        />
         <OrbitControls makeDefault enableDamping={false} />
       </Canvas>
     </div>

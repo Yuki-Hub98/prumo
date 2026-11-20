@@ -172,9 +172,7 @@ export function TelaProjeto({
               pavimento={pavimento}
               comodo={comodo}
               comodos={pavimentos.find((p) => p.id === pavimento)?.comodos ?? []}
-              versaoProjeto={projeto.data?.versao}
               aoComodo={setComodo}
-              variacao={(comodo && ativa[comodo]) || "base"}
               cores={coresVistas}
               geometria={geometria.data}
               selecionado={selecionado}

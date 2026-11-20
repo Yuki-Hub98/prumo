@@ -775,6 +775,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/cena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cena Comodo
+         * @description Cena 3D ao vivo do cômodo (geometria e materiais calculados pelo core).
+         */
+        get: operations["cena_comodo_projetos__codigo__comodos__comodo__cena_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/pavimentos/{pavimento}/cena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cena Pavimento
+         * @description Cena 3D ao vivo do pavimento inteiro (todos os cômodos, cada parede uma vez).
+         */
+        get: operations["cena_pavimento_projetos__codigo__pavimentos__pavimento__cena_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/comodos/{comodo}/vistas": {
         parameters: {
             query?: never;
@@ -983,6 +1023,66 @@ export interface components {
              * @description A pasta não é apagada: vai para projetos/_apagados/ (fotos, croquis).
              */
             pasta_movida_para: string | null;
+        };
+        /**
+         * Caixa3D
+         * @description Paralelepípedo (peças de móvel, folhas de porta): centro e tamanho em mm, giro em z.
+         */
+        Caixa3D: {
+            /** Nome */
+            nome: string;
+            /** Centro */
+            centro: [
+                number,
+                number,
+                number
+            ];
+            /** Tamanho */
+            tamanho: [
+                number,
+                number,
+                number
+            ];
+            /** Rotacao */
+            rotacao: number;
+            /** Material */
+            material: string;
+            /**
+             * Chanfro
+             * @default 0
+             */
+            chanfro?: number;
+            /** Oculto Em */
+            oculto_em?: string[];
+            /**
+             * Extras
+             * @description movel e parte (pintura).
+             */
+            extras?: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * Cena3D
+         * @description Cena calculada pelo core (a mesma que vai para o Blender, sem câmeras e luzes), para o
+         *     visor montar o 3D ao vivo: muda junto com a planta, a cada versão (rascunho incluído).
+         */
+        Cena3D: {
+            /**
+             * Versao
+             * @description Versão do projeto desta cena.
+             */
+            versao: number;
+            /** Prismas */
+            prismas: components["schemas"]["Prisma3D"][];
+            /** Caixas */
+            caixas: components["schemas"]["Caixa3D"][];
+            /** Materiais */
+            materiais: {
+                [key: string]: components["schemas"]["Material3D"];
+            };
+            /** Aviso */
+            aviso?: string | null;
         };
         /**
          * Chapa
@@ -1342,6 +1442,30 @@ export interface components {
              */
             tipo: "janela";
             peitoril: components["schemas"]["Medida"];
+        };
+        /** Material3D */
+        Material3D: {
+            /** Cor */
+            cor: string;
+            /**
+             * Rugosidade
+             * @default 0.6
+             */
+            rugosidade?: number;
+            /** Textura */
+            textura?: string | null;
+            /**
+             * Metal
+             * @default false
+             */
+            metal?: boolean;
+            /**
+             * Vidro
+             * @default false
+             */
+            vidro?: boolean;
+            /** Emissao */
+            emissao?: number | null;
         };
         /**
          * Medida
@@ -1918,6 +2042,27 @@ export interface components {
              * @enum {string}
              */
             unidade?: "mm" | "cm" | "m";
+        };
+        /**
+         * Prisma3D
+         * @description Contorno na planta (mm) extrudado de ``z0`` a ``z1`` (paredes, piso, teto...).
+         */
+        Prisma3D: {
+            /** Nome */
+            nome: string;
+            /** Contorno */
+            contorno: [
+                number,
+                number
+            ][];
+            /** Z0 */
+            z0: number;
+            /** Z1 */
+            z1: number;
+            /** Material */
+            material: string;
+            /** Oculto Em */
+            oculto_em?: string[];
         };
         /** Problema */
         Problema: {
@@ -3934,6 +4079,70 @@ export interface operations {
                     "application/json": {
                         [key: string]: number;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cena_comodo_projetos__codigo__comodos__comodo__cena_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cena3D"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cena_pavimento_projetos__codigo__pavimentos__pavimento__cena_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                pavimento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cena3D"];
                 };
             };
             /** @description Validation Error */

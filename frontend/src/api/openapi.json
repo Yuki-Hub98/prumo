@@ -3175,6 +3175,110 @@
         }
       }
     },
+    "/projetos/{codigo}/comodos/{comodo}/cena": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Cena Comodo",
+        "description": "Cena 3D ao vivo do cômodo (geometria e materiais calculados pelo core).",
+        "operationId": "cena_comodo_projetos__codigo__comodos__comodo__cena_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cena3D"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/cena": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Cena Pavimento",
+        "description": "Cena 3D ao vivo do pavimento inteiro (todos os cômodos, cada parede uma vez).",
+        "operationId": "cena_pavimento_projetos__codigo__pavimentos__pavimento__cena_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cena3D"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/comodos/{comodo}/vistas": {
       "get": {
         "tags": [
@@ -3656,6 +3760,138 @@
           "pasta_movida_para"
         ],
         "title": "Apagado"
+      },
+      "Caixa3D": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "centro": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Centro"
+          },
+          "tamanho": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Tamanho"
+          },
+          "rotacao": {
+            "type": "number",
+            "title": "Rotacao"
+          },
+          "material": {
+            "type": "string",
+            "title": "Material"
+          },
+          "chanfro": {
+            "type": "number",
+            "title": "Chanfro",
+            "default": 0.0
+          },
+          "oculto_em": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Oculto Em"
+          },
+          "extras": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Extras",
+            "description": "movel e parte (pintura)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nome",
+          "centro",
+          "tamanho",
+          "rotacao",
+          "material"
+        ],
+        "title": "Caixa3D",
+        "description": "Paralelepípedo (peças de móvel, folhas de porta): centro e tamanho em mm, giro em z."
+      },
+      "Cena3D": {
+        "properties": {
+          "versao": {
+            "type": "integer",
+            "title": "Versao",
+            "description": "Versão do projeto desta cena."
+          },
+          "prismas": {
+            "items": {
+              "$ref": "#/components/schemas/Prisma3D"
+            },
+            "type": "array",
+            "title": "Prismas"
+          },
+          "caixas": {
+            "items": {
+              "$ref": "#/components/schemas/Caixa3D"
+            },
+            "type": "array",
+            "title": "Caixas"
+          },
+          "materiais": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Material3D"
+            },
+            "type": "object",
+            "title": "Materiais"
+          },
+          "aviso": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aviso"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "versao",
+          "prismas",
+          "caixas",
+          "materiais"
+        ],
+        "title": "Cena3D",
+        "description": "Cena calculada pelo core (a mesma que vai para o Blender, sem câmeras e luzes), para o\nvisor montar o 3D ao vivo: muda junto com a planta, a cada versão (rascunho incluído)."
       },
       "Chapa": {
         "properties": {
@@ -4574,6 +4810,57 @@
         ],
         "title": "Janela",
         "description": "Janela com peitoril (altura do piso até o vão)."
+      },
+      "Material3D": {
+        "properties": {
+          "cor": {
+            "type": "string",
+            "title": "Cor"
+          },
+          "rugosidade": {
+            "type": "number",
+            "title": "Rugosidade",
+            "default": 0.6
+          },
+          "textura": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Textura"
+          },
+          "metal": {
+            "type": "boolean",
+            "title": "Metal",
+            "default": false
+          },
+          "vidro": {
+            "type": "boolean",
+            "title": "Vidro",
+            "default": false
+          },
+          "emissao": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emissao"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cor"
+        ],
+        "title": "Material3D"
       },
       "Medida": {
         "properties": {
@@ -6120,6 +6407,61 @@
         "type": "object",
         "title": "Preferencias",
         "description": "Preferências do usuário (por ora um só; com login, uma por pessoa)."
+      },
+      "Prisma3D": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "contorno": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Contorno"
+          },
+          "z0": {
+            "type": "number",
+            "title": "Z0"
+          },
+          "z1": {
+            "type": "number",
+            "title": "Z1"
+          },
+          "material": {
+            "type": "string",
+            "title": "Material"
+          },
+          "oculto_em": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Oculto Em"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nome",
+          "contorno",
+          "z0",
+          "z1",
+          "material"
+        ],
+        "title": "Prisma3D",
+        "description": "Contorno na planta (mm) extrudado de ``z0`` a ``z1`` (paredes, piso, teto...)."
       },
       "Problema": {
         "properties": {
