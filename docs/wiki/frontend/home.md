@@ -173,7 +173,7 @@ No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagad
 
 - **Desenhar paredes:** escolha a espessura (e a origem), clique canto a canto; o ponto gruda
   nos cantos existentes e alinha na horizontal/vertical. Botão direito termina a sequência.
-- **Cantos:** arraste os círculos azuis; as paredes que se encontram no canto vão junto.
+- **Cantos:** arraste os quadradinhos dos cantos; as paredes que se encontram no canto vão junto.
 - **Clique para editar:** parede (espessura, dividir, + Porta, + Janela, + Tomada/ponto,
   remover), porta/janela (medidas, para onde abre, dobradiça), tomada/ponto (altura, posição),
   cômodo (nome, tipo, pé-direito, remover).
