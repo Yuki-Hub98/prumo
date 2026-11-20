@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, buscar, ErroApi, ou, type ResultadoEdicao } from "./api/cliente";
+import { api, buscar, ErroApi, type Esquemas, ou, type ResultadoEdicao } from "./api/cliente";
 import type { Unidade } from "./unidades";
 
 export const chaves = {
@@ -150,6 +150,26 @@ export function usePedirRenderPavimento(codigo: string, pavimento: string) {
       ),
     onSettled: () =>
       qc.invalidateQueries({ queryKey: [...chaves.projeto(codigo), "renders-pavimento", pavimento] }),
+  });
+}
+
+/** Cena 3D ao vivo do cômodo ou do pavimento (refaz a cada versão do projeto). */
+export function useCena(codigo: string, alvo: { comodo: string } | { pavimento: string }, ativo = true) {
+  const chave = "pavimento" in alvo ? ["pavimento", alvo.pavimento] : ["comodo", alvo.comodo];
+  return useQuery<Esquemas["Cena3D"], ErroApi>({
+    queryKey: [...chaves.projeto(codigo), "cena", ...chave],
+    // o openapi-fetch tipa pares/trincas como listas: a forma é a do esquema Cena3D
+    queryFn: async () => {
+      const r =
+        "pavimento" in alvo
+          ? await ou(api.GET("/projetos/{codigo}/pavimentos/{pavimento}/cena", { params: { path: { codigo, pavimento: alvo.pavimento } } }))
+          : await ou(api.GET("/projetos/{codigo}/comodos/{comodo}/cena", { params: { path: { codigo, comodo: alvo.comodo } } }));
+      return r as unknown as Esquemas["Cena3D"];
+    },
+    enabled: ativo,
+    placeholderData: (anterior, consulta) =>
+      // enquanto a versão nova chega, mostra a anterior do mesmo cômodo (sem piscar)
+      consulta?.queryKey.slice(-2).join() === chave.join() ? anterior : undefined,
   });
 }
 

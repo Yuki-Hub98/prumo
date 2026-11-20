@@ -105,6 +105,8 @@ O esquema completo (para gerar os tipos do frontend) está em `/openapi.json`.
 | GET | `/projetos/{p}/renders?comodo=` / `?pavimento=` | pedidos recentes (de um cômodo / do pavimento inteiro) |
 | GET | `/renders/{id}` | status, progresso, imagem atual, tempo restante, duração |
 | GET | `/renders/{id}/imagens/{nome}` | PNG pronto (`render-<vista>.png`) |
+| GET | `/projetos/{p}/comodos/{c}/cena` | cena 3D ao vivo do cômodo (prismas, caixas, materiais em mm; cores padrão), para o visor |
+| GET | `/projetos/{p}/pavimentos/{a}/cena` | cena 3D ao vivo do pavimento inteiro |
 | GET | `/renders/{id}/modelo` | modelo 3D do cômodo ou do pavimento (`.glb`), para o visor; `modelo_url` no render |
 
 - **Qualidades:** rascunho 800×500, 16 amostras (segundos); final 1600×1000, 96 amostras

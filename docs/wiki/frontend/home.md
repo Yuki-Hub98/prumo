@@ -115,18 +115,18 @@ navegador. Depois pede **rascunho** ou **final** da variação de cor ativa, mos
 
 ## Visor 3D
 
-No topo, **Planta | 3D** troca a área principal para o modelo 3D do cômodo (o `.glb` do
-render pronto mais recente; troque o cômodo na lista). Arraste para girar, roda para zoom,
-botão direito para mover. Vistas prontas: **De cima** (sem teto, como maquete),
-**Perspectiva**, **Frente**, **Fundo**, **Esquerda** e **Direita** — nas de lado a parede do
-lado da câmera é **cortada** para ver o cômodo por dentro. A caixa **teto** mostra o teto e a
-luminária. O modelo só muda quando sai um render novo: se o projeto mudou depois, a tela
-avisa para pedir um rascunho. As texturas (madeira, tecido) aparecem só nas imagens; no 3D
-vão as cores lisas.
+No topo, **Planta | 3D** troca a área principal para o 3D do cômodo (troque na lista). O 3D é
+**ao vivo**: é montado na hora a partir da mesma cena que o core calcula para o Blender
+(`GET .../cena`), a cada versão do projeto, rascunho incluído. Móvel novo, movido, girado,
+medida, parede, porta ou planejado aparecem no 3D e na planta juntos, sem pedir render. Arraste
+para girar, roda para zoom, botão direito para mover; editar não tira a câmera do lugar.
+Vistas prontas: **De cima** (sem teto, como maquete), **Perspectiva**, **Frente**, **Fundo**,
+**Esquerda** e **Direita** — nas de lado a parede do lado da câmera é **cortada** para ver o
+cômodo por dentro. A caixa **teto** mostra o teto e a luminária. No 3D vão as cores lisas; as
+fotos realistas (texturas, luz) são do Blender, na aba **Imagens**.
 
-Na lista, **Pavimento inteiro** mostra a casa toda (todos os cômodos, sem teto). O botão
-**gerar modelo da casa** (ou **atualizar**) põe um rascunho na fila e o visor abre quando fica
-pronto; as vistas de lado cortam a parede externa do lado da câmera.
+Na lista, **Pavimento inteiro** mostra a casa toda (todos os cômodos, sem teto), também ao vivo;
+as vistas de lado cortam a parede externa do lado da câmera.
 
 ### Pintar no 3D
 

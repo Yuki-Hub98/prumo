@@ -643,6 +643,8 @@ class _Cena:
     def cameras(
         self, vistas: tuple[str, ...] = ("perspectiva", "superior")
     ) -> list[dict[str, Any]]:
+        if not vistas:  # cena para a tela (3D ao vivo): sem câmeras, sem a busca de ponto livre
+            return []
         disponiveis = self.cameras_disponiveis()
         fora = [v for v in vistas if v not in disponiveis]
         if fora:

@@ -109,3 +109,30 @@ def test_recusas_do_pavimento(api: TestClient) -> None:
     url = "/projetos/casa/pavimentos/terreo/renders"
     assert api.post(url, json={"vistas": ["cama"]}).status_code == 422
     assert api.post(url, json={"qualidade": "ultra"}).status_code == 422
+
+
+def test_cena_3d_ao_vivo(api: TestClient) -> None:
+    """A cena do visor muda junto com o projeto (sem render): móvel movido sai na posição nova."""
+    r = api.get("/projetos/casa/comodos/quarto/cena")
+    assert r.status_code == 200, r.text
+    cena = r.json()
+    nomes = {p["nome"] for p in cena["prismas"]} | {c["nome"] for c in cena["caixas"]}
+    assert {"piso", "teto"} <= nomes and any(n.startswith("cama-") for n in nomes)
+    teto = next(p for p in cena["prismas"] if p["nome"] == "teto")
+    assert teto["oculto_em"] == ["superior"]
+    cama = next(c for c in cena["caixas"] if c["nome"] == "cama-cabeceira")
+    assert cama["extras"] == {"movel": "cama", "parte": "cabeceira"}
+
+    antes = cama["centro"]
+    v = cena["versao"]
+    api.post("/projetos/casa/comodos/quarto/moveis/cama/mover", params={"versao": v},
+             json={"centro": [1000, 1300]})  # fmt: skip
+    depois = api.get("/projetos/casa/comodos/quarto/cena").json()
+    assert depois["versao"] == v + 1
+    nova = next(c for c in depois["caixas"] if c["nome"] == "cama-cabeceira")["centro"]
+    assert nova != antes
+
+    pav = api.get("/projetos/casa/pavimentos/terreo/cena").json()
+    assert {"piso-quarto", "piso-banheiro"} <= {p["nome"] for p in pav["prismas"]}
+    assert api.get("/projetos/casa/comodos/cozinha/cena").status_code == 404
+    assert api.get("/projetos/casa/pavimentos/superior/cena").status_code == 404

@@ -1,24 +1,23 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { type Cores, type InfoRender, type PavimentoTela, URL_API } from "../api/cliente";
-import { usePedirRenderPavimento, useRenders, useRendersPavimento } from "../dados";
+import type { Cores, PavimentoTela } from "../api/cliente";
+import { useCena } from "../dados";
 import type { Pintura } from "../visor/Visor3D";
 
 // three.js é pesado: só baixa quando a pessoa abre o 3D
 const Visor3D = lazy(() => import("../visor/Visor3D"));
 
 const INTEIRO = "__pavimento__";
-const ATIVOS = new Set(["na_fila", "rodando"]);
 
-/** Área principal no modo 3D: o modelo do render pronto mais recente do cômodo, ou o do
- * pavimento inteiro (a casa com o teto cortado), pintado ao vivo com as cores do painel. */
+/** Área principal no modo 3D, **ao vivo**: o 3D é montado da cena que o core calcula a cada
+ * versão do projeto (rascunho incluído), então muda junto com a planta, sem render. O cômodo
+ * da lista, ou o pavimento inteiro (a casa com o teto cortado), pintado com as cores do painel.
+ * As fotos realistas (Blender) ficam em "Imagens". */
 export function Tela3D({
   codigo,
   pavimento,
   comodo,
   comodos,
-  versaoProjeto,
   aoComodo,
-  variacao,
   cores,
   geometria,
   selecionado,
@@ -28,11 +27,8 @@ export function Tela3D({
   pavimento: string;
   comodo: string | null;
   comodos: { id: string; nome?: string | null }[];
-  versaoProjeto: number | undefined;
   aoComodo: (id: string) => void;
-  /** Variação ativa do cômodo no painel de cores (o modelo dela é o preferido). */
-  variacao: string;
-  /** Rascunho das cores do painel (``null`` na base). */
+  /** Cores para pintar por cima (rascunho do painel ou a variação salva; ``null`` na base). */
   cores: Cores | null;
   geometria: PavimentoTela | undefined;
   selecionado: string | null;
@@ -44,21 +40,13 @@ export function Tela3D({
   useEffect(() => {
     if (!comodo && comodos[0]) aoComodo(comodos[0].id);
   }, [comodo, comodos, aoComodo]);
-  const doComodo = useRenders(codigo, atual ?? "").data ?? [];
-  const doPavimento = useRendersPavimento(codigo, pavimento, inteiro).data ?? [];
-  const pedir = usePedirRenderPavimento(codigo, pavimento);
-  const lista = inteiro ? doPavimento : atual ? doComodo : [];
-  // o modelo da variação ativa vem com as cores dela; sem ele, o mais recente
-  const r = lista.find((x) => x.modelo_url && (inteiro || x.variacao === variacao)) ?? lista.find((x) => x.modelo_url);
+  const cena = useCena(codigo, inteiro ? { pavimento } : { comodo: atual ?? "" }, inteiro || !!atual);
   const pintura = useMemo<Pintura | null>(() => {
     if (!atual || !geometria) return null;
     const aberturas = Object.fromEntries(geometria.aberturas.map((a) => [a.id, a.parede]));
     const moveis = Object.fromEntries(geometria.moveis.filter((m) => m.comodo === atual).map((m) => [m.id, m.tipo]));
     return { cores, ctx: { comodo: atual, pavimento: inteiro, aberturas, moveis } };
   }, [atual, geometria, cores, inteiro]);
-  const rodando = inteiro ? doPavimento.find((x) => ATIVOS.has(x.status)) : undefined;
-  const falhou = inteiro && doPavimento[0]?.status === "erro" ? doPavimento[0] : undefined;
-  const desatualizado = r && versaoProjeto !== undefined && r.versao_projeto !== versaoProjeto;
 
   return (
     <div className="flex h-full flex-col">
@@ -79,46 +67,20 @@ export function Tela3D({
             </option>
           ))}
         </select>
-        {inteiro && (
-          <button
-            className="rounded border border-stone-300 bg-white px-2 py-0.5 hover:bg-stone-100 disabled:opacity-50"
-            disabled={!!rodando || pedir.isPending}
-            onClick={() => pedir.mutate({ qualidade: "rascunho" })}
-          >
-            {r ? "atualizar modelo da casa" : "gerar modelo da casa"}
-          </button>
-        )}
-        {rodando && <Andamento r={rodando} />}
-        {pedir.error && <span className="text-xs text-red-700">{pedir.error.message}</span>}
-        {cores && r && (
-          <span className="text-xs text-stone-500">
-            cores do painel aplicadas ao vivo{inteiro && " (no pavimento: piso, teto, rodapé e móveis)"}
-          </span>
-        )}
-        {r && (
-          <span className="text-xs text-stone-500">
-            modelo do render de {new Date(r.criado_em).toLocaleString("pt-BR")} · versão {r.versao_projeto}
-          </span>
-        )}
-        {desatualizado && (
-          <span className="text-xs text-amber-700">
-            {inteiro
-              ? "o projeto mudou depois deste modelo: clique em atualizar"
-              : 'o projeto mudou depois deste render: as cores aparecem ao vivo; medidas e móveis novos só com um rascunho em "Imagens 3D"'}
-          </span>
-        )}
+        <span className="text-xs text-stone-500">
+          ao vivo · versão {cena.data?.versao ?? "…"}
+          {cena.isFetching && " · atualizando…"}
+          {inteiro && " · no pavimento pintam piso, teto, rodapé e móveis"}
+        </span>
+        <span className="text-xs text-stone-400">fotos realistas: aba "Imagens"</span>
       </div>
-      {falhou && !rodando && (
-        <p className="border-b border-red-200 bg-red-50 px-3 py-1 text-xs text-red-800">
-          o último modelo da casa falhou: {falhou.erro?.split("\n")[0]}
-        </p>
-      )}
+      {cena.error && <p className="border-b border-red-200 bg-red-50 px-3 py-1 text-xs text-red-800">{cena.error.message}</p>}
       <div className="min-h-0 flex-1">
-        {r?.modelo_url ? (
+        {cena.data ? (
           <Suspense fallback={<p className="p-4 text-stone-500">carregando o visor…</p>}>
             <Visor3D
-              key={r.modelo_url}
-              url={URL_API + r.modelo_url}
+              cena={cena.data}
+              chave={inteiro ? `pavimento:${pavimento}` : `comodo:${atual}`}
               pintura={pintura}
               selecionado={selecionado}
               aoMovel={aoSelecionarMovel}
@@ -126,26 +88,9 @@ export function Tela3D({
             />
           </Suspense>
         ) : (
-          <p className="p-4 text-stone-500">
-            {inteiro
-              ? rodando
-                ? "gerando o modelo da casa…"
-                : 'Ainda não há modelo da casa: clique em "gerar modelo da casa" (segundos).'
-              : atual
-                ? 'Ainda não há modelo 3D deste cômodo: peça um rascunho no painel "Imagens 3D" (segundos).'
-                : "Nenhum cômodo no projeto."}
-          </p>
+          <p className="p-4 text-stone-500">{atual || inteiro ? "montando o 3D…" : "Nenhum cômodo no projeto."}</p>
         )}
       </div>
     </div>
-  );
-}
-
-function Andamento({ r }: { r: InfoRender }) {
-  return (
-    <span className="text-xs text-stone-600">
-      {r.status === "na_fila" ? "na fila" : `gerando ${Math.round(r.progresso * 100)}%`}
-      {r.restante_s != null && ` · ~${Math.ceil(r.restante_s)} s`}
-    </span>
   );
 }

@@ -19,6 +19,7 @@ from interiores_api.esquemas import (
     AlterarParede,
     Apagado,
     Campos,
+    Cena3D,
     DefinirConstrucao,
     DividirParede,
     InfoRender,
@@ -519,6 +520,18 @@ def estimativas(
 ) -> dict[str, float]:
     """Segundos estimados por qualidade (rascunho, final), pelo histórico."""
     return svc.estimativas(imagens)
+
+
+@render.get("/projetos/{codigo}/comodos/{comodo}/cena")
+def cena_comodo(svc: Svc, codigo: str, comodo: str) -> Cena3D:
+    """Cena 3D ao vivo do cômodo (geometria e materiais calculados pelo core)."""
+    return svc.cena(codigo, comodo=comodo)
+
+
+@render.get("/projetos/{codigo}/pavimentos/{pavimento}/cena")
+def cena_pavimento(svc: Svc, codigo: str, pavimento: str) -> Cena3D:
+    """Cena 3D ao vivo do pavimento inteiro (todos os cômodos, cada parede uma vez)."""
+    return svc.cena(codigo, pavimento=pavimento)
 
 
 @render.get("/projetos/{codigo}/comodos/{comodo}/vistas")
