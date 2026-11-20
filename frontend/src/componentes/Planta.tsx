@@ -4,6 +4,9 @@ import { PADRAO } from "./PainelCores";
 import { formatar, type Unidade } from "../unidades";
 import { encaixar, vertices, type Pt } from "../editor/geometria";
 
+/** Quanto o ponteiro anda (px na tela) antes de um clique num móvel virar arrasto. */
+export const FOLGA_PX = 4;
+
 export type Item = { tipo: "parede" | "abertura" | "instalacao" | "comodo"; id: string };
 
 /** Modo editor de planta: o que está selecionado e os callbacks de edição. */
@@ -69,7 +72,8 @@ export function Planta({
   aoMover: (movel: MovelTela, centro: [number, number]) => void;
 }) {
   const svg = useRef<SVGSVGElement>(null);
-  const [arrasto, setArrasto] = useState<{ id: string; ini: Pt; d: Pt } | null>(null);
+  // ``tela``: onde o clique começou (px); ``solto``: já passou da folga e está arrastando
+  const [arrasto, setArrasto] = useState<{ id: string; ini: Pt; d: Pt; tela: Pt; solto: boolean } | null>(null);
   const [canto, setCanto] = useState<{ de: Pt; para: Pt } | null>(null);
   const [trilha, setTrilha] = useState<Pt | null>(null);
   const [cursor, setCursor] = useState<Pt | null>(null);
@@ -132,8 +136,11 @@ export function Planta({
           return;
         }
         if (!arrasto) return;
+        // clicar para selecionar treme a mão: só vira arrasto depois de 4 px na tela
+        const solto = arrasto.solto || Math.hypot(e.clientX - arrasto.tela[0], e.clientY - arrasto.tela[1]) >= FOLGA_PX;
+        if (!solto) return;
         const [x, y] = emMm(e);
-        setArrasto({ ...arrasto, d: [arredonda(x - arrasto.ini[0]), arredonda(y - arrasto.ini[1])] });
+        setArrasto({ ...arrasto, solto, d: [arredonda(x - arrasto.ini[0]), arredonda(y - arrasto.ini[1])] });
       }}
       onPointerUp={() => {
         if (canto) {
@@ -283,7 +290,7 @@ export function Planta({
               e.stopPropagation();
               (e.target as Element).setPointerCapture?.(e.pointerId);
               aoSelecionar(m.id);
-              setArrasto({ id: m.id, ini: emMm(e), d: [0, 0] });
+              setArrasto({ id: m.id, ini: emMm(e), d: [0, 0], tela: [e.clientX, e.clientY], solto: false });
             }}
           >
             <polygon
