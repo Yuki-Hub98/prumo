@@ -35,6 +35,9 @@ PARTES: dict[str, str] = {
     "cuba": "Cuba",
     "torneira": "Torneira",
     "bocas": "Bocas e grelhas",
+    "caixa": "Caixa acoplada",
+    "vidros": "Vidros",
+    "perfis": "Perfis",
 }
 """Id → nome para a tela, na ordem em que aparecem."""
 
@@ -51,6 +54,8 @@ POR_SIMBOLO: dict[Simbolo, tuple[str, ...]] = {
     Simbolo.PIA: ("bancada", "portas", "puxadores", "cuba", "torneira"),
     Simbolo.FOGAO: ("tampo", "bocas", "portas", "puxadores"),
     Simbolo.GELADEIRA: ("portas", "puxadores"),
+    Simbolo.VASO: ("assento", "caixa"),
+    Simbolo.BOX: ("vidros", "perfis"),
 }
 PLANEJADO: tuple[str, ...] = ("portas", "gavetas", "puxadores", "prateleiras")
 """Móvel planejado (com ``construcao``): caixa = corpo; portas, frentes de gaveta,
@@ -78,6 +83,9 @@ _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"^cuba$", "cuba"),
         (r"^torneira\d*$", "torneira"),
         (r"^boca\d+$", "bocas"),
+        (r"^caixa$", "caixa"),
+        (r"^vidro\d+$", "vidros"),
+        (r"^perfil\d*$", "perfis"),
     )
 )
 

@@ -11,11 +11,10 @@ from __future__ import annotations
 
 import math
 
-from shapely import LineString, Point
-from shapely.geometry.base import BaseGeometry
+from shapely import LineString
 
 from interiores_core import catalogo, geometria
-from interiores_core.modelo import Janela, Movel, PontoInstalacao, Porta, TrechoInstalacao
+from interiores_core.modelo import Janela, Movel, Porta
 from interiores_core.regras.contexto import Contexto, Regra, de_tipo, lado_local
 from interiores_core.validacao import Severidade
 
@@ -75,19 +74,6 @@ def triangulo(ctx: Contexto) -> None:
         )
 
 
-def _pontos(ctx: Contexto, tipo: str) -> list[BaseGeometry]:
-    """Pontos e trechos de instalação do pavimento desse tipo."""
-    achados: list[BaseGeometry] = []
-    for i in ctx.pavimento.instalacoes:
-        if i.tipo != tipo:
-            continue
-        if isinstance(i, PontoInstalacao):
-            achados.append(Point(i.posicao))
-        elif isinstance(i, TrechoInstalacao):
-            achados.append(LineString(i.caminho))
-    return achados
-
-
 def pia_com_agua_e_esgoto(ctx: Contexto) -> None:
     """Toda pia precisa de ponto de água fria e de esgoto a menos de ``pia_ponto_max``."""
     limite = ctx.limites["pia_ponto_max"]
@@ -97,7 +83,7 @@ def pia_com_agua_e_esgoto(ctx: Contexto) -> None:
             ("agua_fria", "pia_sem_agua", "água fria"),
             ("esgoto", "pia_sem_esgoto", "esgoto"),
         ):
-            if not any(pol.distance(p) <= limite for p in _pontos(ctx, tipo)):
+            if not any(pol.distance(p) <= limite for p in ctx.instalacoes(tipo)):
                 ctx.add(
                     Severidade.ERRO,
                     codigo,
@@ -138,7 +124,7 @@ def fogao_gas_e_ventilacao(ctx: Contexto) -> None:
     if not fogoes:
         return
     perto = ctx.util.buffer(200)
-    tem_gas = any(perto.intersects(p) for p in _pontos(ctx, "gas"))
+    tem_gas = any(perto.intersects(p) for p in ctx.instalacoes("gas"))
     ventila = bool(_janelas(ctx)) or any(
         "externo" in (p.de, p.para) for p in ctx.portas if isinstance(p, Porta)
     )

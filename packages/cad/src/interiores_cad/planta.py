@@ -401,6 +401,19 @@ class _Planta:
                     circ = [(cx + r * math.cos(t * math.pi / 6), cy + r * math.sin(t * math.pi / 6))
                             for t in range(12)]  # fmt: skip
                     linhas.extend(zip(circ, circ[1:] + circ[:1], strict=True))
+        elif simbolo is Simbolo.VASO:
+            # caixa atrás (fundo) e a bacia oval na frente
+            caixa = min(180.0, d * 0.3)
+            ret(-w, -d, w, -d + caixa)
+            cy, ry, rx = (-d + caixa + d) / 2, (2 * d - caixa) / 2 - 10, w - 10
+            oval = [(rx * math.cos(t * math.pi / 8), cy + ry * math.sin(t * math.pi / 8))
+                    for t in range(16)]  # fmt: skip
+            linhas.extend(zip(oval, oval[1:] + oval[:1], strict=True))
+        elif simbolo is Simbolo.BOX:
+            # vidro na frente (duas folhas que se cruzam no meio) e o caimento para o ralo
+            linhas.append(((-w, d - 20), (w * 0.1, d - 20)))
+            linhas.append(((-w * 0.1, d - 50), (w, d - 50)))
+            linhas.extend([((-w, -d), (w, d - 50)), ((-w, d - 50), (w, -d))])
         elif simbolo is Simbolo.GELADEIRA:
             linhas.extend([((-w, -d), (w, d)), ((-w, d), (w, -d))])  # X: equipamento alto
             linhas.append(((-w, d - 40), (w, d - 40)))  # porta

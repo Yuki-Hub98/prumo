@@ -40,7 +40,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 10
+VERSAO_CENA = 11
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -66,6 +66,9 @@ CORES_PADRAO = {
 }
 CORES_MOVEIS = {
     "pia": "#F2F0EC",
+    "lavatorio": "#F2F0EC",
+    "vaso": "#FBFBFA",
+    "box": "#D8D4CC",
     "fogao": "#D9DBDE",
     "geladeira": "#E9EAEC",
     "cama": "#8B6B4F",
@@ -553,6 +556,10 @@ class _Cena:
             f.fogao()
         elif simbolo is Simbolo.GELADEIRA:
             f.geladeira()
+        elif simbolo is Simbolo.VASO:
+            f.vaso()
+        elif simbolo is Simbolo.BOX:
+            f.box()
         else:
             f.p("corpo", -f.w, -f.d, f.base, f.w, f.d, f.topo, chanfro=10)
         return f.pecas
@@ -967,6 +974,36 @@ class _Feitio:
                 cx = -w + (2 * i + 1) * w / n
                 self.p(f"boca{2 * i + j}", cx - lado / 2, y - lado / 2, topo, cx + lado / 2,
                        y + lado / 2, topo + 25, self.sombra, chanfro=lado / 2 - 1)  # fmt: skip
+
+    def vaso(self) -> None:
+        """Louça: pé, bacia, assento com tampa e caixa acoplada (ou só a bacia, suspenso)."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        suspenso = self.h < 500
+        caixa = 0.0 if suspenso else min(180.0, d * 0.3)
+        bacia = base + (380.0 if not suspenso else self.h - 40)
+        if not suspenso:
+            self.p("pe", -w * 0.55, -d + caixa, base, w * 0.55, d - 120, bacia - 120, chanfro=60)
+        else:
+            self.p("pe", -w, -d, bacia - 300, w, -d + 120, bacia - 40, chanfro=40)
+        self.p("bacia", -w, -d + caixa, bacia - 120 if not suspenso else bacia - 300, w, d,
+               bacia, chanfro=min(w, 120.0))  # fmt: skip
+        self.p("assento", -w, -d + caixa + 30, bacia, w, d, bacia + 40, chanfro=min(w, 110.0))
+        if not suspenso:
+            self.p("caixa", -w, -d, base + 380, w, -d + caixa, topo, chanfro=30)
+            self.p("botao", -30, -d + caixa / 2 - 30, topo, 30, -d + caixa / 2 + 30, topo + 8,
+                   self.metal, chanfro=20)  # fmt: skip
+
+    def box(self) -> None:
+        """Piso do box rebaixado, duas folhas de vidro de correr na frente e perfis."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        vidro = self.cena.material("vidro", CORES_PADRAO["vidro"], vidro=True)
+        self.p("corpo", -w, -d, base, w, d - 60, base + 8)  # piso do box, sobre o piso
+        self.p("vidro0", -w + 20, d - 40, base + 20, w * 0.1, d - 30, topo - 40, vidro)
+        self.p("vidro1", -w * 0.1, d - 60, base + 20, w - 20, d - 50, topo - 40, vidro)
+        self.p("perfil0", -w, d - 70, topo - 40, w, d - 20, topo, self.metal)
+        self.p("perfil1", -w, d - 70, base, w, d - 20, base + 20, self.metal)
+        self.p("perfil2", -w, d - 70, base, -w + 20, d - 20, topo, self.metal)
+        self.p("perfil3", w - 20, d - 70, base, w, d - 20, topo, self.metal)
 
     def geladeira(self) -> None:
         """Duplex: freezer em cima (1/3) e geladeira embaixo, puxadores verticais."""

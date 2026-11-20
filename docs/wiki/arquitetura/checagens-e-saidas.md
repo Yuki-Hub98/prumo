@@ -31,6 +31,10 @@ são padrões configuráveis em `regras.toml`, não norma técnica.
 | Cozinha: fogão a gás sem ponto de gás no cômodo ou sem ventilação (janela/porta para fora) | — | erro |
 | Cozinha: fogão embaixo de janela | 300 mm | aviso |
 | Cozinha: altura da bancada da pia | 900 ± 50 mm | aviso |
+| Banheiro: área livre à frente do vaso e do lavatório | 600 mm | aviso |
+| Banheiro: tomada perto do box | 600 mm | erro |
+| Banheiro: box sem ralo dentro dele | — | erro |
+| Banheiro: vaso sem esgoto; lavatório sem água fria ou esgoto | 300 mm | erro |
 | Planejado: construção que não cabe | — | erro |
 | Planejado: prateleira sem apoio · cabideiro baixo · móvel raso · gaveta estreita | 900 · 1000 · 550 · 300 mm | aviso |
 

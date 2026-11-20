@@ -27,6 +27,7 @@ class Categoria(StrEnum):
     MESAS = "mesas"
     ELETRONICOS = "eletronicos"
     COZINHA = "cozinha"
+    BANHEIRO = "banheiro"
     SOB_MEDIDA = "sob_medida"
 
 
@@ -50,6 +51,10 @@ class Simbolo(StrEnum):
     FOGAO = "fogao"
     """Bocas em cima (e forno na frente, se for de piso)."""
     GELADEIRA = "geladeira"
+    VASO = "vaso"
+    """Bacia (arredondada na frente) e caixa acoplada atrás."""
+    BOX = "box"
+    """Área do chuveiro com o vidro na frente."""
 
 
 class _Base(BaseModel):
@@ -370,6 +375,46 @@ _ITENS = (
             _m("inverse", "Inverse (75 × 75 × 190)", 750, 750, 1900),
         ),
         modelo_padrao="duplex",
+    ),
+    # ------------------------------------------------------------ banheiro
+    ItemCatalogo(
+        tipo="vaso",
+        nome="Vaso sanitário",
+        categoria=Categoria.BANHEIRO,
+        simbolo=Simbolo.VASO,
+        lados_uso=("frente",),
+        modelos=(
+            _m("acoplada", "Com caixa acoplada (37 × 65)", 370, 650, 780),
+            _m("compacto", "Compacto (36 × 60)", 360, 600, 750),
+            _m("suspenso", "Suspenso, caixa embutida (36 × 54)", 360, 540, 400),
+        ),
+        modelo_padrao="acoplada",
+    ),
+    ItemCatalogo(
+        tipo="lavatorio",
+        nome="Lavatório (gabinete com cuba)",
+        categoria=Categoria.BANHEIRO,
+        simbolo=Simbolo.PIA,
+        lados_uso=("frente",),
+        modelos=(
+            _m("60", "Gabinete 60 × 45", 600, 450, 850),
+            _m("80", "Gabinete 80 × 45", 800, 450, 850),
+            _m("100", "Bancada 100 × 50", 1000, 500, 850),
+        ),
+        modelo_padrao="60",
+    ),
+    ItemCatalogo(
+        tipo="box",
+        nome="Box do chuveiro",
+        categoria=Categoria.BANHEIRO,
+        simbolo=Simbolo.BOX,
+        lados_uso=("frente",),
+        modelos=(
+            _m("90x90", "90 × 90", 900, 900, 1900),
+            _m("80x120", "120 × 80 (frontal)", 1200, 800, 1900),
+            _m("90x140", "140 × 90 (frontal)", 1400, 900, 1900),
+        ),
+        modelo_padrao="80x120",
     ),
     ItemCatalogo(
         tipo="sob_medida",

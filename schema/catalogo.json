@@ -853,6 +853,153 @@
       "modelo_padrao": "duplex"
     },
     {
+      "tipo": "vaso",
+      "nome": "Vaso sanitário",
+      "categoria": "banheiro",
+      "simbolo": "vaso",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "acoplada",
+          "nome": "Com caixa acoplada (37 × 65)",
+          "largura": 370,
+          "profundidade": 650,
+          "altura": 780,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "compacto",
+          "nome": "Compacto (36 × 60)",
+          "largura": 360,
+          "profundidade": 600,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "suspenso",
+          "nome": "Suspenso, caixa embutida (36 × 54)",
+          "largura": 360,
+          "profundidade": 540,
+          "altura": 400,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        }
+      ],
+      "modelo_padrao": "acoplada"
+    },
+    {
+      "tipo": "lavatorio",
+      "nome": "Lavatório (gabinete com cuba)",
+      "categoria": "banheiro",
+      "simbolo": "pia",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "60",
+          "nome": "Gabinete 60 × 45",
+          "largura": 600,
+          "profundidade": 450,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "80",
+          "nome": "Gabinete 80 × 45",
+          "largura": 800,
+          "profundidade": 450,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "100",
+          "nome": "Bancada 100 × 50",
+          "largura": 1000,
+          "profundidade": 500,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        }
+      ],
+      "modelo_padrao": "60"
+    },
+    {
+      "tipo": "box",
+      "nome": "Box do chuveiro",
+      "categoria": "banheiro",
+      "simbolo": "box",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "90x90",
+          "nome": "90 × 90",
+          "largura": 900,
+          "profundidade": 900,
+          "altura": 1900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "80x120",
+          "nome": "120 × 80 (frontal)",
+          "largura": 1200,
+          "profundidade": 800,
+          "altura": 1900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "90x140",
+          "nome": "140 × 90 (frontal)",
+          "largura": 1400,
+          "profundidade": 900,
+          "altura": 1900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        }
+      ],
+      "modelo_padrao": "80x120"
+    },
+    {
       "tipo": "sob_medida",
       "nome": "Móvel sob medida",
       "categoria": "sob_medida",

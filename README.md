@@ -299,10 +299,12 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Cozinha**: pia (gabinete, bancada, cuba e torneira), fogão (a gás ou cooktop) e
       geladeira no catálogo, com símbolo na planta e 3D; checagens de triângulo de trabalho,
       água/esgoto da pia, gás e ventilação do fogão, fogão sob janela e altura da bancada
+- [x] **Banheiro**: vaso (com caixa acoplada ou suspenso), lavatório e box no catálogo, com
+      símbolo na planta e 3D; checagens de área livre, tomada perto do box, box sem ralo e
+      pontos de água/esgoto
 
 ### Próximos
 
-- [ ] Banheiro (vaso, box/chuveiro, ralo)
 - [ ] Modelos prontos (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
       escolher e posicionar, com símbolo na planta e 3D detalhado. **Tudo editável pela
       pessoa**: partir de um modelo pronto e mudar medidas, acabamento/cor, número de
