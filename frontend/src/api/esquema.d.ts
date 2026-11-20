@@ -594,6 +594,66 @@ export interface paths {
         patch: operations["alterar_movel_projetos__codigo__comodos__comodo__moveis__id___patch"];
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/construcao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Definir Construcao
+         * @description Monta o móvel por dentro (vãos, gavetas, nichos, cabideiros, portas) ou tira (null).
+         */
+        put: operations["definir_construcao_projetos__codigo__comodos__comodo__moveis__id___construcao_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/construcao/sugerir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sugerir Construcao
+         * @description Monta o móvel com o interior padrão do tipo, para ajustar a partir daí.
+         */
+        post: operations["sugerir_construcao_projetos__codigo__comodos__comodo__moveis__id___construcao_sugerir_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/planejado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver Planejado
+         * @description Vista de frente calculada do móvel planejado (para o editor desenhar).
+         */
+        get: operations["ver_planejado_projetos__codigo__comodos__comodo__moveis__id___planejado_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/comodos/{comodo}/variacoes": {
         parameters: {
             query?: never;
@@ -936,6 +996,19 @@ export interface components {
             material: string;
             espessura: components["schemas"]["Medida"];
         };
+        /** ChapaTela */
+        ChapaTela: {
+            /** Material */
+            material: string;
+            /** Espessura */
+            espessura: number;
+            /** Area M2 */
+            area_m2: number;
+            /** Chapas */
+            chapas: number;
+            /** Fita Metros */
+            fita_metros: number;
+        };
         /**
          * Comodo
          * @description Cômodo: polígono derivado das paredes que o delimitam (não digitado à parte).
@@ -1058,6 +1131,13 @@ export interface components {
             comodo: string;
             /** Moveis */
             moveis?: components["schemas"]["Movel"][];
+        };
+        /**
+         * DefinirConstrucao
+         * @description Como o móvel é montado por dentro (planejado); ``null`` tira a construção.
+         */
+        DefinirConstrucao: {
+            construcao: components["schemas"]["Construcao"] | null;
         };
         /** DividirParede */
         DividirParede: {
@@ -1396,6 +1476,16 @@ export interface components {
              * @default []
              */
             partes?: components["schemas"]["ParteTela"][];
+            /**
+             * Planejavel
+             * @default false
+             */
+            planejavel?: boolean;
+            /**
+             * Planejado
+             * @default false
+             */
+            planejado?: boolean;
         };
         /**
          * MoverMovel
@@ -1727,6 +1817,28 @@ export interface components {
             profundidade: components["schemas"]["Medida"];
         };
         /**
+         * PlanejadoTela
+         * @description Vista de frente de um móvel planejado, já calculada, para o editor desenhar.
+         */
+        PlanejadoTela: {
+            /** Largura */
+            largura: number;
+            /** Altura */
+            altura: number;
+            /** Retangulos */
+            retangulos: components["schemas"]["RetanguloTela"][];
+            /** Larguras Vaos */
+            larguras_vaos: number[];
+            /** Alturas */
+            alturas: number[][];
+            /** Pecas */
+            pecas: number;
+            /** Chapas */
+            chapas: components["schemas"]["ChapaTela"][];
+            /** Ferragens */
+            ferragens: string[];
+        };
+        /**
          * PontoInstalacao
          * @description Ponto (tomada, interruptor, saída de água...) com altura do piso.
          */
@@ -1924,6 +2036,26 @@ export interface components {
              * @description Até 5 caminhos alterados (resumo).
              */
             caminhos: string[];
+        };
+        /** RetanguloTela */
+        RetanguloTela: {
+            /** Tipo */
+            tipo: string;
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+            /** Largura */
+            largura: number;
+            /** Altura */
+            altura: number;
+            /**
+             * Rotulo
+             * @default
+             */
+            rotulo?: string;
+            /** Vao */
+            vao?: number | null;
         };
         /**
          * Severidade
@@ -3443,6 +3575,115 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    definir_construcao_projetos__codigo__comodos__comodo__moveis__id___construcao_put: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DefinirConstrucao"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sugerir_construcao_projetos__codigo__comodos__comodo__moveis__id___construcao_sugerir_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ver_planejado_projetos__codigo__comodos__comodo__moveis__id___planejado_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanejadoTela"];
                 };
             };
             /** @description Validation Error */

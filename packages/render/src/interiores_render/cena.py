@@ -879,22 +879,68 @@ class _Feitio:
             self.p(f"prateleira{i}", -w + e, -d + 6, z, w - e, d, z + e, chanfro=2)
 
     def planejado(self) -> None:
+        """Móvel montado por dentro: caixa, portas, frentes de gaveta (com puxador) e, nos
+        vãos sem porta, o fundo escuro dos nichos e as prateleiras à vista.
+
+        A vista de frente do cálculo tem ``u`` da esquerda para a direita **de quem olha
+        de frente**; no referencial do móvel a frente é +y, então a esquerda de quem olha
+        é +x: ``x = w - u`` (sem isso o móvel sairia espelhado em relação ao desenho)."""
         w, d, base, topo = self.w, self.d, self.base, self.topo
         self.p("caixa", -w, -d, base, w, d - 20, topo, chanfro=4)
         try:
             calc = planejado.calcular(self.m)
         except planejado.ConstrucaoInvalidaError:
             calc = None
-        portas = [r for r in calc.layout if r.tipo == "porta"] if calc else []
-        for i, r in enumerate(portas):  # folhas um pouco afastadas: mostram as divisões
-            x0 = -w + r.x + 2
-            z0, z1 = base + r.y + 2, base + r.y + r.altura - 2
-            self.p(f"porta{i}", x0, d - 20, z0, x0 + r.largura - 4, d, z1, chanfro=3)
-            x = x0 + r.largura - 50 if i % 2 == 0 else x0 + 35
-            meio = (z0 + z1) / 2
-            self.p(f"puxador{i}", x, d, meio - 120, x + 15, d + 25, meio + 120, self.metal)
-        if not portas:
+        if calc is None:
             self.p("frente", -w, d - 20, base, w, d, topo, chanfro=3)
+            return
+
+        def faixa(u: float, largura: float) -> tuple[float, float]:
+            """Trecho [u, u + largura] da vista de frente → (x0, x1) do móvel."""
+            return w - u - largura, w - u
+
+        portas = [r for r in calc.layout if r.tipo == "porta"]
+
+        def coberto(r: Any) -> bool:  # atrás de uma porta: não aparece
+            cx, cy = r.x + r.largura / 2, r.y + r.altura / 2
+            return any(p.x <= cx <= p.x + p.largura and p.y <= cy <= p.y + p.altura for p in portas)
+
+        n_pux = 0
+
+        def puxador(u: float, z: float, comprido: float, deitado: bool) -> None:
+            nonlocal n_pux
+            x = w - u
+            if deitado:
+                self.p(f"puxador{n_pux}", x - comprido / 2, d, z - 8, x + comprido / 2, d + 25,
+                       z + 8, self.metal)  # fmt: skip
+            else:
+                self.p(f"puxador{n_pux}", x - 8, d, z - comprido / 2, x + 8, d + 25,
+                       z + comprido / 2, self.metal)  # fmt: skip
+            n_pux += 1
+
+        for i, r in enumerate(portas):  # folhas um pouco afastadas: mostram as divisões
+            x0, x1 = faixa(r.x + 2, r.largura - 4)
+            z0, z1 = base + r.y + 2, base + r.y + r.altura - 2
+            self.p(f"porta{i}", x0, d - 20, z0, x1, d, z1, chanfro=3)
+            # pares abrem do meio: puxador do lado de dentro do par (de quem olha)
+            u = r.x + r.largura - 50 if i % 2 == 0 else r.x + 50
+            puxador(u, (z0 + z1) / 2, min(240.0, (z1 - z0) * 0.4), deitado=False)
+        visiveis = [r for r in calc.layout if not coberto(r)]
+        for i, r in enumerate(x for x in visiveis if x.tipo == "gaveta"):
+            x0, x1 = faixa(r.x + 2, r.largura - 4)
+            z0, z1 = base + r.y + 2, base + r.y + r.altura - 2
+            self.p(f"gaveta{i}", x0, d - 20, z0, x1, d, z1, chanfro=3)
+            puxador(r.x + r.largura / 2, z1 - min(60.0, (z1 - z0) / 3),
+                    min(160.0, (x1 - x0) * 0.4), deitado=True)  # fmt: skip
+        for i, r in enumerate(x for x in visiveis if x.tipo in ("nicho", "cabideiro")):
+            # fundo escuro 1 mm à frente da caixa: o nicho aberto "fundo" na imagem
+            x0, x1 = faixa(r.x, r.largura)
+            z0 = base + r.y
+            self.p(f"nicho{i}", x0, d - 20, z0, x1, d - 19, z0 + r.altura, self.sombra)
+        for i, r in enumerate(x for x in visiveis if x.tipo == "prateleira"):
+            x0, x1 = faixa(r.x, r.largura)
+            z0 = base + r.y
+            self.p(f"prateleira{i}", x0, d - 19, z0, x1, d - 4, z0 + r.altura)
 
 
 def montar_cena(

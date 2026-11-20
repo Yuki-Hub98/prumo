@@ -664,6 +664,30 @@
         }
       ],
       "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "sob_medida",
+      "nome": "Móvel sob medida",
+      "categoria": "sob_medida",
+      "simbolo": "generico",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Caixa (80 × 50 × 80)",
+          "largura": 800,
+          "profundidade": 500,
+          "altura": 800,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null
+        }
+      ],
+      "modelo_padrao": "padrao"
     }
   ]
 }

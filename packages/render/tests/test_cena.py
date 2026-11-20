@@ -275,3 +275,39 @@ def test_cor_por_parte_do_movel() -> None:
     puxador = mats[gr["guarda-roupa-puxador0"]["material"]]
     assert puxador["cor"] == "#c0a060" and puxador["metal"]  # pelo tipo; segue metal
     assert all("extras" in cx for cx in gr.values())
+
+
+def test_planejado_no_3d_igual_ao_desenho() -> None:
+    """Vão 1 (o da esquerda de quem olha de frente) fica em +x com a frente para +y; nichos
+    sem porta aparecem (fundo escuro), gavetas com frente e puxador."""
+    from interiores_core.carregar import ProjetoCarregado
+    from interiores_core.modelo import DadosComodo
+
+    c = carregar(DADOS)
+    dados = c.dados_comodos["quarto"].model_dump(mode="json", exclude_none=True)
+    med = {"origem": "projeto"}
+    dados["moveis"] = [{
+        "id": "gab", "tipo": "sob_medida", "centro": [1500, 1500], "rotacao": 0,
+        "largura": {"valor": 1200, **med}, "profundidade": {"valor": 500, **med},
+        "altura": {"valor": 800, **med},
+        "construcao": {
+            "chapa": {"material": "MDF", "espessura": {"valor": 18, **med}},
+            "fundo": {"material": "HDF", "espessura": {"valor": 6, **med}},
+            "vaos": [{"espacos": [{"tipo": "gaveta"}, {"tipo": "gaveta"}]},
+                     {"espacos": [{"tipo": "nicho"}, {"tipo": "nicho"}], "porta": False}],
+        },
+    }]  # fmt: skip
+    novo = ProjetoCarregado(
+        pasta=c.pasta, projeto=c.projeto,
+        dados_comodos={**c.dados_comodos, "quarto": DadosComodo.model_validate(dados)},
+        variacoes={},
+    )  # fmt: skip
+    cena = montar_cena(novo, "quarto")
+    pecas = {cx["nome"]: cx for cx in cena["caixas"] if cx["nome"].startswith("gab-")}
+    gavetas = [p for n, p in pecas.items() if n.startswith("gab-gaveta")]
+    nichos = [p for n, p in pecas.items() if n.startswith("gab-nicho")]
+    assert len(gavetas) == 2 and len(nichos) == 2
+    assert all(g["centro"][0] > 1500 for g in gavetas)  # vão 1: esquerda de quem olha = +x
+    assert all(n["centro"][0] < 1500 for n in nichos)
+    assert any(n.startswith("gab-prateleira") for n in pecas)
+    assert sum(n.startswith("gab-puxador") for n in pecas) == 2  # um por gaveta

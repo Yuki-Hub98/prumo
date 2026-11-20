@@ -2494,6 +2494,223 @@
         }
       }
     },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/construcao": {
+      "put": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Definir Construcao",
+        "description": "Monta o móvel por dentro (vãos, gavetas, nichos, cabideiros, portas) ou tira (null).",
+        "operationId": "definir_construcao_projetos__codigo__comodos__comodo__moveis__id___construcao_put",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefinirConstrucao"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/construcao/sugerir": {
+      "post": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Sugerir Construcao",
+        "description": "Monta o móvel com o interior padrão do tipo, para ajustar a partir daí.",
+        "operationId": "sugerir_construcao_projetos__codigo__comodos__comodo__moveis__id___construcao_sugerir_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/planejado": {
+      "get": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Ver Planejado",
+        "description": "Vista de frente calculada do móvel planejado (para o editor desenhar).",
+        "operationId": "ver_planejado_projetos__codigo__comodos__comodo__moveis__id___planejado_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanejadoTela"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/comodos/{comodo}/variacoes": {
       "get": {
         "tags": [
@@ -3460,6 +3677,39 @@
         "title": "Chapa",
         "description": "Material de chapa (MDF, MDP, HDF...) e sua espessura."
       },
+      "ChapaTela": {
+        "properties": {
+          "material": {
+            "type": "string",
+            "title": "Material"
+          },
+          "espessura": {
+            "type": "integer",
+            "title": "Espessura"
+          },
+          "area_m2": {
+            "type": "number",
+            "title": "Area M2"
+          },
+          "chapas": {
+            "type": "integer",
+            "title": "Chapas"
+          },
+          "fita_metros": {
+            "type": "number",
+            "title": "Fita Metros"
+          }
+        },
+        "type": "object",
+        "required": [
+          "material",
+          "espessura",
+          "area_m2",
+          "chapas",
+          "fita_metros"
+        ],
+        "title": "ChapaTela"
+      },
       "Comodo": {
         "properties": {
           "id": {
@@ -3781,6 +4031,27 @@
         ],
         "title": "DadosComodo",
         "description": "Raiz de ``comodos/<comodo>.json``: mobiliário e dados específicos."
+      },
+      "DefinirConstrucao": {
+        "properties": {
+          "construcao": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Construcao"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "construcao"
+        ],
+        "title": "DefinirConstrucao",
+        "description": "Como o móvel é montado por dentro (planejado); ``null`` tira a construção."
       },
       "DividirParede": {
         "properties": {
@@ -4660,6 +4931,16 @@
             "type": "array",
             "title": "Partes",
             "default": []
+          },
+          "planejavel": {
+            "type": "boolean",
+            "title": "Planejavel",
+            "default": false
+          },
+          "planejado": {
+            "type": "boolean",
+            "title": "Planejado",
+            "default": false
           }
         },
         "type": "object",
@@ -5586,6 +5867,73 @@
         ],
         "title": "Pilar"
       },
+      "PlanejadoTela": {
+        "properties": {
+          "largura": {
+            "type": "integer",
+            "title": "Largura"
+          },
+          "altura": {
+            "type": "integer",
+            "title": "Altura"
+          },
+          "retangulos": {
+            "items": {
+              "$ref": "#/components/schemas/RetanguloTela"
+            },
+            "type": "array",
+            "title": "Retangulos"
+          },
+          "larguras_vaos": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Larguras Vaos"
+          },
+          "alturas": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Alturas"
+          },
+          "pecas": {
+            "type": "integer",
+            "title": "Pecas"
+          },
+          "chapas": {
+            "items": {
+              "$ref": "#/components/schemas/ChapaTela"
+            },
+            "type": "array",
+            "title": "Chapas"
+          },
+          "ferragens": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ferragens"
+          }
+        },
+        "type": "object",
+        "required": [
+          "largura",
+          "altura",
+          "retangulos",
+          "larguras_vaos",
+          "alturas",
+          "pecas",
+          "chapas",
+          "ferragens"
+        ],
+        "title": "PlanejadoTela",
+        "description": "Vista de frente de um móvel planejado, já calculada, para o editor desenhar."
+      },
       "PontoInstalacao": {
         "properties": {
           "id": {
@@ -6105,6 +6453,55 @@
           "caminhos"
         ],
         "title": "ResumoVersao"
+      },
+      "RetanguloTela": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          },
+          "largura": {
+            "type": "number",
+            "title": "Largura"
+          },
+          "altura": {
+            "type": "number",
+            "title": "Altura"
+          },
+          "rotulo": {
+            "type": "string",
+            "title": "Rotulo",
+            "default": ""
+          },
+          "vao": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vao"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo",
+          "x",
+          "y",
+          "largura",
+          "altura"
+        ],
+        "title": "RetanguloTela"
       },
       "Severidade": {
         "type": "string",

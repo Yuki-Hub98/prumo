@@ -153,6 +153,20 @@ export function usePedirRenderPavimento(codigo: string, pavimento: string) {
   });
 }
 
+/** Vista de frente calculada de um móvel planejado (atualiza junto com o projeto). */
+export function usePlanejado(codigo: string, comodo: string, id: string, ativo: boolean) {
+  return useQuery({
+    queryKey: [...chaves.projeto(codigo), "planejado", comodo, id],
+    queryFn: () =>
+      ou(
+        api.GET("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/planejado", {
+          params: { path: { codigo, comodo, id_: id } },
+        }),
+      ),
+    enabled: ativo,
+  });
+}
+
 /** Segundos estimados (rascunho, final) para ``imagens`` vistas, pelo histórico da máquina. */
 export function useEstimativas(imagens = 2) {
   return useQuery({

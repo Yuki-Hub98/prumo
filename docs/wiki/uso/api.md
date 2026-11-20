@@ -68,7 +68,10 @@ make api                # http://localhost:8010/docs (documentação interativa)
 | GET | `/catalogo` | tipos e modelos de móvel (medidas padrão, lados de uso) |
 | POST | `/projetos/{p}/comodos/{c}/moveis` | pôr móvel do catálogo: `centro` (+`rotacao`) ou `parede` (+`distancia`) |
 | POST | `.../moveis/{id}/mover` | arrastar, girar ou prender numa parede |
-| PATCH/DELETE | `.../moveis/{id}` | medidas (com origem), nome, modelo; remover |
+| PATCH/DELETE | `.../moveis/{id}` | medidas (com origem), nome, modelo, portas; remover |
+| PUT | `.../moveis/{id}/construcao` | montar por dentro (`{construcao}`: chapa, fundo, rodapé, vãos com espaços) ou `null` para desmontar; recusa o que não cabe |
+| POST | `.../moveis/{id}/construcao/sugerir` | interior padrão do tipo (guarda-roupa, cômoda, sob medida...) |
+| GET | `.../moveis/{id}/planejado` | vista de frente calculada (retângulos em mm), larguras/alturas, peças, chapas, ferragens |
 
 Toda resposta de edição traz `novos` e `problemas`: nos móveis, as checagens de uso do
 cômodo (passagem, lateral da cama, frente do guarda-roupa, giro de porta, tomada atrás de

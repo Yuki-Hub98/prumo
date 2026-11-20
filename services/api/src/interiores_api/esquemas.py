@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from interiores_core.medidas import Medida, Origem
 from interiores_core.modelo import (
     Comodo,
+    Construcao,
     CoresVariacao,
     DadosComodo,
     Id,
@@ -278,6 +279,12 @@ class NovoMovel(_Esquema):
     )
 
 
+class DefinirConstrucao(_Esquema):
+    """Como o móvel é montado por dentro (planejado); ``null`` tira a construção."""
+
+    construcao: Construcao | None
+
+
 class MoverMovel(_Esquema):
     """Arrastar (``centro``), girar (``rotacao``) ou prender numa ``parede``."""
 
@@ -296,6 +303,7 @@ __all__ = [
     "AlterarParede",
     "Apagado",
     "Campos",
+    "DefinirConstrucao",
     "DividirParede",
     "InfoRender",
     "ItemHistorico",

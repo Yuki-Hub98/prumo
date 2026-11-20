@@ -15,10 +15,11 @@ from pydantic import BaseModel, ConfigDict
 from shapely import Polygon
 from shapely.geometry.base import BaseGeometry
 
-from interiores_core import geometria
+from interiores_core import geometria, planejado
 from interiores_core.modelo import (
     DadosComodo,
     Janela,
+    Movel,
     Pavimento,
     PontoInstalacao,
     Porta,
@@ -92,6 +93,45 @@ class MovelTela(_Tela):
     """Não ocupa o piso (TV na parede, armário aéreo)."""
     partes: list[ParteTela] = []
     """Partes com cor própria (portas, gavetas...), além do corpo."""
+    planejavel: bool = False
+    """Dá para montar por dentro (vãos, gavetas, portas, prateleiras)."""
+    planejado: bool = False
+    """Já tem construção (é planejado)."""
+
+
+class RetanguloTela(_Tela):
+    tipo: str
+    """lateral, base, tampo, divisoria, rodape, prateleira, gaveta, nicho, cabideiro, porta."""
+    x: float
+    y: float
+    """mm a partir do canto de baixo à esquerda (olhando de frente)."""
+    largura: float
+    altura: float
+    rotulo: str = ""
+    vao: int | None = None
+
+
+class ChapaTela(_Tela):
+    material: str
+    espessura: int
+    area_m2: float
+    chapas: int
+    fita_metros: float
+
+
+class PlanejadoTela(_Tela):
+    """Vista de frente de um móvel planejado, já calculada, para o editor desenhar."""
+
+    largura: int
+    altura: int
+    retangulos: list[RetanguloTela]
+    larguras_vaos: list[float]
+    alturas: list[list[float]]
+    """Altura de cada espaço, por vão (de baixo para cima)."""
+    pecas: int
+    """Peças de chapa (somando as quantidades)."""
+    chapas: list[ChapaTela]
+    ferragens: list[str]
 
 
 class InstalacaoTela(_Tela):
@@ -212,6 +252,8 @@ def pavimento_para_tela(
             frente=geometria.frente_movel(m),
             elevado=not m.ocupa_piso,
             partes=[ParteTela(id=p, nome=PARTES[p]) for p in partes_do_movel(m)],
+            planejavel=m.tipo in planejado.TIPOS_PLANEJAVEIS,
+            planejado=m.construcao is not None,
         )
         for c in pav.comodos
         for m in (dados_comodos[c.id].moveis if c.id in dados_comodos else [])
@@ -238,4 +280,42 @@ def pavimento_para_tela(
         moveis=moveis,
         instalacoes=instalacoes,
         limites=limites,
+    )
+
+
+def planejado_para_tela(m: Movel) -> PlanejadoTela:
+    """Vista de frente do móvel planejado (levanta ``ConstrucaoInvalidaError``/``ValueError``
+    se a construção não fecha ou o móvel não tem construção)."""
+    if m.construcao is None:
+        raise ValueError(f"o móvel '{m.id}' não é planejado (sem construção)")
+    r = planejado.calcular(m)
+    return PlanejadoTela(
+        largura=m.largura.valor,
+        altura=m.altura.valor,
+        retangulos=[
+            RetanguloTela(
+                tipo=x.tipo,
+                x=round(x.x, 1),
+                y=round(x.y, 1),
+                largura=round(x.largura, 1),
+                altura=round(x.altura, 1),
+                rotulo=x.rotulo,
+                vao=x.vao,
+            )
+            for x in r.layout
+        ],
+        larguras_vaos=[round(v, 1) for v in r.larguras_vaos],
+        alturas=[[round(a, 1) for a in col] for col in r.alturas],
+        pecas=sum(p.quantidade for p in r.pecas),
+        chapas=[
+            ChapaTela(
+                material=c.material,
+                espessura=c.espessura,
+                area_m2=c.area_m2,
+                chapas=c.chapas,
+                fita_metros=c.fita_metros,
+            )
+            for c in r.chapas
+        ],
+        ferragens=[f"{f.quantidade}× {f.nome}" for f in r.ferragens],
     )

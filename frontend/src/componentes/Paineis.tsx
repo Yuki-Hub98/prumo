@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { api, ou, type Medida, type PavimentoTela, type Problema } from "../api/cliente";
 import { useCatalogo, useEditar, useEstimadas, useProjeto } from "../dados";
-import { formatar, paraMm, type Unidade } from "../unidades";
+import { formatar, ORIGENS, type Origem, paraMm, type Unidade } from "../unidades";
 import { CampoMedida } from "./CampoMedida";
+import { EditorPlanejado } from "./EditorPlanejado";
 
 type ItemCatalogo = {
   tipo: string;
@@ -135,13 +136,141 @@ export function PainelMovel({
         />
       ))}
       {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}
+      {geometria.moveis.find((m) => m.id === id)?.planejavel && (
+        <div className="-mx-3 mt-2 border-t border-stone-200">
+          <EditorPlanejado
+            codigo={codigo}
+            comodo={comodo}
+            id={id}
+            construcao={movel.construcao}
+            portas={movel.portas}
+            unidade={unidade}
+          />
+        </div>
+      )}
     </Caixa>
   );
 }
 
 // ------------------------------------------------------------------ adicionar móvel
 
-export function AdicionarMovel({ codigo, geometria }: { codigo: string; geometria: PavimentoTela }) {
+/** ``comodos.quarto.moveis[sob-medida-2]`` → ``sob-medida-2`` (o id que o servidor deu). */
+export function idCriado(caminhos: string[]): string | null {
+  for (const c of caminhos) {
+    const m = /\.moveis\[([^\]]+)\]$/.exec(c);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+/** Móvel do zero: nome e medidas livres (caixa); depois dá para montar por dentro. */
+function CriarDoZero({
+  codigo,
+  comodo,
+  centro,
+  unidade,
+  aoCriado,
+}: {
+  codigo: string;
+  comodo: string;
+  centro: [number, number] | undefined;
+  unidade: Unidade;
+  aoCriado?: (id: string) => void;
+}) {
+  const editar = useEditar(codigo);
+  const [nome, setNome] = useState("");
+  const [medidas, setMedidas] = useState({ largura: "", profundidade: "", altura: "" });
+  const [origem, setOrigem] = useState<Origem | null>(null);
+  const mm = Object.fromEntries(Object.entries(medidas).map(([k, v]) => [k, paraMm(v, unidade)])) as Record<
+    keyof typeof medidas,
+    number | null
+  >;
+  const pronto = !!centro && !!origem && Object.values(mm).every((v) => v !== null && v > 0);
+  return (
+    <form
+      className="mt-3 flex flex-col gap-1 border-t border-stone-200 pt-2 text-sm"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!pronto) return;
+        editar.mutate(
+          (versao) =>
+            ou(
+              api.POST("/projetos/{codigo}/comodos/{comodo}/moveis", {
+                params: { path: { codigo, comodo }, query: { versao } },
+                body: {
+                  tipo: "sob_medida",
+                  nome: nome.trim() || null,
+                  centro: [Math.round(centro![0]), Math.round(centro![1])],
+                  medidas: Object.fromEntries(
+                    Object.entries(mm).map(([k, v]) => [k, { valor: v!, origem: origem! }]),
+                  ),
+                },
+              }),
+            ),
+          {
+            onSuccess: (r) => {
+              const novo = idCriado(r.alteracoes.map((a) => a.caminho));
+              if (novo) aoCriado?.(novo);
+              setNome("");
+              setMedidas({ largura: "", profundidade: "", altura: "" });
+              setOrigem(null);
+            },
+          },
+        );
+      }}
+    >
+      <h3 className="text-xs font-semibold text-stone-500">Criar do zero</h3>
+      <input
+        className="rounded border px-1"
+        placeholder="nome (ex.: gabinete, nicho, bancada)"
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+      />
+      <div className="grid grid-cols-3 gap-1">
+        {(["largura", "profundidade", "altura"] as const).map((k) => (
+          <label key={k} className="grid text-xs text-stone-500">
+            {k} ({unidade})
+            <input
+              className={`rounded border px-1 text-sm ${medidas[k] && mm[k] === null ? "border-red-400" : ""}`}
+              inputMode="decimal"
+              value={medidas[k]}
+              onChange={(e) => setMedidas((m) => ({ ...m, [k]: e.target.value }))}
+            />
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-1 text-xs">
+        <span className="text-stone-500">as medidas são:</span>
+        {ORIGENS.map((o) => (
+          <button
+            key={o.valor}
+            type="button"
+            className={`rounded px-1.5 py-0.5 ${origem === o.valor ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+            onClick={() => setOrigem(o.valor)}
+          >
+            {o.rotulo}
+          </button>
+        ))}
+      </div>
+      <button className={botao} disabled={!pronto || editar.isPending}>
+        criar no centro do cômodo
+      </button>
+      {editar.error && <p className="text-red-700">{editar.error.message}</p>}
+    </form>
+  );
+}
+
+export function AdicionarMovel({
+  codigo,
+  geometria,
+  unidade,
+  aoCriado,
+}: {
+  codigo: string;
+  geometria: PavimentoTela;
+  unidade: Unidade;
+  aoCriado?: (id: string) => void;
+}) {
   const catalogo = useCatalogo().data as { itens: ItemCatalogo[] } | undefined;
   const editar = useEditar(codigo);
   const comodos = geometria.comodos.filter((c) => c.centro);
@@ -209,6 +338,13 @@ export function AdicionarMovel({ codigo, geometria }: { codigo: string; geometri
         <p className="text-xs text-stone-500">As medidas do catálogo entram como chute; ajuste depois.</p>
         {editar.error && <p className="text-red-700">{editar.error.message}</p>}
       </div>
+      <CriarDoZero
+        codigo={codigo}
+        comodo={alvo}
+        centro={centro ? [centro[0], centro[1]] : undefined}
+        unidade={unidade}
+        aoCriado={aoCriado}
+      />
     </Caixa>
   );
 }

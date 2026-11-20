@@ -107,3 +107,55 @@ def test_alterar_e_remover(casa: tuple[Projeto, DadosComodo]) -> None:
     fora = em.remover_movel(projeto, "quarto", dados, "cama")
     assert [m.id for m in fora.dados.moveis] == ["guarda-roupa"]
     assert [a.caminho for a in fora.alteracoes] == ["comodos.quarto.moveis[cama]"]
+
+
+def test_sob_medida_montado_por_dentro(casa: tuple[Projeto, DadosComodo]) -> None:
+    """Do zero: caixa com as medidas da pessoa; depois o interior sugerido e ajustado."""
+    from interiores_core import planejado
+    from interiores_core.tela import planejado_para_tela
+
+    projeto, dados = casa
+    med = {
+        "largura": Medida(valor=1600, origem=Origem.PROJETO),
+        "profundidade": Medida(valor=550, origem=Origem.PROJETO),
+        "altura": Medida(valor=900, origem=Origem.PROJETO),
+    }
+    ed = em.adicionar_movel(
+        projeto, "quarto", dados, "sob_medida", nome="Gabinete", centro=(1500, 1500), medidas=med
+    )
+    m = _m(ed, "sob-medida")
+    assert (m.nome, m.largura.valor, m.construcao) == ("Gabinete", 1600, None)
+
+    ed = em.sugerir_construcao(projeto, "quarto", ed.dados, "sob-medida")
+    m = _m(ed, "sob-medida")
+    assert m.construcao is not None and len(m.construcao.vaos) == 2  # ~80 cm por vão
+    vista = planejado_para_tela(m)
+    assert vista.largura == 1600 and {r.tipo for r in vista.retangulos} >= {"lateral", "nicho"}
+
+    # ajusta: um vão com duas gavetas embaixo e nicho em cima, outro sem porta
+    construcao = m.construcao.model_dump(mode="json", exclude_none=True)
+    construcao["vaos"] = [
+        {"espacos": [{"tipo": "gaveta"}, {"tipo": "gaveta"}, {"tipo": "nicho"}]},
+        {"espacos": [{"tipo": "nicho"}], "porta": False},
+    ]
+    ed = em.definir_construcao(projeto, "quarto", ed.dados, "sob-medida", construcao)
+    vista = planejado_para_tela(_m(ed, "sob-medida"))
+    assert [r.tipo for r in vista.retangulos].count("gaveta") == 2
+    assert any("corrediça" in f.lower() for f in vista.ferragens)
+
+    # o que não cabe é recusado com a mensagem do cálculo
+    construcao["vaos"][0]["largura"] = {"valor": 5000, "origem": "projeto"}
+    with pytest.raises(EdicaoInvalidaError):
+        em.definir_construcao(projeto, "quarto", ed.dados, "sob-medida", construcao)
+
+    ed = em.definir_construcao(projeto, "quarto", ed.dados, "sob-medida", None)
+    assert _m(ed, "sob-medida").construcao is None
+    with pytest.raises(ValueError, match="não é planejado"):
+        planejado_para_tela(_m(ed, "sob-medida"))
+    assert "sob_medida" in planejado.TIPOS_PLANEJAVEIS
+
+
+def test_cama_nao_e_planejavel(casa: tuple[Projeto, DadosComodo]) -> None:
+    projeto, dados = casa
+    with pytest.raises(EdicaoInvalidaError, match="não é planejável"):
+        em.sugerir_construcao(projeto, "quarto", dados, "cama")

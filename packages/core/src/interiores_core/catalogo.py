@@ -26,6 +26,7 @@ class Categoria(StrEnum):
     SENTAR = "sentar"
     MESAS = "mesas"
     ELETRONICOS = "eletronicos"
+    SOB_MEDIDA = "sob_medida"
 
 
 class Simbolo(StrEnum):
@@ -313,7 +314,18 @@ _ITENS = (
         ),
         modelo_padrao="padrao",
     ),
+    ItemCatalogo(
+        tipo="sob_medida",
+        nome="Móvel sob medida",
+        categoria=Categoria.SOB_MEDIDA,
+        simbolo=Simbolo.GENERICO,
+        lados_uso=("frente",),
+        modelos=(_m("padrao", "Caixa (80 × 50 × 80)", 800, 500, 800),),
+        modelo_padrao="padrao",
+    ),
 )
+"""O último, ``sob_medida``, é o móvel criado do zero: nome e medidas livres; dá para
+montar por dentro (``construcao``) como planejado."""
 
 CATALOGO: dict[str, ItemCatalogo] = {i.tipo: i for i in _ITENS}
 

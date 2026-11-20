@@ -18,7 +18,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from interiores_core import catalogo, geometria
+from interiores_core import catalogo, geometria, planejado
 from interiores_core.edicao import (
     Alteracao,
     EdicaoInvalidaError,
@@ -26,7 +26,7 @@ from interiores_core.edicao import (
     registrar_anterior,
 )
 from interiores_core.medidas import Medida
-from interiores_core.modelo import DadosComodo, Projeto
+from interiores_core.modelo import DadosComodo, Movel, Projeto
 from interiores_core.regras import checar
 from interiores_core.validacao import Problema, Severidade, validar
 
@@ -243,3 +243,52 @@ def remover_movel(
         del d["moveis"][_indice(d, id_)]
 
     return _aplicar(projeto, comodo, dados, regras, mudar)
+
+
+def definir_construcao(
+    projeto: Projeto,
+    comodo: str,
+    dados: DadosComodo | None,
+    id_: str,
+    construcao: Mapping[str, Any] | None,
+    regras: Mapping[str, object] | None = None,
+) -> EdicaoMoveis:
+    """Monta o móvel por dentro (planejado) ou tira a construção (``None``).
+
+    Confere se a construção cabe no móvel (vãos, gavetas, alturas): o que não fecha é
+    recusado com a mensagem do cálculo (ex.: "os vãos somam mais que a largura").
+    """
+
+    def mudar(d: Dados) -> None:
+        movel = d["moveis"][_indice(d, id_)]
+        if construcao is None:
+            movel.pop("construcao", None)
+            return
+        movel["construcao"] = dict(construcao)
+        try:
+            planejado.calcular(Movel.model_validate(movel))
+        except ValidationError as e:
+            raise EdicaoInvalidaError(f"construção inválida: {e}") from e
+        except planejado.ConstrucaoInvalidaError as e:
+            raise EdicaoInvalidaError(str(e)) from e
+
+    return _aplicar(projeto, comodo, dados, regras, mudar)
+
+
+def sugerir_construcao(
+    projeto: Projeto,
+    comodo: str,
+    dados: DadosComodo | None,
+    id_: str,
+    regras: Mapping[str, object] | None = None,
+) -> EdicaoMoveis:
+    """Monta o móvel com o interior padrão do tipo (para a pessoa ajustar a partir daí)."""
+    base = dados or DadosComodo(schema_version=1, comodo=comodo)
+    movel = next((m for m in base.moveis if m.id == id_), None)
+    if movel is None:
+        raise KeyError(f"móvel '{id_}' não existe em '{comodo}'")
+    try:
+        sugerida = planejado.construcao_sugerida(movel)
+    except KeyError as e:
+        raise EdicaoInvalidaError(str(e.args[0])) from e
+    return definir_construcao(projeto, comodo, dados, id_, sugerida, regras)
