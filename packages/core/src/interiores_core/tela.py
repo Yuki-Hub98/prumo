@@ -16,6 +16,7 @@ from shapely import Polygon
 from shapely.geometry.base import BaseGeometry
 
 from interiores_core import geometria, planejado
+from interiores_core.medidas import medidas_estimadas
 from interiores_core.modelo import (
     DadosComodo,
     Janela,
@@ -41,6 +42,8 @@ class ParedeTela(_Tela):
     espessura: int
     lado_a: str
     lado_b: str
+    estimada: bool = False
+    """Alguma medida da parede (espessura, altura) é chute: a tela desenha tracejado."""
 
 
 class AberturaTela(_Tela):
@@ -52,6 +55,8 @@ class AberturaTela(_Tela):
     giro: list[Pt] | None = None
     """Área varrida pela folha (porta de giro)."""
     largura: int
+    estimada: bool = False
+    """Alguma medida do vão (largura, altura, posição, peitoril) é chute."""
 
 
 class FaceTela(_Tela):
@@ -203,6 +208,7 @@ def pavimento_para_tela(
             espessura=p.espessura.valor,
             lado_a=p.lado_a,
             lado_b=p.lado_b,
+            estimada=bool(medidas_estimadas(p)),
         )
         for p in pav.paredes
         if geometria.comprimento(p) > 0
@@ -221,6 +227,7 @@ def pavimento_para_tela(
                 vao=vao,
                 giro=_pts(giro.exterior.coords[:-1]) if giro is not None else None,
                 largura=a.largura.valor,
+                estimada=bool(medidas_estimadas(a)),
             )
         )
     comodos = []

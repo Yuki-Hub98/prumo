@@ -3762,6 +3762,11 @@
           "largura": {
             "type": "integer",
             "title": "Largura"
+          },
+          "estimada": {
+            "type": "boolean",
+            "title": "Estimada",
+            "default": false
           }
         },
         "type": "object",
@@ -6086,6 +6091,11 @@
           "lado_b": {
             "type": "string",
             "title": "Lado B"
+          },
+          "estimada": {
+            "type": "boolean",
+            "title": "Estimada",
+            "default": false
           }
         },
         "type": "object",
