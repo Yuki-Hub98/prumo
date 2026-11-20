@@ -815,6 +815,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/pavimentos/{pavimento}/tinta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tinta
+         * @description Tinta do pavimento: látex de paredes e teto, esmalte de portas e rodapé, por cor.
+         */
+        get: operations["tinta_projetos__codigo__pavimentos__pavimento__tinta_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/pavimentos/{pavimento}/tinta.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tinta Xlsx
+         * @description A mesma planilha do ``make tinta``, para baixar.
+         */
+        get: operations["tinta_xlsx_projetos__codigo__pavimentos__pavimento__tinta_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/comodos/{comodo}/vistas": {
         parameters: {
             query?: never;
@@ -1280,6 +1320,25 @@ export interface components {
                 number
             ];
         };
+        /**
+         * GrupoTinta
+         * @description Uma tinta numa cor: o que comprar.
+         */
+        GrupoTinta: {
+            /**
+             * Tinta
+             * @enum {string}
+             */
+            tinta: "latex" | "esmalte";
+            /** Cor */
+            cor: string | null;
+            /** Area M2 */
+            area_m2: number;
+            /** Litros */
+            litros: number;
+            /** Latas */
+            latas: components["schemas"]["Lata"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1442,6 +1501,13 @@ export interface components {
              */
             tipo: "janela";
             peitoril: components["schemas"]["Medida"];
+        };
+        /** Lata */
+        Lata: {
+            /** Litros */
+            litros: number;
+            /** Quantidade */
+            quantidade: number;
         };
         /** Material3D */
         Material3D: {
@@ -2246,6 +2312,51 @@ export interface components {
          * @enum {string}
          */
         Severidade: "erro" | "aviso" | "info";
+        /** SuperficieTinta */
+        SuperficieTinta: {
+            /** Comodo */
+            comodo: string;
+            /** Nome */
+            nome: string;
+            /**
+             * Tinta
+             * @enum {string}
+             */
+            tinta: "latex" | "esmalte";
+            /**
+             * Cor
+             * @description Hex da variação; null = cor padrão.
+             */
+            cor: string | null;
+            /** Area M2 */
+            area_m2: number;
+            /** Litros */
+            litros: number;
+        };
+        /**
+         * Tinta
+         * @description Cálculo de tinta do pavimento com as variações escolhidas em cada cômodo.
+         */
+        Tinta: {
+            /** Versao */
+            versao: number;
+            /**
+             * Preliminar
+             * @description Há medida estimada no pavimento: confira antes de comprar.
+             */
+            preliminar: boolean;
+            /** Grupos */
+            grupos: components["schemas"]["GrupoTinta"][];
+            /** Superficies */
+            superficies: components["schemas"]["SuperficieTinta"][];
+            /**
+             * Parametros
+             * @description Rendimento, demãos, perda e latas usados.
+             */
+            parametros: {
+                [key: string]: unknown;
+            };
+        };
         /**
          * TipoComodo
          * @enum {string}
@@ -4182,6 +4293,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Cena3D"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tinta_projetos__codigo__pavimentos__pavimento__tinta_get: {
+        parameters: {
+            query?: {
+                /** @description Cores de cada cômodo: cômodo:variação (repita; sem = cor padrão). */
+                variacao?: string[];
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                pavimento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tinta"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tinta_xlsx_projetos__codigo__pavimentos__pavimento__tinta_xlsx_get: {
+        parameters: {
+            query?: {
+                /** @description Cores de cada cômodo: cômodo:variação (repita; sem = cor padrão). */
+                variacao?: string[];
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                pavimento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

@@ -14,7 +14,9 @@ from interiores_core.carregar import ProjetoCarregado, carregar
 from interiores_core.medidas import medidas_em
 from interiores_core.regras import checar
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, Severidade, validar
+from interiores_relatorios.comparar import gerar_comparacao
 from interiores_relatorios.lista_corte import gerar_lista
+from interiores_relatorios.tinta import gerar_tinta
 from interiores_render import gerar as render
 
 if TYPE_CHECKING:
@@ -549,6 +551,93 @@ def _render_pavimentos(
         if r.gerado:
             for arq in r.arquivos:
                 print(f"      {arq}")
+
+
+# ---------------------------------------------------------------- tinta e comparação
+
+
+def _escolhas(pares: list[str]) -> dict[str, str]:
+    """``["quarto=escura", ...]`` → ``{"quarto": "escura"}``."""
+    saida: dict[str, str] = {}
+    for par in pares:
+        comodo, sep, nome = par.partition("=")
+        if not sep or not comodo or not nome:
+            print(f"erro: use cômodo=variação (recebi '{par}')")
+            raise typer.Exit(2)
+        saida[comodo] = nome
+    return saida
+
+
+@app.command("tinta")
+def cmd_tinta(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    pavimento: Annotated[
+        str | None, typer.Option(help="Só este pavimento (padrão: todos).")
+    ] = None,
+    variacao: Annotated[
+        list[str] | None,
+        typer.Option("--variacao", "-v", help="Cores de um cômodo: cômodo=variação (repita)."),
+    ] = None,
+    projetos: PastaProjetos = Path("projetos"),
+    saida: Annotated[Path, typer.Option(help="Pasta das saídas geradas.")] = Path("out"),
+    forcar: Annotated[
+        bool, typer.Option("--forcar", help="Regera mesmo se a entrada não mudou.")
+    ] = False,
+) -> None:
+    """Planilha de tinta (.xlsx): látex de paredes e teto e esmalte de portas e rodapé, por
+    cor, com litros e latas; e o detalhe por cômodo."""
+    from interiores_core import tinta
+    from interiores_relatorios.tinta import NOME_TINTA, cores_das_variacoes
+
+    carregado = _carregar(projetos / projeto)
+    escolhas = _escolhas(variacao or [])
+    ids = [pavimento] if pavimento else [p.id for p in carregado.projeto.pavimentos]
+    for pav_id in ids:
+        try:
+            xlsx, gerou = gerar_tinta(carregado, saida, pav_id, escolhas, forcar)
+            pav = next(p for p in carregado.projeto.pavimentos if p.id == pav_id)
+            r = tinta.calcular(pav, cores_das_variacoes(carregado, escolhas), carregado.regras)
+        except (KeyError, StopIteration) as e:
+            print(f"erro: {e.args[0] if e.args else pav_id}")
+            raise typer.Exit(2) from e
+        print(f"  {pav_id:<25} {'gerado    ' if gerou else 'inalterado'}  {xlsx}")
+        for g in r.grupos:
+            latas = " + ".join(f"{n}×{t:g} L" for t, n in g.latas.items())
+            print(f"      {NOME_TINTA[g.tinta]:<26} {g.cor or 'cor padrão':<10} "
+                  f"{g.area_m2:7.2f} m²  {g.litros:6.2f} L  → {latas}")  # fmt: skip
+    if carregado.estimadas():
+        print("  PRELIMINAR: há medidas estimadas (confira as áreas antes de comprar)")
+
+
+@app.command("comparar")
+def cmd_comparar(
+    projeto: Annotated[str, typer.Argument(help="Nome da pasta em projetos/.")],
+    comodo: Annotated[str, typer.Argument(help="Id do cômodo.")],
+    variacoes: Annotated[
+        str, typer.Option(help="Variações separadas por vírgula, ou 'todas'.")
+    ] = "todas",
+    vista: Annotated[
+        str, typer.Option(help="Vista do render (perspectiva, superior...).")
+    ] = "perspectiva",
+    projetos: PastaProjetos = Path("projetos"),
+    saida: Annotated[Path, typer.Option(help="Pasta das saídas geradas.")] = Path("out"),
+) -> None:
+    """Montagem lado a lado das imagens das variações do cômodo (.png). Usa os renders
+    prontos (final ou rascunho): rode `interiores render ... --variacao todas` antes."""
+    carregado = _carregar(projetos / projeto)
+    nomes = (
+        render.variacoes_do_comodo(carregado, comodo)
+        if variacoes == "todas"
+        else [v.strip() for v in variacoes.split(",") if v.strip()]
+    )
+    try:
+        png, faltando = gerar_comparacao(carregado, saida, comodo, nomes, vista)
+    except (KeyError, ValueError) as e:
+        print(f"erro: {e.args[0] if isinstance(e, KeyError) else e}")
+        raise typer.Exit(2) from e
+    print(f"  {png}")
+    if faltando:
+        print(f"  sem imagem '{vista}' (renderize antes): {', '.join(faltando)}")
 
 
 # ---------------------------------------------------------------- banco

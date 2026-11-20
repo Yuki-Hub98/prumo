@@ -173,6 +173,24 @@ export function useCena(codigo: string, alvo: { comodo: string } | { pavimento: 
   });
 }
 
+/** Tinta do pavimento com a variação escolhida em cada cômodo (refaz a cada versão). */
+export function useTinta(codigo: string, pavimento: string, escolhas: Record<string, string>) {
+  const variacao = Object.entries(escolhas)
+    .filter(([, v]) => v !== "base")
+    .map(([c, v]) => `${c}:${v}`)
+    .sort();
+  return useQuery({
+    queryKey: [...chaves.projeto(codigo), "tinta", pavimento, ...variacao],
+    queryFn: () =>
+      ou(
+        api.GET("/projetos/{codigo}/pavimentos/{pavimento}/tinta", {
+          params: { path: { codigo, pavimento }, query: { variacao } },
+        }),
+      ),
+    placeholderData: (anterior) => anterior,
+  });
+}
+
 /** Vista de frente calculada de um móvel planejado (atualiza junto com o projeto). */
 export function usePlanejado(codigo: string, comodo: string, id: string, ativo: boolean) {
   return useQuery({

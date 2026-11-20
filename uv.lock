@@ -571,6 +571,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "interiores-banco" },
     { name = "interiores-core" },
+    { name = "interiores-relatorios" },
     { name = "interiores-render" },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
@@ -582,6 +583,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.165.0" },
     { name = "interiores-banco", editable = "packages/banco" },
     { name = "interiores-core", editable = "packages/core" },
+    { name = "interiores-relatorios", editable = "packages/relatorios" },
     { name = "interiores-render", editable = "packages/render" },
     { name = "structlog", specifier = ">=26.1.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.54.0" },
@@ -670,12 +672,14 @@ source = { editable = "packages/relatorios" }
 dependencies = [
     { name = "interiores-core" },
     { name = "openpyxl" },
+    { name = "pillow" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "interiores-core", editable = "packages/core" },
     { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "pillow", specifier = ">=11" },
 ]
 
 [[package]]

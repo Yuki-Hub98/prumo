@@ -45,3 +45,34 @@ def test_faces_na_geometria(api: TestClient) -> None:
     g = api.get("/projetos/casa/pavimentos/terreo/geometria").json()
     quarto = next(c for c in g["comodos"] if c["id"] == "quarto")
     assert {f["parede"] for f in quarto["faces"]} >= {"p1", "p2", "p7"}
+
+
+def test_tinta_do_pavimento_com_a_variacao(api: TestClient) -> None:
+    corpo = {"nome": "Escura", "cores": {"parede": "#7a8b94", "paredes": {"p2": "#c46b4f"}}}
+    assert api.put(f"{VAR}/escura", params={"versao": 1}, json=corpo).status_code == 200
+    padrao = api.get("/projetos/casa/pavimentos/terreo/tinta").json()
+    assert padrao["preliminar"] is True
+    assert {(g["tinta"], g["cor"]) for g in padrao["grupos"]} == {
+        ("latex", None),
+        ("esmalte", None),
+    }
+    r = api.get("/projetos/casa/pavimentos/terreo/tinta", params={"variacao": "quarto:escura"})
+    assert r.status_code == 200, r.text
+    cores = {g["cor"] for g in r.json()["grupos"] if g["tinta"] == "latex"}
+    assert {"#7a8b94", "#c46b4f"} <= cores
+    latex = next(g for g in padrao["grupos"] if g["tinta"] == "latex")
+    assert latex["latas"] and all(lata["quantidade"] > 0 for lata in latex["latas"])
+    x = api.get("/projetos/casa/pavimentos/terreo/tinta.xlsx", params={"variacao": "quarto:escura"})
+    assert x.status_code == 200 and x.content[:2] == b"PK"  # .xlsx é um zip
+    assert "tinta-casa-terreo.xlsx" in x.headers["content-disposition"]
+    assert (
+        api.get("/projetos/casa/pavimentos/terreo/tinta", params={"variacao": "quarto"}).status_code
+        == 422
+    )
+    assert (
+        api.get(
+            "/projetos/casa/pavimentos/terreo/tinta", params={"variacao": "quarto:nada"}
+        ).status_code
+        == 404
+    )
+    assert api.get("/projetos/casa/pavimentos/superior/tinta").status_code == 404

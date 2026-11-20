@@ -210,6 +210,44 @@ daquele tipo). Tudo é opcional: o que faltar usa a cor padrão.
 
 ---
 
+### Comparar as variações lado a lado
+
+```bash
+make compare P=casa C=quarto                     # todas as variações com imagem (perspectiva)
+make compare P=casa C=quarto V=base,escura VISTA=superior
+```
+
+Junta a imagem pronta de cada variação (final ou, sem ela, o rascunho) numa grade com o nome
+de cada uma: `out/casa/terreo/quarto/_comparacao/comparacao-<vista>.png`. Precisa de pelo menos
+duas variações renderizadas (`make render P=casa C=quarto V=todas`).
+
+### Tinta
+
+```bash
+make tinta P=casa                                # cores padrão
+make tinta P=casa VAR="quarto=escura"            # com a variação de cor do quarto
+```
+
+Planilha `out/casa/terreo/_geral/tinta.xlsx`: aba **Comprar** (por tinta e cor: área, litros e
+latas sugeridas) e aba **Por cômodo** (paredes, parede de destaque, teto, rodapé e portas).
+Paredes e teto em látex; portas (dos dois lados) e rodapé em esmalte. A área das paredes é a
+face de cada parede voltada para o cômodo × pé-direito, menos portas, janelas e a faixa do
+rodapé. Padrões (estimativa de rótulo): látex 10 m²/L por demão, esmalte 8 m²/L, 2 demãos,
+10 % de perda, latas de 18 / 3,6 / 0,9 L (látex) e 3,6 / 0,9 / 0,225 L (esmalte). Troque no
+`regras.toml`:
+
+```toml
+[tinta]
+rendimento_latex = 12
+demaos_latex = 3
+perda = 0.15
+latas_latex = [18, 3.6]
+```
+
+Sai com "PRELIMINAR" se houver medida estimada: confira as áreas antes de comprar.
+
+---
+
 ## 7. Configurar os limites das checagens
 
 Crie `projetos/casa/regras.toml` (opcional; os valores abaixo são os padrões):
