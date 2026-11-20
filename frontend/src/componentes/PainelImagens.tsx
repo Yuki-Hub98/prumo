@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { URL_API, type InfoRender } from "../api/cliente";
-import { useEstimativas, usePedirRender, useRenders, useVistas } from "../dados";
+import { ultimasImagens } from "../comparar";
+import { useEstimativas, usePedirRender, useRenders, useVariacoes, useVistas } from "../dados";
+import { Comparador } from "./Comparador";
 import { formatarTempo } from "../tempo";
 import { alternar, guardar, lembrar, vistaDaImagem, vistasValidas } from "../vistas";
 
@@ -72,6 +74,13 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
   const est = useEstimativas(Math.max(vistas.length, 1)).data;
   const pedir = usePedirRender(codigo, comodo);
   const semVista = vistas.length === 0;
+  const variacoes = useVariacoes(codigo, comodo).data ?? {};
+  const nomesVariacoes = Object.fromEntries([
+    ["base", "base (cores padrão)"],
+    ...Object.entries(variacoes).map(([k, v]) => [k, v.nome ?? k]),
+  ]);
+  const comImagem = Object.keys(ultimasImagens(lista)).length;
+  const [comparando, setComparando] = useState(false);
   const botao = "flex-1 rounded border border-stone-300 px-2 py-1 text-sm hover:bg-stone-100 disabled:opacity-40";
   return (
     <section className="border-b border-stone-200 p-3">
@@ -108,6 +117,18 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
         </button>
       </div>
       {pedir.error && <p className="mb-2 text-sm text-red-700">{pedir.error.message}</p>}
+      <button
+        className="mb-2 w-full rounded border border-stone-300 px-2 py-1 text-sm hover:bg-stone-100 disabled:opacity-40"
+        disabled={comImagem < 2}
+        title={comImagem < 2 ? "precisa de imagens prontas de pelo menos duas variações" : undefined}
+        onClick={() => setComparando(true)}
+      >
+        comparar variações lado a lado
+        {comImagem < 2 && <span className="block text-xs text-stone-500">peça imagens de duas variações ou mais</span>}
+      </button>
+      {comparando && (
+        <Comparador renders={lista} nomes={nomesVariacoes} titulos={titulos} aoFechar={() => setComparando(false)} />
+      )}
       <ul className="space-y-2">
         {lista.slice(0, 6).map((r) => (
           <Item key={r.id} r={r} titulos={titulos} />

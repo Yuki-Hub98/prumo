@@ -3279,6 +3279,138 @@
         }
       }
     },
+    "/projetos/{codigo}/pavimentos/{pavimento}/tinta": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Tinta",
+        "description": "Tinta do pavimento: látex de paredes e teto, esmalte de portas e rodapé, por cor.",
+        "operationId": "tinta_projetos__codigo__pavimentos__pavimento__tinta_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "variacao",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Cores de cada cômodo: cômodo:variação (repita; sem = cor padrão).",
+              "default": [],
+              "title": "Variacao"
+            },
+            "description": "Cores de cada cômodo: cômodo:variação (repita; sem = cor padrão)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tinta"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/tinta.xlsx": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Tinta Xlsx",
+        "description": "A mesma planilha do ``make tinta``, para baixar.",
+        "operationId": "tinta_xlsx_projetos__codigo__pavimentos__pavimento__tinta_xlsx_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "variacao",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Cores de cada cômodo: cômodo:variação (repita; sem = cor padrão).",
+              "default": [],
+              "title": "Variacao"
+            },
+            "description": "Cores de cada cômodo: cômodo:variação (repita; sem = cor padrão)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/comodos/{comodo}/vistas": {
       "get": {
         "tags": [
@@ -4391,6 +4523,55 @@
         ],
         "title": "FaceTela"
       },
+      "GrupoTinta": {
+        "properties": {
+          "tinta": {
+            "type": "string",
+            "enum": [
+              "latex",
+              "esmalte"
+            ],
+            "title": "Tinta"
+          },
+          "cor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cor"
+          },
+          "area_m2": {
+            "type": "number",
+            "title": "Area M2"
+          },
+          "litros": {
+            "type": "number",
+            "title": "Litros"
+          },
+          "latas": {
+            "items": {
+              "$ref": "#/components/schemas/Lata"
+            },
+            "type": "array",
+            "title": "Latas"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tinta",
+          "cor",
+          "area_m2",
+          "litros",
+          "latas"
+        ],
+        "title": "GrupoTinta",
+        "description": "Uma tinta numa cor: o que comprar."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -4810,6 +4991,25 @@
         ],
         "title": "Janela",
         "description": "Janela com peitoril (altura do piso até o vão)."
+      },
+      "Lata": {
+        "properties": {
+          "litros": {
+            "type": "number",
+            "title": "Litros"
+          },
+          "quantidade": {
+            "type": "integer",
+            "title": "Quantidade"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "litros",
+          "quantidade"
+        ],
+        "title": "Lata"
       },
       "Material3D": {
         "properties": {
@@ -6947,6 +7147,101 @@
           "info"
         ],
         "title": "Severidade"
+      },
+      "SuperficieTinta": {
+        "properties": {
+          "comodo": {
+            "type": "string",
+            "title": "Comodo"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "tinta": {
+            "type": "string",
+            "enum": [
+              "latex",
+              "esmalte"
+            ],
+            "title": "Tinta"
+          },
+          "cor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cor",
+            "description": "Hex da variação; null = cor padrão."
+          },
+          "area_m2": {
+            "type": "number",
+            "title": "Area M2"
+          },
+          "litros": {
+            "type": "number",
+            "title": "Litros"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "comodo",
+          "nome",
+          "tinta",
+          "cor",
+          "area_m2",
+          "litros"
+        ],
+        "title": "SuperficieTinta"
+      },
+      "Tinta": {
+        "properties": {
+          "versao": {
+            "type": "integer",
+            "title": "Versao"
+          },
+          "preliminar": {
+            "type": "boolean",
+            "title": "Preliminar",
+            "description": "Há medida estimada no pavimento: confira antes de comprar."
+          },
+          "grupos": {
+            "items": {
+              "$ref": "#/components/schemas/GrupoTinta"
+            },
+            "type": "array",
+            "title": "Grupos"
+          },
+          "superficies": {
+            "items": {
+              "$ref": "#/components/schemas/SuperficieTinta"
+            },
+            "type": "array",
+            "title": "Superficies"
+          },
+          "parametros": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parametros",
+            "description": "Rendimento, demãos, perda e latas usados."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "versao",
+          "preliminar",
+          "grupos",
+          "superficies",
+          "parametros"
+        ],
+        "title": "Tinta",
+        "description": "Cálculo de tinta do pavimento com as variações escolhidas em cada cômodo."
       },
       "TipoComodo": {
         "type": "string",

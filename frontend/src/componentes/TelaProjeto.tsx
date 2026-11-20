@@ -5,6 +5,7 @@ import { PainelPlanta } from "../editor/PainelPlanta";
 import { BotoesDesfazer, PainelHistorico } from "./Desfazer";
 import { PainelCores } from "./PainelCores";
 import { PainelImagens } from "./PainelImagens";
+import { PainelTinta } from "./PainelTinta";
 import { Tela3D } from "./Tela3D";
 import { Abas, ColunaLateral } from "./ColunaLateral";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade, useVariacoes } from "../dados";
@@ -285,6 +286,15 @@ export function TelaProjeto({
                   ) : (
                     <p className="p-3 text-sm text-stone-500">Clique num cômodo para pintar paredes, piso e móveis.</p>
                   ))}
+                {aba === "cores" && (
+                  <PainelTinta
+                    codigo={codigo}
+                    pavimento={pavimento}
+                    escolhas={Object.fromEntries(
+                      (pavimentos.find((p) => p.id === pavimento)?.comodos ?? []).map((c) => [c.id, ativa[c.id] ?? "base"]),
+                    )}
+                  />
+                )}
                 {aba === "imagens" &&
                   (comodo ? (
                     <PainelImagens key={`img-${comodo}`} codigo={codigo} comodo={comodo} variacao={ativa[comodo] ?? "base"} />
