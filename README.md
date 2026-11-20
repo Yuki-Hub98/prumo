@@ -258,40 +258,59 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 
 ## Roadmap
 
-- [x] Esqueleto do monorepo (uv, Docker, pre-commit, commitizen)
-- [x] `core`: schema Projeto → Imóvel → Pavimento → Cômodo
-- [x] Checagens do quarto (passagem, cama, guarda-roupa, portas, tomadas)
-- [x] Planta do quarto e do pavimento em DXF/PDF com carimbo, aviso de obra e instalações
-- [x] Cortes e elevações do quarto
-- [x] Móveis — catálogo (modelo 3D vem com o render): todo tipo de móvel para posicionar nos cômodos (cama, guarda-roupa,
-      armário, sofá, TV/rack, mesa, cadeira, cômoda, criado-mudo, escrivaninha, estante...),
-      cada um com medidas padrão editáveis, frente/lados de uso, símbolo na planta, modelo 3D
-      e checagens próprias (ex.: distância sofá–TV)
-- [x] Móveis — planejados (plano de corte otimizado e 3D ficam para depois): projetar o móvel por dentro (divisórias, prateleiras, gavetas,
-      portas, chapas e acabamento), com desenho técnico cotado, lista de corte e de ferragens
-      (`.xlsx`) para o marceneiro
-- [x] Render do quarto no Blender com variações de cor (variação de layout de móveis fica para depois)
-- [ ] Comparador lado a lado e cálculo de tinta
-- [ ] API + banco (histórico de medidas, variações, escolhas)
-- [ ] Frontend: visor 3D, comparador, formulário de medidas, painel de problemas
-- [ ] Frontend — criar casa do zero (editor de planta): desenhar paredes com as medidas,
-      colocar portas e janelas, nomear os cômodos (derivados das paredes) e instalações, com
-      as checagens rodando na hora; precisa de funções de edição no core como as de móveis
-- [ ] Frontend — editor de móveis: escolher do catálogo, arrastar, girar e redimensionar na
-      planta/3D, editar medidas e criar móveis planejados, com as checagens rodando na hora
+### Feito
+
+- [x] Esqueleto do monorepo (uv, Docker, pre-commit, commitizen) — PRs #1 e #2
+- [x] `core`: schema Projeto → Imóvel → Pavimento → Cômodo — #3
+- [x] Checagens do quarto (passagem, cama, guarda-roupa, portas, tomadas) — #5
+- [x] Planta do quarto e do pavimento em DXF/PDF com carimbo, aviso de obra e instalações — #4, #11
+- [x] Cortes e elevações do quarto — #8
+- [x] Móveis — catálogo: cama, guarda-roupa, armário, sofá, TV/rack, mesa, cadeira, cômoda,
+      criado-mudo, escrivaninha, estante..., com medidas padrão editáveis, frente/lados de uso,
+      símbolo na planta, 3D e checagens próprias (ex.: distância sofá–TV) — #6
+- [x] Móveis — planejados: projetar por dentro (vãos, prateleiras, gavetas, portas, chapas), com
+      desenho técnico cotado, lista de corte e de ferragens (`.xlsx`) — #7; 3D com portas,
+      gavetas e nichos — #27
+- [x] Render do quarto no Blender com variações de cor, fila de render e vistas escolhidas
+      (porta, cama, cantos, de cima) — #9, #17, #20, #24
+- [x] API + banco: PostgreSQL como fonte da verdade, histórico de cada mudança, desfazer/refazer
+      e voltar para uma versão, exportação para `projetos/` — #12, #13, #14, #21
+- [x] **Rascunho**: testar mudanças à vontade, desfazer passo a passo e só então salvar (cada
+      mudança vira uma versão) ou descartar — #26
+- [x] Frontend — planta 2D, formulário de medidas com a origem (medi / quero assim / chute),
+      painel de problemas e "falta medir", coluna lateral com abas e largura ajustável — #15, #26
+- [x] Frontend — criar casa do zero (editor de planta): paredes, cantos, portas, janelas,
+      instalações e cômodos, com as checagens na hora — #18
+- [x] Frontend — editor de móveis: catálogo, arrastar, girar, encostar na parede, medidas,
+      **criar do zero** (sob medida) e **montar planejado por dentro** — #15, #27, #28
+- [x] Frontend — **visor 3D ao vivo**, igual à planta (sem esperar render), com vistas prontas,
+      corte das paredes e teto liga/desliga — #23, #29
+- [x] Cores: variações por cômodo, cada parede, piso, teto, rodapé, cada móvel e **cada parte do
+      móvel** (portas, gavetas, puxadores, travesseiros...), pintadas ao vivo no 3D; seletor de
+      cor e várias coisas de uma vez — #16, #26
+- [x] **Formas dos móveis**: cantos arredondados, redondo/oval e em L (mesas e móveis de corpo
+      simples), na planta, no DXF, nas checagens e no 3D — #30
+- [x] Planta geral do pavimento e 3D da casa (pavimento inteiro com o teto cortado) — #11, #25, #29
+
+### Próximos
+
+- [ ] **Comparador lado a lado e cálculo de tinta**: montagem das variações (`make compare`) e
+      planilha de tinta por cômodo e total (`make tinta`), também na tela
+- [ ] Cozinha (hidráulica, gás, triângulo de trabalho), com pia/cuba, torneira, fogão e
+      geladeira; depois banheiro (vaso, box/chuveiro, ralo)
 - [ ] Modelos prontos (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
-      escolher e posicionar, com símbolo na planta e 3D detalhado no render/visor. **Tudo
-      editável pela pessoa** (no frontend): partir de um modelo pronto e mudar medidas,
-      acabamento/cor, número de portas/folhas/gavetas, puxador, sentido de abertura etc.,
-      podendo salvar a versão editada como modelo próprio para reutilizar:
-      - **móveis mais comuns** do mercado (camas, guarda-roupas, sofás, racks, mesas, cadeiras,
-        cômodas, criados-mudos...), com acabamento, puxadores, pés e portas visíveis;
+      escolher e posicionar, com símbolo na planta e 3D detalhado. **Tudo editável pela
+      pessoa**: partir de um modelo pronto e mudar medidas, acabamento/cor, número de
+      portas/folhas/gavetas, puxador, sentido de abertura etc., podendo **salvar a versão
+      editada como modelo próprio**:
+      - **móveis mais comuns** do mercado, com acabamento, puxadores, pés e portas visíveis;
       - **portas**: de giro (lisa, almofadada, com vidro), de correr (aparente e embutida),
         camarão, pivotante, de banheiro com veneziana; com batente, guarnição e maçaneta;
       - **janelas**: de correr (2 e 4 folhas), basculante, maxim-ar, de abrir, veneziana,
         com caixilho, vidro e peitoril padrão; tamanhos comerciais (ex.: 120 × 100, 150 × 120)
-- [ ] Cozinha (hidráulica, gás, triângulo de trabalho)
-- [ ] Planta geral do pavimento e 3D da casa
+- [ ] Editor de móveis — o que falta: redimensionar puxando as bordas na planta, mover e girar
+      direto no 3D, sofá e bancada planejada em L, lista de corte e desenho do planejado pela tela
+- [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis
 - [ ] Referência por foto (pedido do usuário, 2026-11-19): subir uma foto (Pinterest, um
       quarto parecido) pela tela; o sistema tira a paleta dela e cria uma variação de cor
       parecida, para comparar com o render
