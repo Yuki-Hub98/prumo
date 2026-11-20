@@ -377,6 +377,7 @@ TIPOS_PLANEJAVEIS = (
     "rack",
     "sapateira",
     "penteadeira",
+    "sob_medida",
 )
 
 
@@ -409,6 +410,8 @@ def construcao_sugerida(movel: Movel) -> dict[str, object]:
         ),
         "sapateira": (_vaos(1, [_espaco("nicho") for _ in range(6)]), 100),
         "penteadeira": (_vaos(1, [_espaco("nicho"), _espaco(gaveta, 150)]), None),
+        # do zero: vãos de ~80 cm com três nichos, para a pessoa montar a partir daí
+        "sob_medida": (_vaos(max(1, round(larg / 800)), [_espaco("nicho") for _ in range(3)]), 100),
     }
     if movel.tipo not in sugestoes:
         raise KeyError(f"'{movel.tipo}' não é planejável (tipos: {', '.join(TIPOS_PLANEJAVEIS)})")

@@ -45,8 +45,9 @@ POR_SIMBOLO: dict[Simbolo, tuple[str, ...]] = {
     Simbolo.TELA: ("moldura",),
     Simbolo.GENERICO: (),
 }
-PLANEJADO: tuple[str, ...] = ("portas", "puxadores")
-"""Móvel planejado (com ``construcao``): caixa = corpo; portas e puxadores à parte."""
+PLANEJADO: tuple[str, ...] = ("portas", "gavetas", "puxadores", "prateleiras")
+"""Móvel planejado (com ``construcao``): caixa = corpo; portas, frentes de gaveta,
+puxadores e prateleiras (as que ficam à vista nos nichos sem porta) à parte."""
 
 _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
     (re.compile(padrao), parte)
