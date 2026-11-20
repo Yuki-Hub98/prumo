@@ -297,7 +297,9 @@ class _Planta:
             cam: dict[str, object] = {"layer": "MOVEL"}
             if not m.ocupa_piso:
                 cam["linetype"] = TRACEJADO
-            self.msp.add_lwpolyline(geometria.cantos_movel(m), close=True, dxfattribs=cam)
+            # na forma do móvel (retângulo, arredondado, redondo, L)
+            contorno = list(geometria.poligono_movel(m).exterior.coords)[:-1]
+            self.msp.add_lwpolyline(contorno, close=True, dxfattribs=cam)
             for ini, fim in self.detalhes_movel(m):
                 self.msp.add_line(
                     geometria.girar_movel(m, *ini), geometria.girar_movel(m, *fim), dxfattribs=cam
