@@ -7,6 +7,9 @@ Cada gravação:
 2. substitui as linhas das entidades pelo conteúdo novo;
 3. sobe ``versao``, grava o ``snapshot`` e uma linha de ``historico`` por alteração
    (antes → depois, pelo caminho com ids).
+
+Versões acima da atual são passos de rascunho desfeitos (guardados para o refazer,
+ver :mod:`interiores_banco.rascunho`); uma gravação nova apaga esses passos.
 """
 
 from __future__ import annotations
@@ -15,7 +18,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
 from interiores_banco import tabelas as t
@@ -67,6 +70,11 @@ def _carregar(sessao: Session, codigo: str, travar: bool = False) -> t.Projeto |
     return sessao.scalars(consulta).first()
 
 
+def linha_para_gravar(sessao: Session, codigo: str) -> t.Projeto | None:
+    """A linha do projeto travada até o commit (para operações que gravam)."""
+    return _carregar(sessao, codigo, travar=True)
+
+
 def do_projeto(alteracoes: Iterable[Alteracao]) -> list[Alteracao]:
     """Põe no caminho o prefixo ``projeto.`` das alterações feitas no ``Projeto``
     (ex.: de :class:`interiores_core.edicao.Edicao`), para casar com o caminho das
@@ -93,8 +101,11 @@ def gravar(
     operacao: str | None = None,
     versao_esperada: int | None = None,
     alteracoes: Iterable[Alteracao] | None = None,
+    rascunho: bool = False,
 ) -> Gravado:
     """Grava o conteúdo como nova versão (ou cria o projeto). Não faz commit.
+
+    ``rascunho``: a versão é um passo de rascunho (abre o rascunho se não houver).
 
     ``alteracoes`` evita recalcular a diferença (caminhos relativos ao conteúdo
     inteiro; para as de uma ``Edicao`` use :func:`do_projeto`); sem elas, a
@@ -120,15 +131,11 @@ def gravar(
         else list(diferencas(anterior, conteudo.como_dict()))
     )
     if linha.versao:
-        # apaga as linhas atuais antes de inserir as novas (senão as restrições de
-        # unicidade, como medida.caminho, colidem: o flush insere antes de apagar)
-        linha.pavimentos.clear()
-        linha.medidas.clear()
-        sessao.flush()
-    para_linhas(conteudo, linha)
-    sessao.add(linha)
+        apagar_acima(sessao, linha.id, linha.versao)  # passos desfeitos: sem refazer agora
+        if rascunho and linha.rascunho_desde is None:
+            linha.rascunho_desde = linha.versao
+    substituir(sessao, linha, conteudo)
     linha.versao += 1
-    linha.hash_conteudo = hash_novo
     sessao.flush()
     sessao.add(
         t.Snapshot(
@@ -152,6 +159,31 @@ def gravar(
         )
     sessao.flush()
     return Gravado(linha.versao, lista)
+
+
+def substituir(sessao: Session, linha: t.Projeto, conteudo: Conteudo) -> None:
+    """Troca as linhas das entidades pelo ``conteudo`` (sem mexer na versão)."""
+    if linha.versao:
+        # apaga as linhas atuais antes de inserir as novas (senão as restrições de
+        # unicidade, como medida.caminho, colidem: o flush insere antes de apagar)
+        linha.pavimentos.clear()
+        linha.medidas.clear()
+        sessao.flush()
+    para_linhas(conteudo, linha)
+    sessao.add(linha)
+    linha.hash_conteudo = conteudo.hash
+    sessao.flush()
+
+
+def apagar_acima(sessao: Session, projeto_id: int, versao: int) -> None:
+    """Apaga snapshot e histórico das versões acima de ``versao`` (passos desfeitos)."""
+    sessao.execute(
+        delete(t.Snapshot).where(t.Snapshot.projeto_id == projeto_id, t.Snapshot.versao > versao)
+    )
+    sessao.execute(
+        delete(t.Historico).where(t.Historico.projeto_id == projeto_id, t.Historico.versao > versao)
+    )
+    sessao.flush()
 
 
 def marcar_exportado(sessao: Session, codigo: str, versao: int, hash_arquivos: str) -> None:
@@ -184,19 +216,25 @@ class ResumoVersao:
 
 
 def versoes(sessao: Session, codigo: str) -> list[ResumoVersao]:
-    """Todas as versões do projeto, da mais nova para a mais velha."""
-    projeto_id = sessao.scalar(select(t.Projeto.id).where(t.Projeto.codigo == codigo))
-    if projeto_id is None:
+    """Todas as versões do projeto até a atual, da mais nova para a mais velha (sem os
+    passos de rascunho desfeitos, que ficam acima da atual)."""
+    linha = sessao.execute(
+        select(t.Projeto.id, t.Projeto.versao).where(t.Projeto.codigo == codigo)
+    ).first()
+    if linha is None:
         raise ProjetoInexistenteError(f"projeto '{codigo}' não está no banco")
+    projeto_id, atual = linha
     quando = dict(
         sessao.execute(
-            select(t.Snapshot.versao, t.Snapshot.quando).where(t.Snapshot.projeto_id == projeto_id)
+            select(t.Snapshot.versao, t.Snapshot.quando).where(
+                t.Snapshot.projeto_id == projeto_id, t.Snapshot.versao <= atual
+            )
         ).all()
     )
     por_versao: dict[int, tuple[str | None, list[str]]] = {}
     for versao, op, caminho in sessao.execute(
         select(t.Historico.versao, t.Historico.operacao, t.Historico.caminho)
-        .where(t.Historico.projeto_id == projeto_id)
+        .where(t.Historico.projeto_id == projeto_id, t.Historico.versao <= atual)
         .order_by(t.Historico.versao, t.Historico.id)
     ):
         _, caminhos = por_versao.setdefault(versao, (op, []))

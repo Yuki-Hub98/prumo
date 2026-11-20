@@ -77,12 +77,20 @@ def escrever(conteudo: Conteudo, pasta: Path) -> None:
         regras.write_text(conteudo.regras_toml, encoding="utf-8")
 
 
+_RASCUNHO = (
+    "'{codigo}' tem um rascunho aberto na tela (mudanças ainda não salvas): salve ou "
+    "descarte o rascunho antes de sincronizar com projetos/"
+)
+
+
 def exportar(sessao: Session, codigo: str, pasta: Path | str, forcar: bool = False) -> Sincronizado:
     """Grava ``projetos/<codigo>/`` a partir do banco."""
     pasta = Path(pasta)
     conteudo, versao = repositorio.ler(sessao, codigo)
     linha = _linha(sessao, codigo)
     assert linha is not None
+    if linha.rascunho_desde is not None:
+        raise ConflitoDeSincronizacaoError(_RASCUNHO.format(codigo=codigo))
     atual = _hash_arquivos(pasta)
     if atual is not None and atual == linha.hash_exportado and linha.versao_exportada == versao:
         return Sincronizado(codigo, versao, False)
@@ -106,6 +114,8 @@ def importar(sessao: Session, pasta: Path | str, forcar: bool = False) -> Sincro
     codigo = conteudo.projeto.projeto
     linha = _linha(sessao, codigo)
     if linha is not None:
+        if linha.rascunho_desde is not None:
+            raise ConflitoDeSincronizacaoError(_RASCUNHO.format(codigo=codigo))
         if carregado.hash_entrada == linha.hash_exportado:
             return Sincronizado(codigo, linha.versao, False)
         mudou_no_banco = (

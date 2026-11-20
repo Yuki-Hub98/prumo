@@ -182,3 +182,34 @@ def test_migracoes_batem_com_as_tabelas(sessao: Session) -> None:
         sessao.connection(), opts={"compare_type": True, "compare_server_default": True}
     )
     assert compare_metadata(contexto, t.Base.metadata) == []
+
+
+def test_rascunho_passos_e_sincronizacao(sessao: Session, casa: Path) -> None:
+    """Passos de rascunho: desfazer/refazer/descartar; importar e exportar recusam."""
+    from interiores_banco import rascunho
+
+    arquivos.importar(sessao, casa)
+    conteudo, v = repositorio.ler(sessao, "casa")
+    imovel = conteudo.projeto.imovel.model_copy(update={"endereco_apelido": "teste"})
+    outro = conteudo.projeto.model_copy(update={"imovel": imovel})
+    repositorio.gravar(sessao, Conteudo(outro, conteudo.comodos, conteudo.variacoes),
+                       fonte="teste", versao_esperada=v, rascunho=True)  # fmt: skip
+    assert rascunho.estado(sessao, "casa") == rascunho.Estado(desde=1, passos=1, refazer=False)
+    with pytest.raises(arquivos.ConflitoDeSincronizacaoError, match="rascunho"):
+        arquivos.exportar(sessao, "casa", casa)
+    with pytest.raises(arquivos.ConflitoDeSincronizacaoError, match="rascunho"):
+        arquivos.importar(sessao, casa)
+    assert rascunho.desfazer_passo(sessao, "casa", 2) == 1
+    assert repositorio.ler(sessao, "casa")[0].hash == conteudo.hash
+    assert rascunho.estado(sessao, "casa") == rascunho.Estado(desde=1, passos=0, refazer=True)
+    assert [x.versao for x in repositorio.versoes(sessao, "casa")] == [1]  # desfeito some
+    assert rascunho.refazer_passo(sessao, "casa", 1) == 2
+    with pytest.raises(repositorio.ConflitoDeVersaoError):
+        rascunho.descartar(sessao, "casa", 1)
+    assert rascunho.descartar(sessao, "casa", 2) == 1
+    assert rascunho.estado(sessao, "casa") is None
+    assert repositorio.ler(sessao, "casa")[0].hash == conteudo.hash
+    with pytest.raises(rascunho.SemRascunhoError):
+        rascunho.salvar(sessao, "casa", 1)
+    with pytest.raises(rascunho.SemRascunhoError):
+        rascunho.desfazer_passo(sessao, "casa", 1)
