@@ -30,11 +30,11 @@ export function Comparador({
   const colunas = escolhidas.length <= 1 ? 1 : escolhidas.length <= 4 ? 2 : 3;
 
   return (
-    <div role="dialog" aria-label="Comparar variações" className="fixed inset-0 z-50 flex flex-col bg-stone-100">
-      <div className="flex flex-wrap items-center gap-2 border-b border-stone-200 bg-white px-4 py-2 text-sm">
+    <div role="dialog" aria-label="Comparar variações" className="fixed inset-0 z-50 flex flex-col bg-superficie-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-linha bg-superficie px-4 py-2 text-sm">
         <h2 className="font-semibold">Comparar variações</h2>
         {todas.map((v) => (
-          <label key={v} className="flex items-center gap-1 rounded border border-stone-300 px-2 py-0.5">
+          <label key={v} className="flex items-center gap-1 rounded-md border border-linha-forte px-2 py-0.5">
             <input
               type="checkbox"
               checked={escolhidas.includes(v)}
@@ -43,14 +43,14 @@ export function Comparador({
             {nomes[v] ?? v}
           </label>
         ))}
-        <select className="rounded border" value={vista} onChange={(e) => setVista(e.target.value)} aria-label="vista">
+        <select className="rounded-md border" value={vista} onChange={(e) => setVista(e.target.value)} aria-label="vista">
           {(comuns.length ? comuns : [vista]).map((v) => (
             <option key={v} value={v}>
               {titulos[v] ?? v}
             </option>
           ))}
         </select>
-        <button className="ml-auto rounded border border-stone-300 px-3 py-0.5 hover:bg-stone-100" onClick={aoFechar}>
+        <button className="ml-auto rounded-md border border-linha-forte px-3 py-0.5 hover:bg-superficie-2" onClick={aoFechar}>
           fechar (Esc)
         </button>
       </div>
@@ -62,15 +62,15 @@ export function Comparador({
               <figcaption className="mb-1 flex justify-between text-sm">
                 <b>{nomes[v] ?? v}</b>
                 {q && (
-                  <span className="text-xs text-stone-500">
+                  <span className="text-xs text-tinta-suave">
                     {q.qualidade} · versão {q.versao}
                   </span>
                 )}
               </figcaption>
               {q ? (
-                <img src={URL_API + q.url} alt={`${nomes[v] ?? v}: ${titulos[vista] ?? vista}`} className="w-full rounded border bg-white" />
+                <img src={URL_API + q.url} alt={`${nomes[v] ?? v}: ${titulos[vista] ?? vista}`} className="w-full rounded-md border bg-superficie" />
               ) : (
-                <p className="rounded border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500">
+                <p className="rounded-md border border-dashed border-linha-forte p-6 text-center text-sm text-tinta-suave">
                   Sem imagem "{titulos[vista] ?? vista}" desta variação: peça um render dela
                 </p>
               )}

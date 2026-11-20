@@ -1,3 +1,4 @@
+import { btn } from "../estilo";
 import { useState } from "react";
 import { api, ou, type Medida, type PavimentoTela } from "../api/cliente";
 import { CampoMedida } from "../componentes/CampoMedida";
@@ -6,8 +7,8 @@ import { formatar, ORIGENS, paraMm, type Origem, type Unidade } from "../unidade
 import type { Item } from "../componentes/Planta";
 import { paraId, proximoId } from "./geometria";
 
-const botao = "rounded border border-stone-300 px-2 py-0.5 text-sm hover:bg-stone-100 disabled:opacity-40";
-const perigo = "rounded border border-red-300 px-2 py-0.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-40";
+const botao = btn("secundario", "xs");
+const perigo = "rounded-md border border-erro px-2 py-0.5 text-sm text-erro hover:bg-erro-fundo disabled:opacity-45";
 
 const TIPOS_COMODO = [
   "quarto", "sala", "cozinha", "banheiro", "lavabo", "area_servico", "escritorio", "corredor",
@@ -27,8 +28,8 @@ type TipoInstalacao = keyof typeof TIPOS_INSTALACAO;
 
 function Caixa({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section className="border-b border-stone-200 p-3">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">{titulo}</h2>
+    <section className="border-b border-linha p-3">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-tinta-suave">{titulo}</h2>
       {children}
     </section>
   );
@@ -55,16 +56,16 @@ function NovaMedida({
   return (
     <div className="py-1 text-sm">
       <label className="flex items-center gap-2">
-        <span className="w-28 text-stone-500">{rotulo}</span>
+        <span className="w-28 text-tinta-suave">{rotulo}</span>
         <input
-          className="w-20 rounded border px-1"
+          className="w-20 rounded-md border px-1"
           value={texto}
           onChange={(e) => {
             setTexto(e.target.value);
             avisar(e.target.value, origem);
           }}
         />
-        <span className="text-stone-500">{unidade}</span>
+        <span className="text-tinta-suave">{unidade}</span>
       </label>
       <div className="ml-28 flex gap-2 pl-2 text-xs">
         {ORIGENS.map((o) => (
@@ -113,7 +114,7 @@ export function PainelPlanta(props: Props) {
 
   return (
     <>
-      {editar.error && <p className="border-b border-red-200 bg-red-50 p-2 text-sm text-red-800">{editar.error.message}</p>}
+      {editar.error && <p className="border-b border-erro bg-erro-fundo p-2 text-sm text-erro">{editar.error.message}</p>}
       {!item && <Ferramentas {...ctx} />}
       {item?.tipo === "parede" && <PainelParede key={item.id} {...ctx} id={item.id} />}
       {item?.tipo === "abertura" && <PainelAbertura key={item.id} {...ctx} id={item.id} />}
@@ -145,7 +146,7 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
       <Caixa titulo="Desenhar paredes">
         {desenhando ? (
           <>
-            <p className="mb-2 text-sm text-stone-600">
+            <p className="mb-2 text-sm text-tinta-suave">
               Clique na planta canto a canto. Gruda nos cantos existentes e alinha reto. Botão direito
               termina a sequência.
             </p>
@@ -170,12 +171,12 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
           </button>
         ) : (
           <div className="flex flex-col gap-1 text-sm">
-            <p className="text-stone-600">
+            <p className="text-tinta-suave">
               Clique nas paredes que fecham o cômodo, em volta dele ({escolhendo.length} escolhidas
               {escolhendo.length ? `: ${escolhendo.join(", ")}` : ""}).
             </p>
-            <input className="rounded border px-1" placeholder="Nome (ex.: Cozinha)" value={nome} onChange={(e) => setNome(e.target.value)} />
-            <select className="rounded border" value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)}>
+            <input className="rounded-md border px-1" placeholder="Nome (ex.: Cozinha)" value={nome} onChange={(e) => setNome(e.target.value)} />
+            <select className="rounded-md border" value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)}>
               {TIPOS_COMODO.map((t) => (
                 <option key={t} value={t}>
                   {t.replace("_", " ")}
@@ -227,7 +228,7 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
             }
           />
         ))}
-        <p className="mt-2 text-xs text-stone-500">
+        <p className="mt-2 text-xs text-tinta-suave">
           Clique numa parede, porta, janela, tomada ou cômodo para editar. Arraste os cantos (círculos azuis)
           para mover paredes.
         </p>
@@ -250,12 +251,12 @@ function RemoverAndar({
   if (sozinho) return null;
   const cheio = (pav.paredes?.length ?? 0) + (pav.comodos?.length ?? 0) > 0;
   return confirmar ? (
-    <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-xs text-red-900">
+    <div className="mt-2 rounded-md border border-erro bg-erro-fundo p-2 text-xs text-erro">
       Remover o andar "{pav.nome ?? pav.id}"
       {cheio && `, com ${pav.comodos?.length ?? 0} cômodo(s) e ${pav.paredes?.length ?? 0} parede(s) (e os móveis)`}?
       <div className="mt-1 flex gap-2">
         <button
-          className="rounded bg-red-700 px-2 py-0.5 text-white disabled:opacity-40"
+          className={btn("perigo", "xs")}
           disabled={ocupado}
           onClick={() =>
             fazer((versao) =>
@@ -269,13 +270,13 @@ function RemoverAndar({
         >
           Remover
         </button>
-        <button className="rounded border border-red-200 bg-white px-2 py-0.5" onClick={() => setConfirmar(false)}>
+        <button className="rounded-md border border-erro bg-superficie px-2 py-0.5" onClick={() => setConfirmar(false)}>
           Cancelar
         </button>
       </div>
     </div>
   ) : (
-    <button className="mt-2 text-xs text-red-700 hover:underline" onClick={() => setConfirmar(true)}>
+    <button className="mt-2 text-xs text-erro hover:underline" onClick={() => setConfirmar(true)}>
       Remover este andar
     </button>
   );
@@ -295,7 +296,7 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
 
   return (
     <Caixa titulo={`Parede ${id}`}>
-      <p className="mb-1 text-sm text-stone-600">
+      <p className="mb-1 text-sm text-tinta-suave">
         Comprimento {formatar(comp, unidade)} · lados: {p.lado_a} | {p.lado_b}
       </p>
       <CampoMedida
@@ -310,10 +311,10 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
         }
       />
       {aberturas.length > 0 && (
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-tinta-suave">
           nela:{" "}
           {aberturas.map((a) => (
-            <button key={a.id} className="mr-1 text-sky-700 hover:underline" onClick={() => aoItem({ tipo: "abertura", id: a.id })}>
+            <button key={a.id} className="mr-1 link" onClick={() => aoItem({ tipo: "abertura", id: a.id })}>
               {a.id}
             </button>
           ))}
@@ -344,9 +345,9 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
           );
         }}
       >
-        <span className="text-stone-500">Dividir a</span>
-        <input className="w-16 rounded border px-1" value={corte} onChange={(e) => setCorte(e.target.value)} />
-        <span className="text-stone-500">{unidade} do início</span>
+        <span className="text-tinta-suave">Dividir a</span>
+        <input className="w-16 rounded-md border px-1" value={corte} onChange={(e) => setCorte(e.target.value)} />
+        <span className="text-tinta-suave">{unidade} do início</span>
         <button className={botao} disabled={paraMm(corte, unidade) === null || ocupado}>Ok</button>
       </form>
       <div className="mt-3 flex items-center gap-2 text-sm">
@@ -363,7 +364,7 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
         >
           Remover parede
         </button>
-        <label className="flex items-center gap-1 text-xs text-stone-600">
+        <label className="flex items-center gap-1 text-xs text-tinta-suave">
           <input type="checkbox" checked={cascata} onChange={(e) => setCascata(e.target.checked)} />
           Levar junto portas/janelas e tirar dos cômodos
         </label>
@@ -400,15 +401,15 @@ function NovaAbertura({
   const pronto = campos.every((c) => m[c]);
   const id = proximoId(`${tipo}-`, (pav.aberturas ?? []).map((a) => a.id));
   return (
-    <div className="mt-2 rounded border border-stone-200 bg-white p-2">
+    <div className="mt-2 rounded-md border border-linha bg-superficie p-2">
       <p className="mb-1 text-sm font-medium">Nova {tipo} ({id})</p>
       {campos.map((c) => (
         <NovaMedida key={c} rotulo={rotulos[c]} unidade={unidade} inicial={iniciais[c]?.[unidade] ?? ""} aoMudar={(v) => setM((x) => ({ ...x, [c]: v }))} />
       ))}
       {tipo === "porta" && (
         <label className="flex items-center gap-2 py-1 text-sm">
-          <span className="w-28 text-stone-500">Abre para</span>
-          <select className="rounded border" value={abrePara} onChange={(e) => setAbrePara(e.target.value)}>
+          <span className="w-28 text-tinta-suave">Abre para</span>
+          <select className="rounded-md border" value={abrePara} onChange={(e) => setAbrePara(e.target.value)}>
             {lados.map((l) => (
               <option key={l} value={l}>{l}</option>
             ))}
@@ -460,8 +461,8 @@ function NovaInstalacao({
   const [comodo, setComodo] = useState(lados[0] ?? "");
   const id = proximoId(`${tipo.replace("_", "-")}-`, (pav.instalacoes ?? []).map((i) => i.id));
   return (
-    <div className="mt-2 rounded border border-stone-200 bg-white p-2">
-      <select className="mb-1 rounded border text-sm" value={tipo} onChange={(e) => setTipo(e.target.value as TipoInstalacao)}>
+    <div className="mt-2 rounded-md border border-linha bg-superficie p-2">
+      <select className="mb-1 rounded-md border text-sm" value={tipo} onChange={(e) => setTipo(e.target.value as TipoInstalacao)}>
         {Object.entries(TIPOS_INSTALACAO).map(([k, v]) => (
           <option key={k} value={k}>{v}</option>
         ))}
@@ -470,8 +471,8 @@ function NovaInstalacao({
       <NovaMedida rotulo="Altura do piso" unidade={unidade} inicial={unidade === "cm" ? (tipo === "interruptor" ? "110" : "30") : ""} aoMudar={setAltura} />
       {lados.length === 2 && (
         <label className="flex items-center gap-2 py-1 text-sm">
-          <span className="w-28 text-stone-500">Lado (cômodo)</span>
-          <select className="rounded border" value={comodo} onChange={(e) => setComodo(e.target.value)}>
+          <span className="w-28 text-tinta-suave">Lado (cômodo)</span>
+          <select className="rounded-md border" value={comodo} onChange={(e) => setComodo(e.target.value)}>
             {lados.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </label>
@@ -521,9 +522,9 @@ function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx 
   const rotulos = { distancia_inicio: "Do início", largura: "Largura", altura: "Altura", peitoril: "Peitoril" };
   return (
     <Caixa titulo={`${a.tipo === "porta" ? "Porta" : "Janela"} ${id}`}>
-      <p className="mb-1 text-sm text-stone-600">
+      <p className="mb-1 text-sm text-tinta-suave">
         Na parede{" "}
-        <button className="text-sky-700 hover:underline" onClick={() => aoItem({ tipo: "parede", id: a.parede })}>
+        <button className="link" onClick={() => aoItem({ tipo: "parede", id: a.parede })}>
           {a.parede}
         </button>
       </p>
@@ -532,8 +533,8 @@ function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx 
       ))}
       {a.tipo === "porta" && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-stone-500">Abre para</span>
-          <select className="rounded border" value={a.abre_para ?? ""} onChange={(e) => alterar({ abre_para: e.target.value })}>
+          <span className="text-tinta-suave">Abre para</span>
+          <select className="rounded-md border" value={a.abre_para ?? ""} onChange={(e) => alterar({ abre_para: e.target.value })}>
             {[a.de, a.para].map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
           <button className={botao} disabled={ocupado} onClick={() => alterar({ dobradica: a.dobradica === "fim" ? "inicio" : "fim" })}>
@@ -571,7 +572,7 @@ function PainelInstalacao({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ct
   const nome = TIPOS_INSTALACAO[i.tipo as TipoInstalacao] ?? i.tipo;
   return (
     <Caixa titulo={`${nome} ${id}`}>
-      {"parede" in i && i.parede && <p className="mb-1 text-sm text-stone-600">Na parede {i.parede}</p>}
+      {"parede" in i && i.parede && <p className="mb-1 text-sm text-tinta-suave">Na parede {i.parede}</p>}
       <CampoMedida rotulo="Altura do piso" medida={i.altura} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ altura: m })} />
       {"parede" in i && i.parede && (
         <form
@@ -582,9 +583,9 @@ function PainelInstalacao({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ct
             if (mm !== null) alterar({}, mm);
           }}
         >
-          <span className="text-stone-500">Mover para</span>
-          <input className="w-16 rounded border px-1" value={dist} onChange={(e) => setDist(e.target.value)} />
-          <span className="text-stone-500">{unidade} do início</span>
+          <span className="text-tinta-suave">Mover para</span>
+          <input className="w-16 rounded-md border px-1" value={dist} onChange={(e) => setDist(e.target.value)} />
+          <span className="text-tinta-suave">{unidade} do início</span>
           <button className={botao} disabled={paraMm(dist, unidade) === null || ocupado}>Ok</button>
         </form>
       )}
@@ -618,20 +619,20 @@ function PainelComodo({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
   return (
     <Caixa titulo={`Cômodo ${c.nome}`}>
       <form className="mb-2 flex gap-1 text-sm" onSubmit={(e) => (e.preventDefault(), nome.trim() && alterar({ nome: nome.trim() }))}>
-        <input className="min-w-0 flex-1 rounded border px-1" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <input className="min-w-0 flex-1 rounded-md border px-1" value={nome} onChange={(e) => setNome(e.target.value)} />
         <button className={botao} disabled={nome.trim() === c.nome || ocupado}>Renomear</button>
       </form>
       <label className="mb-2 flex items-center gap-2 text-sm">
-        <span className="text-stone-500">Tipo</span>
-        <select className="rounded border" value={c.tipo} onChange={(e) => alterar({ tipo: e.target.value })}>
+        <span className="text-tinta-suave">Tipo</span>
+        <select className="rounded-md border" value={c.tipo} onChange={(e) => alterar({ tipo: e.target.value })}>
           {TIPOS_COMODO.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
         </select>
       </label>
       <CampoMedida rotulo="Pé-direito" medida={c.pe_direito ?? pav.pe_direito} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ pe_direito: m })} />
-      <p className="mt-1 text-xs text-stone-500">
+      <p className="mt-1 text-xs text-tinta-suave">
         paredes:{" "}
         {c.paredes.map((p) => (
-          <button key={p} className="mr-1 text-sky-700 hover:underline" onClick={() => aoItem({ tipo: "parede", id: p })}>
+          <button key={p} className="mr-1 link" onClick={() => aoItem({ tipo: "parede", id: p })}>
             {p}
           </button>
         ))}

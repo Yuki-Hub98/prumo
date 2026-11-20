@@ -50,9 +50,9 @@ export function Tela3D({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-stone-200 bg-white px-3 py-1.5 text-sm">
+      <div className="flex flex-wrap items-center gap-3 border-b border-linha bg-superficie px-3 py-1.5 text-sm">
         <select
-          className="rounded border"
+          className="rounded-md border"
           value={inteiro ? INTEIRO : (atual ?? "")}
           onChange={(e) => {
             const v = e.target.value;
@@ -67,17 +67,17 @@ export function Tela3D({
             </option>
           ))}
         </select>
-        <span className="text-xs text-stone-500">
+        <span className="text-xs text-tinta-suave">
           Ao vivo · versão {cena.data?.versao ?? "…"}
           {cena.isFetching && " · atualizando…"}
           {inteiro && " · no pavimento pintam piso, teto, rodapé e móveis"}
         </span>
-        <span className="text-xs text-stone-400">Fotos realistas: aba "Imagens"</span>
+        <span className="text-xs text-tinta-suave">Fotos realistas: aba "Imagens"</span>
       </div>
-      {cena.error && <p className="border-b border-red-200 bg-red-50 px-3 py-1 text-xs text-red-800">{cena.error.message}</p>}
+      {cena.error && <p className="border-b border-erro bg-erro-fundo px-3 py-1 text-xs text-erro">{cena.error.message}</p>}
       <div className="min-h-0 flex-1">
         {cena.data ? (
-          <Suspense fallback={<p className="p-4 text-stone-500">Carregando o visor…</p>}>
+          <Suspense fallback={<p className="p-4 text-tinta-suave">Carregando o visor…</p>}>
             <Visor3D
               cena={cena.data}
               chave={inteiro ? `pavimento:${pavimento}` : `comodo:${atual}`}
@@ -88,7 +88,7 @@ export function Tela3D({
             />
           </Suspense>
         ) : (
-          <p className="p-4 text-stone-500">{atual || inteiro ? "montando o 3D…" : "Nenhum cômodo no projeto."}</p>
+          <p className="p-4 text-tinta-suave">{atual || inteiro ? "montando o 3D…" : "Nenhum cômodo no projeto."}</p>
         )}
       </div>
     </div>

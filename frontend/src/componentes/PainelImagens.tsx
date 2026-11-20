@@ -17,22 +17,22 @@ const ROTULO: Record<string, string> = {
 function Item({ r, titulos }: { r: InfoRender; titulos: Record<string, string> }) {
   const pct = Math.round(r.progresso * 100);
   return (
-    <li className="rounded border border-stone-200 bg-white p-2 text-sm">
+    <li className="rounded-md border border-linha bg-superficie p-2 text-sm">
       <div className="flex justify-between">
         <span>
           <b>{maiuscula(r.variacao)}</b> · {r.qualidade} · {r.vistas.length} {r.vistas.length === 1 ? "vista" : "vistas"}
         </span>
-        <span className={r.status === "erro" ? "text-red-700" : "text-stone-500"}>{ROTULO[r.status]}</span>
+        <span className={r.status === "erro" ? "text-erro" : "text-tinta-suave"}>{ROTULO[r.status]}</span>
       </div>
       {r.status === "na_fila" && (
-        <p className="text-xs text-stone-500">Estimativa: ~{formatarTempo(r.estimativa_s)}</p>
+        <p className="text-xs text-tinta-suave">Estimativa: ~{formatarTempo(r.estimativa_s)}</p>
       )}
       {r.status === "rodando" && (
         <>
-          <div className="mt-1 h-2 overflow-hidden rounded bg-stone-200">
-            <div className="h-full bg-sky-600 transition-all" style={{ width: `${pct}%` }} />
+          <div className="mt-1 h-2 overflow-hidden rounded-md bg-superficie-2">
+            <div className="h-full bg-trena transition-all" style={{ width: `${pct}%` }} />
           </div>
-          <p className="mt-0.5 text-xs text-stone-500">
+          <p className="mt-0.5 text-xs text-tinta-suave">
             Imagem {r.imagem_atual ?? 1} de {r.imagens} · {pct}% · faltam ~{formatarTempo(r.restante_s)}
           </p>
         </>
@@ -44,19 +44,19 @@ function Item({ r, titulos }: { r: InfoRender; titulos: Record<string, string> }
               const v = vistaDaImagem(u);
               return (
                 <a key={u} href={URL_API + u} target="_blank" rel="noreferrer" className="block">
-                  <img src={URL_API + u} alt={titulos[v] ?? v} className="rounded border" />
-                  <span className="block truncate text-xs text-stone-500">{titulos[v] ?? v}</span>
+                  <img src={URL_API + u} alt={titulos[v] ?? v} className="rounded-md border" />
+                  <span className="block truncate text-xs text-tinta-suave">{titulos[v] ?? v}</span>
                 </a>
               );
             })}
           </div>
-          <p className="mt-0.5 text-xs text-stone-500">
+          <p className="mt-0.5 text-xs text-tinta-suave">
             {r.em_cache ? "Já estava pronto (nada mudou)" : `Levou ${formatarTempo(r.duracao_s)}`} · versão{" "}
             {r.versao_projeto}
           </p>
         </>
       )}
-      {r.status === "erro" && <p className="text-xs text-red-700">{r.erro?.split("\n")[0]}</p>}
+      {r.status === "erro" && <p className="text-xs text-erro">{r.erro?.split("\n")[0]}</p>}
     </li>
   );
 }
@@ -82,13 +82,13 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
   ]);
   const comImagem = Object.keys(ultimasImagens(lista)).length;
   const [comparando, setComparando] = useState(false);
-  const botao = "flex-1 rounded border border-stone-300 px-2 py-1 text-sm hover:bg-stone-100 disabled:opacity-40";
+  const botao = "flex-1 rounded-md border border-linha-forte bg-superficie px-2 py-1 text-sm hover:bg-superficie-2 disabled:cursor-not-allowed disabled:opacity-45";
   return (
-    <section className="border-b border-stone-200 p-3">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
+    <section className="border-b border-linha p-3">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-tinta-suave">
         Imagens 3D · variação {variacao}
       </h2>
-      <p className="mb-1 text-xs text-stone-500">Vistas (cada uma é uma imagem):</p>
+      <p className="mb-1 text-xs text-tinta-suave">Vistas (cada uma é uma imagem):</p>
       <div className="mb-2 flex flex-wrap gap-1">
         {disponiveis.map((v) => {
           const ligada = vistas.includes(v.nome);
@@ -97,7 +97,7 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
               key={v.nome}
               aria-pressed={ligada}
               className={`rounded-full border px-2 py-0.5 text-xs ${
-                ligada ? "border-stone-800 bg-stone-800 text-white" : "border-stone-300 bg-white hover:bg-stone-100"
+                ligada ? "border-tinta bg-tinta text-papel" : "border-linha-forte bg-superficie hover:bg-superficie-2"
               }`}
               onClick={() => setEscolha(alternar(vistas, v.nome, nomes))}
             >
@@ -105,27 +105,27 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
             </button>
           );
         })}
-        {disponiveis.length === 0 && <span className="text-xs text-stone-400">Carregando vistas…</span>}
+        {disponiveis.length === 0 && <span className="text-xs text-tinta-suave">Carregando vistas…</span>}
       </div>
       <div className="mb-2 flex gap-2">
         <button className={botao} disabled={pedir.isPending || semVista} onClick={() => pedir.mutate({ variacao, qualidade: "rascunho", vistas })}>
           Rascunho
-          <span className="block text-xs text-stone-500">~{formatarTempo(est?.rascunho)}</span>
+          <span className="block text-xs text-tinta-suave">~{formatarTempo(est?.rascunho)}</span>
         </button>
         <button className={botao} disabled={pedir.isPending || semVista} onClick={() => pedir.mutate({ variacao, qualidade: "final", vistas })}>
           Final
-          <span className="block text-xs text-stone-500">~{formatarTempo(est?.final)}</span>
+          <span className="block text-xs text-tinta-suave">~{formatarTempo(est?.final)}</span>
         </button>
       </div>
-      {pedir.error && <p className="mb-2 text-sm text-red-700">{pedir.error.message}</p>}
+      {pedir.error && <p className="mb-2 text-sm text-erro">{pedir.error.message}</p>}
       <button
-        className="mb-2 w-full rounded border border-stone-300 px-2 py-1 text-sm hover:bg-stone-100 disabled:opacity-40"
+        className="mb-2 w-full rounded-md border border-linha-forte px-2 py-1 text-sm hover:bg-superficie-2 disabled:opacity-45"
         disabled={comImagem < 2}
         title={comImagem < 2 ? "Precisa de imagens prontas de pelo menos duas variações" : undefined}
         onClick={() => setComparando(true)}
       >
         Comparar variações lado a lado
-        {comImagem < 2 && <span className="block text-xs text-stone-500">Peça imagens de duas variações ou mais</span>}
+        {comImagem < 2 && <span className="block text-xs text-tinta-suave">Peça imagens de duas variações ou mais</span>}
       </button>
       {comparando && (
         <Comparador renders={lista} nomes={nomesVariacoes} titulos={titulos} aoFechar={() => setComparando(false)} />
@@ -135,7 +135,7 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
           <Item key={r.id} r={r} titulos={titulos} />
         ))}
       </ul>
-      {lista.length === 0 && <p className="text-sm text-stone-500">Nenhuma imagem ainda.</p>}
+      {lista.length === 0 && <p className="text-sm text-tinta-suave">Nenhuma imagem ainda.</p>}
     </section>
   );
 }

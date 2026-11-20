@@ -119,7 +119,7 @@ export function Planta({
     <svg
       ref={svg}
       viewBox={viewBox}
-      className="h-full w-full touch-none select-none bg-white"
+      className="h-full w-full touch-none select-none bg-superficie"
       onPointerDown={(e) => {
         if (editor?.desenhando) {
           if (e.button !== 0) return;
