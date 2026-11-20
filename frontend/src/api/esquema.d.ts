@@ -556,6 +556,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/redimensionar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redimensionar Movel
+         * @description Puxar um lado do móvel na planta (o oposto fica parado).
+         */
+        post: operations["redimensionar_movel_projetos__codigo__comodos__comodo__moveis__id___redimensionar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover": {
         parameters: {
             query?: never;
@@ -2449,6 +2469,22 @@ export interface components {
                 };
             };
         };
+        /**
+         * RedimensionarMovel
+         * @description Arrastar um lado do móvel: o lado oposto fica parado; a medida vira "Quero assim".
+         */
+        RedimensionarMovel: {
+            /**
+             * Lado
+             * @enum {string}
+             */
+            lado: "esquerda" | "direita" | "frente" | "costas";
+            /**
+             * Tamanho
+             * @description mm: largura (esquerda/direita) ou profundidade
+             */
+            tamanho: number;
+        };
         /** Renomear */
         Renomear: {
             /** Codigo */
@@ -3966,6 +4002,46 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NovoMovel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    redimensionar_movel_projetos__codigo__comodos__comodo__moveis__id___redimensionar_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedimensionarMovel"];
             };
         };
         responses: {

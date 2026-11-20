@@ -39,6 +39,7 @@ from interiores_api.esquemas import (
     PedidoRenderPavimento,
     Preferencias,
     ProjetoCompleto,
+    RedimensionarMovel,
     Renomear,
     ResultadoEdicao,
     ResumoProjeto,
@@ -420,6 +421,19 @@ def adicionar_movel(
             p, comodo, d, pedido.tipo, modelo=pedido.modelo, id_=pedido.id, nome=pedido.nome,
             centro=pedido.centro, rotacao=pedido.rotacao, parede=pedido.parede,
             distancia=pedido.distancia, medidas=pedido.medidas, regras=r, base=base,
+        ),
+    )  # fmt: skip
+
+
+@moveis.post("/{id_}/redimensionar")
+def redimensionar_movel(
+    svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao, pedido: RedimensionarMovel
+) -> ResultadoEdicao:
+    """Puxar um lado do móvel na planta (o oposto fica parado)."""
+    return svc.editar_moveis(
+        codigo, versao, comodo, "redimensionar_movel",
+        lambda p, d, r: em.redimensionar_movel(
+            p, comodo, d, id_, pedido.lado, pedido.tamanho, regras=r
         ),
     )  # fmt: skip
 

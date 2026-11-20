@@ -164,6 +164,14 @@ neste navegador; sem escolha, segue o sistema. As cores vêm dos tokens da ident
 (Medi / Quero assim / Chute, este também tracejado), vermelho/âmbar é problema e amarelo é ação
 principal ou o que está selecionado.
 
+## Redimensionar pelas bordas
+
+Com um móvel selecionado na planta (modo **Móveis e cores**), aparecem quatro alças amarelas no
+meio dos lados. Puxe uma: o contorno fantasma mostra o tamanho novo e a medida ao vivo; ao
+soltar, a largura (lados) ou a profundidade (frente/costas) muda com o **lado oposto parado**.
+De 1 em 1 cm, mínimo 10 cm. A medida arrastada entra como **"Quero assim"** (decisão do
+usuário: arrastar é decidir) — troque no painel se foi medida. Desfazer volta.
+
 ## Acabamento, puxador e pés
 
 No painel do móvel (aba **Móvel**): **Acabamento** (madeira clara, madeira escura, MDF

@@ -244,6 +244,51 @@ def alterar_movel(
     return _aplicar(projeto, comodo, dados, regras, mudar)
 
 
+TAMANHO_MINIMO = 100
+"""mm: menor largura/profundidade que o arrastar aceita."""
+
+_LADOS: dict[str, tuple[str, int, int]] = {
+    # lado arrastado → (medida que muda, eixo local x/y, sentido)
+    "esquerda": ("largura", 0, -1),
+    "direita": ("largura", 0, 1),
+    "costas": ("profundidade", 1, -1),
+    "frente": ("profundidade", 1, 1),
+}
+
+
+def redimensionar_movel(
+    projeto: Projeto,
+    comodo: str,
+    dados: DadosComodo | None,
+    id_: str,
+    lado: str,
+    tamanho: int,
+    regras: Mapping[str, object] | None = None,
+) -> EdicaoMoveis:
+    """Arrastar um lado do móvel na planta: muda a largura (esquerda/direita) ou a
+    profundidade (frente/costas) para ``tamanho`` mm com o lado **oposto parado** (o centro
+    anda metade da diferença). A medida nova entra como ``projeto`` ("Quero assim"):
+    arrastar é decidir o tamanho (decisão do usuário, 2026-11-20)."""
+    if lado not in _LADOS:
+        raise EdicaoInvalidaError(f"lado '{lado}' inválido ({', '.join(_LADOS)})")
+    if tamanho < TAMANHO_MINIMO:
+        raise EdicaoInvalidaError(f"tamanho mínimo é {TAMANHO_MINIMO} mm")
+    campo, eixo, sentido = _LADOS[lado]
+
+    def mudar(d: Dados) -> None:
+        bruto = d["moveis"][_indice(d, id_)]
+        atual = Movel.model_validate(bruto)
+        antes = getattr(atual, campo).valor
+        anda = (tamanho - antes) / 2 * sentido
+        local = (anda, 0.0) if eixo == 0 else (0.0, anda)
+        cx, cy = geometria.girar_movel(atual, *local)
+        bruto["centro"] = [round(cx), round(cy)]
+        nova = {"valor": int(tamanho), "origem": "projeto", "obs": "arrastado na planta"}
+        bruto[campo] = registrar_anterior(bruto.get(campo), nova)
+
+    return _aplicar(projeto, comodo, dados, regras, mudar)
+
+
 def remover_movel(
     projeto: Projeto,
     comodo: str,

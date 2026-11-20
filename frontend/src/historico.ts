@@ -25,6 +25,7 @@ const NOMES: Record<string, string> = {
   adicionar_movel: "Adicionou móvel",
   alterar_movel: "Alterou móvel",
   mover_movel: "Moveu móvel",
+  redimensionar_movel: "Redimensionou móvel",
   remover_movel: "Removeu móvel",
   salvar_variacao: "Salvou cores",
   remover_variacao: "Removeu variação de cores",

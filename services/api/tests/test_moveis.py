@@ -191,3 +191,20 @@ def test_modelo_proprio_salvar_usar_e_apagar(api: TestClient) -> None:
         ).status_code
         == 404
     )
+
+
+def test_redimensionar_pelo_lado(api: TestClient) -> None:
+    r = api.post(
+        f"{MOVEIS}/cama/redimensionar",
+        params={"versao": 1},
+        json={"lado": "direita", "tamanho": 1600},
+    )
+    assert r.status_code == 200, r.text
+    caminhos = {a["caminho"] for a in r.json()["alteracoes"]}
+    assert {"comodos.quarto.moveis[cama].largura", "comodos.quarto.moveis[cama].centro"} <= caminhos
+    ruim = api.post(
+        f"{MOVEIS}/cama/redimensionar",
+        params={"versao": 2},
+        json={"lado": "direita", "tamanho": 20},
+    )
+    assert ruim.status_code == 422
