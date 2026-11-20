@@ -296,11 +296,13 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Comparador e tinta**: variações lado a lado (`make compare` e na tela) e planilha de
       tinta (`make tinta` e na tela): látex de paredes e teto e esmalte de portas e rodapé, por
       cor, com litros e latas
+- [x] **Cozinha**: pia (gabinete, bancada, cuba e torneira), fogão (a gás ou cooktop) e
+      geladeira no catálogo, com símbolo na planta e 3D; checagens de triângulo de trabalho,
+      água/esgoto da pia, gás e ventilação do fogão, fogão sob janela e altura da bancada
 
 ### Próximos
 
-- [ ] Cozinha (hidráulica, gás, triângulo de trabalho), com pia/cuba, torneira, fogão e
-      geladeira; depois banheiro (vaso, box/chuveiro, ralo)
+- [ ] Banheiro (vaso, box/chuveiro, ralo)
 - [ ] Modelos prontos (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
       escolher e posicionar, com símbolo na planta e 3D detalhado. **Tudo editável pela
       pessoa**: partir de um modelo pronto e mudar medidas, acabamento/cor, número de
