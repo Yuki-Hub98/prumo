@@ -392,6 +392,13 @@ class DefinirConstrucao(_Esquema):
     construcao: Construcao | None
 
 
+class RedimensionarMovel(_Esquema):
+    """Arrastar um lado do móvel: o lado oposto fica parado; a medida vira "Quero assim"."""
+
+    lado: Literal["esquerda", "direita", "frente", "costas"]
+    tamanho: int = Field(gt=0, description="mm: largura (esquerda/direita) ou profundidade")
+
+
 class MoverMovel(_Esquema):
     """Arrastar (``centro``), girar (``rotacao``) ou prender numa ``parede``."""
 
@@ -431,6 +438,7 @@ __all__ = [
     "PedidoRender",
     "Preferencias",
     "ProjetoCompleto",
+    "RedimensionarMovel",
     "Renomear",
     "ResultadoEdicao",
     "ResumoProjeto",
