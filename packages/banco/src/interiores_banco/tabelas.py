@@ -154,6 +154,14 @@ class Abertura(_DoPavimento, Base):
     folha: Mapped[str | None] = mapped_column(String(20))
     abre_para: Mapped[str | None] = mapped_column(Codigo)
     dobradica: Mapped[str | None] = mapped_column(String(10))
+    estilo: Mapped[str | None] = mapped_column(
+        String(20), comment="porta: lisa | almofadada | vidro | veneziana"
+    )
+    abertura: Mapped[str | None] = mapped_column(
+        String(20), comment="janela: correr | basculante | maxim_ar | abrir | fixa"
+    )
+    folhas: Mapped[int | None] = mapped_column(comment="janela: número de folhas")
+    modelo: Mapped[str | None] = mapped_column(String(64), comment="modelo do catálogo")
 
 
 class Estrutura(_DoPavimento, Base):

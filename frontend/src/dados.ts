@@ -66,6 +66,15 @@ export function useVersoes(codigo: string) {
   });
 }
 
+/** Portas e janelas prontas (tipos e tamanhos comerciais). */
+export function useCatalogoAberturas() {
+  return useQuery({
+    queryKey: ["catalogo", "aberturas"],
+    queryFn: () => ou(api.GET("/catalogo/aberturas")),
+    staleTime: Infinity,
+  });
+}
+
 export function useCatalogo() {
   return useQuery({
     queryKey: ["catalogo"],

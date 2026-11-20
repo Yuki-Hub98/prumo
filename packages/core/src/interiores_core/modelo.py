@@ -62,12 +62,20 @@ class Porta(_AberturaBase):
     tipo: Literal["porta"]
     de: str
     para: str
-    folha: Literal["giro", "correr"] = "giro"
+    folha: Literal["giro", "correr", "camarao"] = "giro"
+    """``camarao``: duas folhas que dobram para um lado (varre metade da largura)."""
     abre_para: str | None = Field(
-        None, description="Cômodo (de/para) para onde a folha gira. Obrigatório se giro."
+        None,
+        description="Cômodo (de/para) para onde a folha gira. Obrigatório se giro ou camarão.",
     )
     dobradica: Literal["inicio", "fim"] | None = Field(
         None, description="Lado do vão com a dobradiça, no sentido da parede."
+    )
+    estilo: Literal["lisa", "almofadada", "vidro", "veneziana"] | None = Field(
+        None, description="Acabamento da folha (só visual); sem valor = lisa."
+    )
+    modelo: str | None = Field(
+        None, description="Modelo do catálogo de portas de onde vieram as medidas."
     )
 
 
@@ -76,6 +84,15 @@ class Janela(_AberturaBase):
 
     tipo: Literal["janela"]
     peitoril: Medida
+    abertura: Literal["correr", "basculante", "maxim_ar", "abrir", "fixa"] | None = Field(
+        None, description="Como a janela abre; sem valor = de correr."
+    )
+    folhas: int | None = Field(
+        None, ge=1, le=6, description="Número de folhas (correr/abrir); sem valor = 2."
+    )
+    modelo: str | None = Field(
+        None, description="Modelo do catálogo de janelas de onde vieram as medidas."
+    )
 
 
 Abertura = Annotated[Porta | Janela, Field(discriminator="tipo")]

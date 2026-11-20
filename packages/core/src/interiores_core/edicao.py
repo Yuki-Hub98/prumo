@@ -379,9 +379,11 @@ def remover_parede(projeto: Projeto, pavimento: str, id_: str, cascata: bool = F
 
 CAMPOS_PORTA = {
     "parede", "distancia_inicio", "largura", "altura", "de", "para", "folha", "abre_para",
-    "dobradica",
+    "dobradica", "estilo", "modelo",
 }  # fmt: skip
-CAMPOS_JANELA = {"parede", "distancia_inicio", "largura", "altura", "peitoril"}
+CAMPOS_JANELA = {
+    "parede", "distancia_inicio", "largura", "altura", "peitoril", "abertura", "folhas", "modelo",
+}  # fmt: skip
 
 
 def adicionar_abertura(

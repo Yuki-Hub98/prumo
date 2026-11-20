@@ -337,19 +337,20 @@ class _Validador:
                 f"'{parede.lado_a}' e '{parede.lado_b}'",
                 **onde,
             )
-        if porta.folha == "giro":
+        if porta.folha in ("giro", "camarao"):
+            nome = "de giro" if porta.folha == "giro" else "camarão"
             if porta.abre_para not in (porta.de, porta.para):
                 self.add(
                     Severidade.ERRO,
                     "porta_sentido",
-                    "porta de giro precisa de 'abre_para' igual a 'de' ou 'para'",
+                    f"porta {nome} precisa de 'abre_para' igual a 'de' ou 'para'",
                     **onde,
                 )
             if porta.dobradica is None:
                 self.add(
                     Severidade.ERRO,
                     "porta_dobradica",
-                    "porta de giro precisa de 'dobradica' (inicio|fim)",
+                    f"porta {nome} precisa de 'dobradica' (inicio|fim)",
                     **onde,
                 )
 

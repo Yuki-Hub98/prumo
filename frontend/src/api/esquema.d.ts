@@ -970,6 +970,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/catalogo/aberturas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver Catalogo Aberturas
+         * @description Portas e janelas prontas: tipos e tamanhos comerciais (para escolher ao criar).
+         */
+        get: operations["ver_catalogo_aberturas_catalogo_aberturas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/saude": {
         parameters: {
             query?: never;
@@ -1104,6 +1124,28 @@ export interface components {
              * @description movel e parte (pintura).
              */
             extras?: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * CatalogoAberturas
+         * @description O que a tela recebe: modelos prontos e os nomes de cada opção.
+         */
+        CatalogoAberturas: {
+            /** Portas */
+            portas: components["schemas"]["ModeloPorta"][];
+            /** Janelas */
+            janelas: components["schemas"]["ModeloJanela"][];
+            /** Folhas Porta */
+            folhas_porta: {
+                [key: string]: string;
+            };
+            /** Estilos Porta */
+            estilos_porta: {
+                [key: string]: string;
+            };
+            /** Aberturas Janela */
+            aberturas_janela: {
                 [key: string]: string;
             };
         };
@@ -1506,6 +1548,21 @@ export interface components {
              */
             tipo: "janela";
             peitoril: components["schemas"]["Medida"];
+            /**
+             * Abertura
+             * @description Como a janela abre; sem valor = de correr.
+             */
+            abertura?: ("correr" | "basculante" | "maxim_ar" | "abrir" | "fixa") | null;
+            /**
+             * Folhas
+             * @description Número de folhas (correr/abrir); sem valor = 2.
+             */
+            folhas?: number | null;
+            /**
+             * Modelo
+             * @description Modelo do catálogo de janelas de onde vieram as medidas.
+             */
+            modelo?: string | null;
         };
         /** Lata */
         Lata: {
@@ -1575,6 +1632,59 @@ export interface components {
             valor: number;
             /** Obs */
             obs: string | null;
+        };
+        /** ModeloJanela */
+        ModeloJanela: {
+            /** Id */
+            id: string;
+            /** Nome */
+            nome: string;
+            /**
+             * Abertura
+             * @enum {string}
+             */
+            abertura: "correr" | "basculante" | "maxim_ar" | "abrir" | "fixa";
+            /**
+             * Folhas
+             * @default 2
+             */
+            folhas?: number;
+            /** Largura */
+            largura: number;
+            /** Altura */
+            altura: number;
+            /** Peitoril */
+            peitoril: number;
+            /**
+             * Uso
+             * @default
+             */
+            uso?: string;
+        };
+        /** ModeloPorta */
+        ModeloPorta: {
+            /** Id */
+            id: string;
+            /** Nome */
+            nome: string;
+            /**
+             * Folha
+             * @enum {string}
+             */
+            folha: "giro" | "correr" | "camarao";
+            /**
+             * Estilo
+             * @default lisa
+             * @enum {string}
+             */
+            estilo?: "lisa" | "almofadada" | "vidro" | "veneziana";
+            /** Largura */
+            largura: number;
+            /**
+             * Altura
+             * @default 2100
+             */
+            altura?: number;
         };
         /**
          * Movel
@@ -2126,10 +2236,10 @@ export interface components {
              * @default giro
              * @enum {string}
              */
-            folha?: "giro" | "correr";
+            folha?: "giro" | "correr" | "camarao";
             /**
              * Abre Para
-             * @description Cômodo (de/para) para onde a folha gira. Obrigatório se giro.
+             * @description Cômodo (de/para) para onde a folha gira. Obrigatório se giro ou camarão.
              */
             abre_para?: string | null;
             /**
@@ -2137,6 +2247,16 @@ export interface components {
              * @description Lado do vão com a dobradiça, no sentido da parede.
              */
             dobradica?: ("inicio" | "fim") | null;
+            /**
+             * Estilo
+             * @description Acabamento da folha (só visual); sem valor = lisa.
+             */
+            estilo?: ("lisa" | "almofadada" | "vidro" | "veneziana") | null;
+            /**
+             * Modelo
+             * @description Modelo do catálogo de portas de onde vieram as medidas.
+             */
+            modelo?: string | null;
         };
         /**
          * Preferencias
@@ -4579,6 +4699,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    ver_catalogo_aberturas_catalogo_aberturas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogoAberturas"];
                 };
             };
         };

@@ -152,7 +152,7 @@ def superficies(
     for c in pavimento.comodos:
         saida += _do_comodo(pavimento, c, cores.get(c.id), rodape)
     for ab in pavimento.aberturas:
-        if isinstance(ab, Porta) and ab.folha in ("giro", "correr"):
+        if isinstance(ab, Porta) and ab.folha in ("giro", "correr", "camarao"):
             # folha pintada dos dois lados
             area = 2 * ab.largura.valor * ab.altura.valor / 1e6
             dono = ab.abre_para if ab.abre_para and ab.abre_para != "externo" else ab.de or ""

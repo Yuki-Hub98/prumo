@@ -183,8 +183,15 @@ No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagad
   nos cantos existentes e alinha na horizontal/vertical. Botão direito termina a sequência.
 - **Cantos:** arraste os quadradinhos dos cantos; as paredes que se encontram no canto vão junto.
 - **Clique para editar:** parede (espessura, dividir, + Porta, + Janela, + Tomada/ponto,
-  remover), porta/janela (medidas, para onde abre, dobradiça), tomada/ponto (altura, posição),
-  cômodo (nome, tipo, pé-direito, remover).
+  remover), porta/janela (medidas, para onde abre, dobradiça, tipo), tomada/ponto (altura,
+  posição), cômodo (nome, tipo, pé-direito, remover).
+- **Portas e janelas prontas:** em **+ Porta** / **+ Janela**, "Modelo pronto" traz os tamanhos
+  comerciais (porta de 60 a 90 cm, de correr, camarão; janela de correr 100 × 100 a 200 × 120,
+  basculante e maxim-ar de banheiro, de abrir, fixa) e preenche as medidas — a origem continua
+  sendo perguntada. Porta: folha (giro, correr, camarão) e estilo (lisa, almofadada, com vidro,
+  veneziana). Janela: abertura (correr, basculante, maxim-ar, de abrir, fixa) e número de
+  folhas. Tudo muda depois no painel da porta/janela e aparece na planta, nas elevações e no 3D.
+  Janela sem tipo informado (projetos antigos) continua desenhada como antes.
 - **Novo cômodo:** "Escolher as paredes…", clique nas paredes em volta, dê nome e tipo.
 - Toda medida nova pergunta a origem ("Medi", "Quero assim", "Chute"). As edições vão em fila,
   uma de cada vez, para desenhar rápido sem conflito de versão.

@@ -156,3 +156,34 @@ def test_gerar_vistas_apaga_obsoletas(casa: ProjetoCarregado, tmp_path: Path) ->
     _, arquivos = gerar_vistas(casa, tmp_path, "terreo", "quarto", data=DATA)
     assert not any(v.exists() for v in velhas)
     assert outra.exists() and all(a.exists() for a in arquivos)
+
+
+def _com_tipos(tmp_path: Path) -> ProjetoCarregado:
+    """Cópia da casa com porta camarão almofadada e janela de abrir de 2 folhas."""
+    destino = tmp_path / "casa"
+    shutil.copytree(DADOS, destino)
+    arq = destino / "projeto.json"
+    dados = json.loads(arq.read_text(encoding="utf-8"))
+    for a in dados["pavimentos"][0]["aberturas"]:
+        if a["id"] == "porta-quarto":
+            a.update(folha="camarao", estilo="almofadada")
+        elif a["id"] == "janela-quarto":
+            a.update(abertura="abrir", folhas=2)
+    arq.write_text(json.dumps(dados), encoding="utf-8")
+    return carregar(destino)
+
+
+def test_tipos_de_porta_e_janela_no_desenho(tmp_path: Path) -> None:
+    casa = _com_tipos(tmp_path)
+    planta = desenhar_planta(casa, "terreo", "quarto", DATA).doc
+    arcos = [e for e in planta.modelspace().query("ARC") if e.dxf.layer == "ABERTURA"]
+    # camarão: arco de meia largura (porta de 800)
+    assert any(round(e.dxf.radius) == 400 for e in arcos)
+    assert any("de abrir" in t for t in _textos(planta, "ABERTURA"))
+    vistas = {v.nome: d.doc for v, d in desenhar_vistas(casa, "terreo", "quarto", DATA)}
+    janela = vistas["elevacao-p1"]  # parede da janela
+    tracejadas = [
+        e for e in janela.modelspace().query("LINE")
+        if e.dxf.layer == "ABERTURA" and e.dxf.linetype == "TRACEJADO"
+    ]  # fmt: skip
+    assert len(tracejadas) >= 4  # duas folhas de abrir: um "<" em cada

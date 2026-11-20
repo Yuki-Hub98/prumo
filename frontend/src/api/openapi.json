@@ -3676,6 +3676,28 @@
         }
       }
     },
+    "/catalogo/aberturas": {
+      "get": {
+        "tags": [
+          "catálogo"
+        ],
+        "summary": "Ver Catalogo Aberturas",
+        "description": "Portas e janelas prontas: tipos e tamanhos comerciais (para escolher ao criar).",
+        "operationId": "ver_catalogo_aberturas_catalogo_aberturas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogoAberturas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/saude": {
       "get": {
         "tags": [
@@ -3978,6 +4000,56 @@
         ],
         "title": "Caixa3D",
         "description": "Paralelepípedo (peças de móvel, folhas de porta): centro e tamanho em mm, giro em z."
+      },
+      "CatalogoAberturas": {
+        "properties": {
+          "portas": {
+            "items": {
+              "$ref": "#/components/schemas/ModeloPorta"
+            },
+            "type": "array",
+            "title": "Portas"
+          },
+          "janelas": {
+            "items": {
+              "$ref": "#/components/schemas/ModeloJanela"
+            },
+            "type": "array",
+            "title": "Janelas"
+          },
+          "folhas_porta": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Folhas Porta"
+          },
+          "estilos_porta": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Estilos Porta"
+          },
+          "aberturas_janela": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Aberturas Janela"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "portas",
+          "janelas",
+          "folhas_porta",
+          "estilos_porta",
+          "aberturas_janela"
+        ],
+        "title": "CatalogoAberturas",
+        "description": "O que a tela recebe: modelos prontos e os nomes de cada opção."
       },
       "Cena3D": {
         "properties": {
@@ -4981,6 +5053,51 @@
           },
           "peitoril": {
             "$ref": "#/components/schemas/Medida"
+          },
+          "abertura": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "correr",
+                  "basculante",
+                  "maxim_ar",
+                  "abrir",
+                  "fixa"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abertura",
+            "description": "Como a janela abre; sem valor = de correr."
+          },
+          "folhas": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folhas",
+            "description": "Número de folhas (correr/abrir); sem valor = 2."
+          },
+          "modelo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo",
+            "description": "Modelo do catálogo de janelas de onde vieram as medidas."
           }
         },
         "additionalProperties": false,
@@ -5187,6 +5304,112 @@
           "obs"
         ],
         "title": "MedidaEstimada"
+      },
+      "ModeloJanela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "abertura": {
+            "type": "string",
+            "enum": [
+              "correr",
+              "basculante",
+              "maxim_ar",
+              "abrir",
+              "fixa"
+            ],
+            "title": "Abertura"
+          },
+          "folhas": {
+            "type": "integer",
+            "title": "Folhas",
+            "default": 2
+          },
+          "largura": {
+            "type": "integer",
+            "title": "Largura"
+          },
+          "altura": {
+            "type": "integer",
+            "title": "Altura"
+          },
+          "peitoril": {
+            "type": "integer",
+            "title": "Peitoril"
+          },
+          "uso": {
+            "type": "string",
+            "title": "Uso",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "abertura",
+          "largura",
+          "altura",
+          "peitoril"
+        ],
+        "title": "ModeloJanela"
+      },
+      "ModeloPorta": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "folha": {
+            "type": "string",
+            "enum": [
+              "giro",
+              "correr",
+              "camarao"
+            ],
+            "title": "Folha"
+          },
+          "estilo": {
+            "type": "string",
+            "enum": [
+              "lisa",
+              "almofadada",
+              "vidro",
+              "veneziana"
+            ],
+            "title": "Estilo",
+            "default": "lisa"
+          },
+          "largura": {
+            "type": "integer",
+            "title": "Largura"
+          },
+          "altura": {
+            "type": "integer",
+            "title": "Altura",
+            "default": 2100
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "folha",
+          "largura"
+        ],
+        "title": "ModeloPorta"
       },
       "Movel": {
         "properties": {
@@ -6636,7 +6859,8 @@
             "type": "string",
             "enum": [
               "giro",
-              "correr"
+              "correr",
+              "camarao"
             ],
             "title": "Folha",
             "default": "giro"
@@ -6651,7 +6875,7 @@
               }
             ],
             "title": "Abre Para",
-            "description": "Cômodo (de/para) para onde a folha gira. Obrigatório se giro."
+            "description": "Cômodo (de/para) para onde a folha gira. Obrigatório se giro ou camarão."
           },
           "dobradica": {
             "anyOf": [
@@ -6668,6 +6892,36 @@
             ],
             "title": "Dobradica",
             "description": "Lado do vão com a dobradiça, no sentido da parede."
+          },
+          "estilo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lisa",
+                  "almofadada",
+                  "vidro",
+                  "veneziana"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estilo",
+            "description": "Acabamento da folha (só visual); sem valor = lisa."
+          },
+          "modelo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo",
+            "description": "Modelo do catálogo de portas de onde vieram as medidas."
           }
         },
         "additionalProperties": false,

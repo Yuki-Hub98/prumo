@@ -40,7 +40,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 12
+VERSAO_CENA = 13
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -410,9 +410,38 @@ class _Cena:
             self._no_vao(
                 parede, x, 0, pe + alt / 2, (e, f, vao), f"caixilho-{janela.id}-{lado}", mat
             )
-        if larg > 900:
+        # sem tipo informado: como sempre foi (montante no meio só nas janelas largas)
+        tipo = janela.abertura or "correr"
+        folhas = janela.folhas or (2 if janela.abertura or larg > 900 else 1)
+        if tipo in ("correr", "abrir"):
+            for i in range(1, folhas):  # montantes entre as folhas
+                x = d0 + larg * i / folhas
+                self._no_vao(
+                    parede, x, 0, pe + alt / 2, (40, f - 10, vao), f"caixilho-{janela.id}-m{i}", mat
+                )
+        elif tipo == "basculante":  # palhetas horizontais
+            for i in (1, 2):
+                z = pe + e + vao * i / 3
+                self._no_vao(
+                    parede,
+                    meio,
+                    0,
+                    z,
+                    (larg - 2 * e, f - 10, 30),
+                    f"caixilho-{janela.id}-p{i}",
+                    mat,
+                )
+        if tipo in ("maxim_ar", "basculante", "abrir"):  # puxador
+            metal = self.material("metal", CORES_PADRAO["metal"], rugosidade=0.3, metal=True)
             self._no_vao(
-                parede, meio, 0, pe + alt / 2, (40, f - 10, vao), f"caixilho-{janela.id}-m", mat
+                parede,
+                meio,
+                f / 2 + 12,
+                pe + e + 20,
+                (90, 20, 18),
+                f"caixilho-{janela.id}-px",
+                metal,
+                6,
             )
         fundo = parede.espessura.valor / 2 + 30
         self._no_vao(
@@ -466,8 +495,12 @@ class _Cena:
                 self.caixa(f"luminaria-{i.id}", (x, y, self.pe - 35), tamanho, 0.0, mat, 30, oculto)
 
     def porta(self, porta: Porta, parede: Any) -> None:
-        """Folha aberta a 90° para dentro do cômodo (portas que abrem para fora não aparecem)."""
-        if porta.folha != "giro" or porta.abre_para != self.comodo.id:
+        """Folha aberta a 90° para dentro do cômodo (portas que abrem para fora não aparecem).
+        Camarão: as duas folhas dobradas em "V" junto da dobradiça."""
+        if porta.folha not in ("giro", "camarao") or porta.abre_para != self.comodo.id:
+            return
+        if porta.folha == "camarao":
+            self.porta_camarao(porta, parede)
             return
         giro = geometria.giro_porta(self.pav, porta)
         if giro is None:
@@ -483,7 +516,7 @@ class _Cena:
         ang = math.degrees(math.atan2(ponta[1] - centro[1], ponta[0] - centro[0]))
         larg, alt = porta.largura.valor, porta.altura.valor
         mat = self.material("porta", CORES_PADRAO["porta"], rugosidade=0.5)
-        self.caixa(f"porta-{porta.id}", (mx, my, alt / 2), (larg, 35, alt), ang, mat, 3)
+        self.folha_porta(porta, (mx, my), ang, larg, float(alt), mat)
         # maçaneta perto da ponta da folha, dos dois lados
         metal = self.material("metal", CORES_PADRAO["metal"], rugosidade=0.3, metal=True)
         vx, vy = (ponta[0] - centro[0]) / larg, (ponta[1] - centro[1]) / larg
@@ -491,6 +524,99 @@ class _Cena:
         for lado in (1, -1):
             px, py = hx - vy * 32 * lado, hy + vx * 32 * lado
             self.caixa(f"macaneta-{porta.id}-{lado}", (px, py, 1050), (120, 25, 22), ang, metal, 8)
+
+    def folha_porta(
+        self, porta: Porta, meio: tuple[float, float], ang: float, larg: float, alt: float,
+        mat: str, nome: str | None = None,
+    ) -> None:  # fmt: skip
+        """Uma folha de porta (centro ``meio`` na planta, girada ``ang``) com o estilo dela:
+        lisa, almofadada (almofadas salientes nas duas faces), vidro (visor no alto) ou
+        veneziana (palhetas na metade de baixo)."""
+        nome = nome or f"porta-{porta.id}"
+        estilo = porta.estilo or "lisa"
+        mx, my = meio
+        r = math.radians(ang)
+        ux, uy = math.cos(r), math.sin(r)
+
+        def em(ao_longo: float) -> tuple[float, float]:
+            return mx + ux * ao_longo, my + uy * ao_longo
+
+        if estilo != "vidro":
+            self.caixa(nome, (mx, my, alt / 2), (larg, 35, alt), ang, mat, 3)
+        m = min(120.0, larg * 0.15)
+        if estilo == "almofadada":
+            meio_z = alt * 0.48
+            for i, (z0, z1) in enumerate(
+                ((m * 1.5, meio_z - m / 2), (meio_z + m / 2, alt - m * 1.5))
+            ):
+                self.caixa(
+                    f"{nome}-almofada{i}",
+                    (mx, my, (z0 + z1) / 2),
+                    (larg - 2 * m, 43, z1 - z0),
+                    ang,
+                    mat,
+                    6,
+                )
+        elif estilo == "vidro":
+            vidro = self.material("vidro", CORES_PADRAO["vidro"], vidro=True)
+            z_vidro = alt * 0.45
+            self.caixa(nome, (mx, my, z_vidro / 2), (larg, 35, z_vidro), ang, mat, 3)
+            topo = alt - m * 1.5
+            self.caixa(
+                f"{nome}-travessa", (mx, my, (topo + alt) / 2), (larg, 35, alt - topo), ang, mat, 3
+            )
+            for lado in (-1, 1):
+                cx, cy = em(lado * (larg - m) / 2)
+                self.caixa(
+                    f"{nome}-montante{lado}",
+                    (cx, cy, (z_vidro + topo) / 2),
+                    (m, 35, topo - z_vidro),
+                    ang,
+                    mat,
+                    3,
+                )
+            self.caixa(
+                f"{nome}-vidro",
+                (mx, my, (z_vidro + topo) / 2),
+                (larg - 2 * m, 10, topo - z_vidro),
+                ang,
+                vidro,
+            )
+        elif estilo == "veneziana":
+            z = m * 1.5
+            i = 0
+            while z < alt * 0.45:
+                self.caixa(f"{nome}-palheta{i}", (mx, my, z), (larg - 2 * m, 41, 18), ang, mat, 2)
+                z += 60.0
+                i += 1
+
+    def porta_camarao(self, porta: Porta, parede: Any) -> None:
+        """Duas folhas de meia largura dobradas em "V" (60°) junto da dobradiça."""
+        u, n = geometria.direcao(parede)
+        s = 1 if porta.abre_para == parede.lado_a else -1
+        d0, larg, alt = porta.distancia_inicio.valor, porta.largura.valor, float(porta.altura.valor)
+        meia = parede.espessura.valor / 2
+        ini = (parede.inicio[0] + u[0] * d0, parede.inicio[1] + u[1] * d0)
+        fim = (ini[0] + u[0] * larg, ini[1] + u[1] * larg)
+        dobradica, outro = (ini, fim) if porta.dobradica != "fim" else (fim, ini)
+        v = ((outro[0] - dobradica[0]) / larg, (outro[1] - dobradica[1]) / larg)
+        w = (n[0] * s, n[1] * s)
+        p0 = (dobradica[0] + w[0] * meia, dobradica[1] + w[1] * meia)
+        f = larg / 2
+        p1 = (p0[0] + v[0] * f * 0.5 + w[0] * f * 0.866, p0[1] + v[1] * f * 0.5 + w[1] * f * 0.866)
+        p2 = (p0[0] + v[0] * f, p0[1] + v[1] * f)
+        mat = self.material("porta", CORES_PADRAO["porta"], rugosidade=0.5)
+        for i, (a, b) in enumerate(((p0, p1), (p1, p2))):
+            ang = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
+            self.folha_porta(
+                porta,
+                ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2),
+                ang,
+                f - 6,
+                alt,
+                mat,
+                f"porta-{porta.id}-{i}",
+            )
 
     def rodape(self) -> None:
         if not self.pav.rodape:

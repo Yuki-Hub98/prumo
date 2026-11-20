@@ -126,3 +126,23 @@ def test_mudar_forma(api: TestClient) -> None:
     )
     cama = next(m for m in geo["moveis"] if m["id"] == "cama")
     assert cama["formas"] == ["retangular"]
+
+
+def test_catalogo_de_portas_e_janelas_e_tipo_gravado(api: TestClient, projetos: Path) -> None:
+    cat = api.get("/catalogo/aberturas").json()
+    assert {"giro-80", "camarao-80", "correr-120"} <= {p["id"] for p in cat["portas"]}
+    basc = next(j for j in cat["janelas"] if j["id"] == "basculante-60x60")
+    assert basc["abertura"] == "basculante" and cat["aberturas_janela"]["maxim_ar"] == "Maxim-ar"
+    # muda o tipo de uma janela existente e salva: vai para o banco e para o JSON
+    r = api.patch(
+        "/projetos/casa/pavimentos/terreo/aberturas/basculante-banheiro",
+        params={"versao": 1},
+        json={"abertura": "basculante", "folhas": 1, "modelo": "basculante-60x60"},
+    )
+    assert r.status_code == 200, r.text
+    api.post("/projetos/casa/rascunho/salvar", params={"versao": r.json()["versao"]})
+    dados = json.loads((projetos / "casa" / "projeto.json").read_text())
+    j = next(a for a in dados["pavimentos"][0]["aberturas"] if a["id"] == "basculante-banheiro")
+    assert (j["abertura"], j["folhas"], j["modelo"]) == ("basculante", 1, "basculante-60x60")
+    p = next(a for a in dados["pavimentos"][0]["aberturas"] if a["id"] == "porta-quarto")
+    assert "estilo" not in p and "modelo" not in p  # campo vazio não aparece no JSON
