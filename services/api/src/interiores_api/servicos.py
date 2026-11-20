@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from interiores_api.config import Config
 from interiores_api.esquemas import (
+    Cena3D,
     InfoRascunho,
     InfoRender,
     ItemHistorico,
@@ -55,7 +56,12 @@ from interiores_core.tela import (
     planejado_para_tela,
 )
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
-from interiores_render.cena import VISTAS_PAVIMENTO, vistas_do_comodo
+from interiores_render.cena import (
+    VISTAS_PAVIMENTO,
+    montar_cena,
+    montar_cena_pavimento,
+    vistas_do_comodo,
+)
 from interiores_render.gerar import IMAGENS_POR_RENDER, QUALIDADES
 
 log = structlog.get_logger("interiores.api")
@@ -463,6 +469,21 @@ class Servico:
             q: renders.estimar_s(self.sessao, *tamanho, imagens)
             for q, tamanho in QUALIDADES.items()
         }
+
+    def cena(self, codigo: str, comodo: str | None = None, pavimento: str | None = None) -> Cena3D:
+        """Cena 3D ao vivo do cômodo (ou do pavimento inteiro), na versão atual. Cores
+        padrão: a tela pinta a variação por cima."""
+        c, versao = repositorio.ler(self.sessao, codigo)
+        carregado = ProjetoCarregado(
+            pasta=Path(), projeto=c.projeto, dados_comodos=c.comodos, variacoes=c.variacoes
+        )
+        if pavimento is not None:
+            cena = montar_cena_pavimento(carregado, pavimento, vistas=())
+        else:
+            assert comodo is not None
+            cena = montar_cena(carregado, comodo, vistas=())
+        campos = ("prismas", "caixas", "materiais", "aviso")
+        return Cena3D.model_validate({"versao": versao, **{k: cena[k] for k in campos}})
 
     @staticmethod
     def _vistas(c: Conteudo, comodo: str) -> list[Vista]:

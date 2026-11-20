@@ -102,6 +102,50 @@ class PedidoRender(_Esquema):
     )
 
 
+class Prisma3D(_Esquema):
+    """Contorno na planta (mm) extrudado de ``z0`` a ``z1`` (paredes, piso, teto...)."""
+
+    nome: str
+    contorno: list[tuple[float, float]]
+    z0: float
+    z1: float
+    material: str
+    oculto_em: list[str] = Field(default_factory=list)
+
+
+class Caixa3D(_Esquema):
+    """Paralelepípedo (peças de móvel, folhas de porta): centro e tamanho em mm, giro em z."""
+
+    nome: str
+    centro: tuple[float, float, float]
+    tamanho: tuple[float, float, float]
+    rotacao: float
+    material: str
+    chanfro: float = 0.0
+    oculto_em: list[str] = Field(default_factory=list)
+    extras: dict[str, str] = Field(default_factory=dict, description="movel e parte (pintura).")
+
+
+class Material3D(_Esquema):
+    cor: str
+    rugosidade: float = 0.6
+    textura: str | None = None
+    metal: bool = False
+    vidro: bool = False
+    emissao: float | None = None
+
+
+class Cena3D(_Esquema):
+    """Cena calculada pelo core (a mesma que vai para o Blender, sem câmeras e luzes), para o
+    visor montar o 3D ao vivo: muda junto com a planta, a cada versão (rascunho incluído)."""
+
+    versao: int = Field(description="Versão do projeto desta cena.")
+    prismas: list[Prisma3D]
+    caixas: list[Caixa3D]
+    materiais: dict[str, Material3D]
+    aviso: str | None = None
+
+
 class PedidoRenderPavimento(_Esquema):
     qualidade: Literal["rascunho", "final"] = Field(
         "rascunho", description="rascunho: segundos, para conferir; final: alguns minutos."
