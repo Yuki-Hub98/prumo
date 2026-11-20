@@ -71,7 +71,7 @@ export function Comparador({
                 <img src={URL_API + q.url} alt={`${nomes[v] ?? v}: ${titulos[vista] ?? vista}`} className="w-full rounded border bg-white" />
               ) : (
                 <p className="rounded border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500">
-                  sem imagem "{titulos[vista] ?? vista}" desta variação: peça um render dela
+                  Sem imagem "{titulos[vista] ?? vista}" desta variação: peça um render dela
                 </p>
               )}
             </figure>

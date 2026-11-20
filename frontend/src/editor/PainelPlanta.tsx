@@ -150,14 +150,14 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
               termina a sequência.
             </p>
             <button className={botao} onClick={() => aoDesenhar(false)}>
-              parar de desenhar
+              Parar de desenhar
             </button>
           </>
         ) : (
           <>
-            <NovaMedida rotulo="espessura" unidade={unidade} inicial={unidade === "cm" ? "15" : ""} aoMudar={setEspessura} />
+            <NovaMedida rotulo="Espessura" unidade={unidade} inicial={unidade === "cm" ? "15" : ""} aoMudar={setEspessura} />
             <button className={`${botao} mt-1`} disabled={!espessura} onClick={() => aoDesenhar(true, espessura!)}>
-              começar a desenhar
+              Começar a desenhar
             </button>
           </>
         )}
@@ -166,7 +166,7 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
       <Caixa titulo="Novo cômodo">
         {escolhendo === null ? (
           <button className={botao} onClick={() => aoEscolher([])}>
-            escolher as paredes…
+            Escolher as paredes…
           </button>
         ) : (
           <div className="flex flex-col gap-1 text-sm">
@@ -174,7 +174,7 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
               Clique nas paredes que fecham o cômodo, em volta dele ({escolhendo.length} escolhidas
               {escolhendo.length ? `: ${escolhendo.join(", ")}` : ""}).
             </p>
-            <input className="rounded border px-1" placeholder="nome (ex.: Cozinha)" value={nome} onChange={(e) => setNome(e.target.value)} />
+            <input className="rounded border px-1" placeholder="Nome (ex.: Cozinha)" value={nome} onChange={(e) => setNome(e.target.value)} />
             <select className="rounded border" value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)}>
               {TIPOS_COMODO.map((t) => (
                 <option key={t} value={t}>
@@ -202,10 +202,10 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
                   )
                 }
               >
-                criar cômodo
+                Criar cômodo
               </button>
               <button className={botao} onClick={() => aoEscolher(null)}>
-                cancelar
+                Cancelar
               </button>
             </div>
           </div>
@@ -216,7 +216,7 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
         {(["pe_direito", "rodape"] as const).map((campo) => (
           <CampoMedida
             key={campo}
-            rotulo={campo === "pe_direito" ? "pé-direito" : "rodapé"}
+            rotulo={campo === "pe_direito" ? "Pé-direito" : "Rodapé"}
             medida={pav[campo]}
             unidade={unidade}
             ocupado={ocupado}
@@ -267,16 +267,16 @@ function RemoverAndar({
             )
           }
         >
-          remover
+          Remover
         </button>
         <button className="rounded border border-red-200 bg-white px-2 py-0.5" onClick={() => setConfirmar(false)}>
-          cancelar
+          Cancelar
         </button>
       </div>
     </div>
   ) : (
     <button className="mt-2 text-xs text-red-700 hover:underline" onClick={() => setConfirmar(true)}>
-      remover este andar
+      Remover este andar
     </button>
   );
 }
@@ -296,10 +296,10 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
   return (
     <Caixa titulo={`Parede ${id}`}>
       <p className="mb-1 text-sm text-stone-600">
-        comprimento {formatar(comp, unidade)} · lados: {p.lado_a} | {p.lado_b}
+        Comprimento {formatar(comp, unidade)} · lados: {p.lado_a} | {p.lado_b}
       </p>
       <CampoMedida
-        rotulo="espessura"
+        rotulo="Espessura"
         medida={p.espessura}
         unidade={unidade}
         ocupado={ocupado}
@@ -320,9 +320,9 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
         </p>
       )}
       <div className="mt-2 flex flex-wrap gap-1">
-        <button className={botao} onClick={() => setNovo("porta")}>+ porta</button>
-        <button className={botao} onClick={() => setNovo("janela")}>+ janela</button>
-        <button className={botao} onClick={() => setNovo("instalacao")}>+ tomada/ponto</button>
+        <button className={botao} onClick={() => setNovo("porta")}>+ Porta</button>
+        <button className={botao} onClick={() => setNovo("janela")}>+ Janela</button>
+        <button className={botao} onClick={() => setNovo("instalacao")}>+ Tomada/ponto</button>
       </div>
       {novo === "instalacao" && <NovaInstalacao {...{ id, pav, unidade, base, fazer, ocupado, aoItem }} aoFim={() => setNovo(null)} />}
       {(novo === "porta" || novo === "janela") && (
@@ -344,10 +344,10 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
           );
         }}
       >
-        <span className="text-stone-500">dividir a</span>
+        <span className="text-stone-500">Dividir a</span>
         <input className="w-16 rounded border px-1" value={corte} onChange={(e) => setCorte(e.target.value)} />
         <span className="text-stone-500">{unidade} do início</span>
-        <button className={botao} disabled={paraMm(corte, unidade) === null || ocupado}>ok</button>
+        <button className={botao} disabled={paraMm(corte, unidade) === null || ocupado}>Ok</button>
       </form>
       <div className="mt-3 flex items-center gap-2 text-sm">
         <button
@@ -361,11 +361,11 @@ function PainelParede({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
             )
           }
         >
-          remover parede
+          Remover parede
         </button>
         <label className="flex items-center gap-1 text-xs text-stone-600">
           <input type="checkbox" checked={cascata} onChange={(e) => setCascata(e.target.checked)} />
-          levar junto portas/janelas e tirar dos cômodos
+          Levar junto portas/janelas e tirar dos cômodos
         </label>
       </div>
     </Caixa>
@@ -391,7 +391,7 @@ function NovaAbertura({
   const lados = [parede.lado_a, parede.lado_b];
   const [abrePara, setAbrePara] = useState(lados.find((l) => l !== "externo") ?? lados[0]);
   const campos = tipo === "porta" ? ["distancia_inicio", "largura", "altura"] : ["distancia_inicio", "largura", "altura", "peitoril"];
-  const rotulos: Record<string, string> = { distancia_inicio: "do início", largura: "largura", altura: "altura", peitoril: "peitoril" };
+  const rotulos: Record<string, string> = { distancia_inicio: "Do início", largura: "Largura", altura: "Altura", peitoril: "Peitoril" };
   const iniciais: Record<string, Record<Unidade, string>> = {
     largura: { cm: tipo === "porta" ? "80" : "120", m: tipo === "porta" ? "0,8" : "1,2", mm: tipo === "porta" ? "800" : "1200" },
     altura: { cm: tipo === "porta" ? "210" : "100", m: tipo === "porta" ? "2,1" : "1", mm: tipo === "porta" ? "2100" : "1000" },
@@ -407,7 +407,7 @@ function NovaAbertura({
       ))}
       {tipo === "porta" && (
         <label className="flex items-center gap-2 py-1 text-sm">
-          <span className="w-28 text-stone-500">abre para</span>
+          <span className="w-28 text-stone-500">Abre para</span>
           <select className="rounded border" value={abrePara} onChange={(e) => setAbrePara(e.target.value)}>
             {lados.map((l) => (
               <option key={l} value={l}>{l}</option>
@@ -434,9 +434,9 @@ function NovaAbertura({
             );
           }}
         >
-          criar
+          Criar
         </button>
-        <button className={botao} onClick={aoFim}>cancelar</button>
+        <button className={botao} onClick={aoFim}>Cancelar</button>
       </div>
     </div>
   );
@@ -466,11 +466,11 @@ function NovaInstalacao({
           <option key={k} value={k}>{v}</option>
         ))}
       </select>
-      <NovaMedida rotulo="do início" unidade={unidade} aoMudar={setDist} />
-      <NovaMedida rotulo="altura do piso" unidade={unidade} inicial={unidade === "cm" ? (tipo === "interruptor" ? "110" : "30") : ""} aoMudar={setAltura} />
+      <NovaMedida rotulo="Do início" unidade={unidade} aoMudar={setDist} />
+      <NovaMedida rotulo="Altura do piso" unidade={unidade} inicial={unidade === "cm" ? (tipo === "interruptor" ? "110" : "30") : ""} aoMudar={setAltura} />
       {lados.length === 2 && (
         <label className="flex items-center gap-2 py-1 text-sm">
-          <span className="w-28 text-stone-500">lado (cômodo)</span>
+          <span className="w-28 text-stone-500">Lado (cômodo)</span>
           <select className="rounded border" value={comodo} onChange={(e) => setComodo(e.target.value)}>
             {lados.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
@@ -499,9 +499,9 @@ function NovaInstalacao({
             )
           }
         >
-          criar
+          Criar
         </button>
-        <button className={botao} onClick={aoFim}>cancelar</button>
+        <button className={botao} onClick={aoFim}>Cancelar</button>
       </div>
     </div>
   );
@@ -518,11 +518,11 @@ function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx 
       ou(api.PATCH("/projetos/{codigo}/pavimentos/{pavimento}/aberturas/{id_}", { params: { path: caminho, query: { versao } }, body: campos })),
     );
   const medidas = a.tipo === "janela" ? (["distancia_inicio", "largura", "altura", "peitoril"] as const) : (["distancia_inicio", "largura", "altura"] as const);
-  const rotulos = { distancia_inicio: "do início", largura: "largura", altura: "altura", peitoril: "peitoril" };
+  const rotulos = { distancia_inicio: "Do início", largura: "Largura", altura: "Altura", peitoril: "Peitoril" };
   return (
     <Caixa titulo={`${a.tipo === "porta" ? "Porta" : "Janela"} ${id}`}>
       <p className="mb-1 text-sm text-stone-600">
-        na parede{" "}
+        Na parede{" "}
         <button className="text-sky-700 hover:underline" onClick={() => aoItem({ tipo: "parede", id: a.parede })}>
           {a.parede}
         </button>
@@ -532,12 +532,12 @@ function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx 
       ))}
       {a.tipo === "porta" && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-stone-500">abre para</span>
+          <span className="text-stone-500">Abre para</span>
           <select className="rounded border" value={a.abre_para ?? ""} onChange={(e) => alterar({ abre_para: e.target.value })}>
             {[a.de, a.para].map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
           <button className={botao} disabled={ocupado} onClick={() => alterar({ dobradica: a.dobradica === "fim" ? "inicio" : "fim" })}>
-            trocar lado da dobradiça
+            Trocar lado da dobradiça
           </button>
         </div>
       )}
@@ -551,7 +551,7 @@ function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx 
           )
         }
       >
-        remover
+        Remover
       </button>
     </Caixa>
   );
@@ -571,8 +571,8 @@ function PainelInstalacao({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ct
   const nome = TIPOS_INSTALACAO[i.tipo as TipoInstalacao] ?? i.tipo;
   return (
     <Caixa titulo={`${nome} ${id}`}>
-      {"parede" in i && i.parede && <p className="mb-1 text-sm text-stone-600">na parede {i.parede}</p>}
-      <CampoMedida rotulo="altura do piso" medida={i.altura} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ altura: m })} />
+      {"parede" in i && i.parede && <p className="mb-1 text-sm text-stone-600">Na parede {i.parede}</p>}
+      <CampoMedida rotulo="Altura do piso" medida={i.altura} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ altura: m })} />
       {"parede" in i && i.parede && (
         <form
           className="mt-2 flex items-center gap-1 text-sm"
@@ -582,10 +582,10 @@ function PainelInstalacao({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ct
             if (mm !== null) alterar({}, mm);
           }}
         >
-          <span className="text-stone-500">mover para</span>
+          <span className="text-stone-500">Mover para</span>
           <input className="w-16 rounded border px-1" value={dist} onChange={(e) => setDist(e.target.value)} />
           <span className="text-stone-500">{unidade} do início</span>
-          <button className={botao} disabled={paraMm(dist, unidade) === null || ocupado}>ok</button>
+          <button className={botao} disabled={paraMm(dist, unidade) === null || ocupado}>Ok</button>
         </form>
       )}
       <button
@@ -598,7 +598,7 @@ function PainelInstalacao({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ct
           )
         }
       >
-        remover
+        Remover
       </button>
     </Caixa>
   );
@@ -619,15 +619,15 @@ function PainelComodo({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & 
     <Caixa titulo={`Cômodo ${c.nome}`}>
       <form className="mb-2 flex gap-1 text-sm" onSubmit={(e) => (e.preventDefault(), nome.trim() && alterar({ nome: nome.trim() }))}>
         <input className="min-w-0 flex-1 rounded border px-1" value={nome} onChange={(e) => setNome(e.target.value)} />
-        <button className={botao} disabled={nome.trim() === c.nome || ocupado}>renomear</button>
+        <button className={botao} disabled={nome.trim() === c.nome || ocupado}>Renomear</button>
       </form>
       <label className="mb-2 flex items-center gap-2 text-sm">
-        <span className="text-stone-500">tipo</span>
+        <span className="text-stone-500">Tipo</span>
         <select className="rounded border" value={c.tipo} onChange={(e) => alterar({ tipo: e.target.value })}>
           {TIPOS_COMODO.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
         </select>
       </label>
-      <CampoMedida rotulo="pé-direito" medida={c.pe_direito ?? pav.pe_direito} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ pe_direito: m })} />
+      <CampoMedida rotulo="Pé-direito" medida={c.pe_direito ?? pav.pe_direito} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ pe_direito: m })} />
       <p className="mt-1 text-xs text-stone-500">
         paredes:{" "}
         {c.paredes.map((p) => (

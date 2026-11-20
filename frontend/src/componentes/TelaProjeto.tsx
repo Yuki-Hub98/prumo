@@ -129,10 +129,10 @@ export function TelaProjeto({
     <div className="flex h-screen flex-col">
       <header className="flex items-center gap-4 border-b border-stone-200 bg-white px-4 py-2">
         <button className="text-sm text-sky-700 hover:underline" onClick={aoVoltar}>
-          ← projetos
+          ← Projetos
         </button>
         <h1 className="font-semibold">{codigo}</h1>
-        {projeto.data && <span className="text-xs text-stone-500">versão {projeto.data.versao}</span>}
+        {projeto.data && <span className="text-xs text-stone-500">Versão {projeto.data.versao}</span>}
         <div className="flex items-center gap-1">
           <select
             className="rounded border text-sm"
@@ -193,7 +193,7 @@ export function TelaProjeto({
           ))}
         </div>
         <BotoesDesfazer codigo={codigo} aoProblemas={setNovos} aoHistorico={() => setHistorico((h) => !h)} />
-        {editar.isPending && <span className="text-xs text-stone-500">gravando…</span>}
+        {editar.isPending && <span className="text-xs text-stone-500">Gravando…</span>}
         {editar.error && <span className="text-sm text-red-700">{editar.error.message}</span>}
       </header>
       <div className="flex min-h-0 flex-1">

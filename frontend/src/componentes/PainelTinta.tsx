@@ -52,13 +52,13 @@ export function PainelTinta({
                     <span
                       className="inline-block h-4 w-6 rounded border border-stone-300 align-middle"
                       style={{ background: g.cor ?? "repeating-linear-gradient(45deg,#f5f5f4,#f5f5f4 3px,#e7e5e4 3px,#e7e5e4 6px)" }}
-                      title={g.cor ?? "cor padrão"}
+                      title={g.cor ?? "Cor padrão"}
                     />
                   </td>
                   <td className="py-1">
                     <b>{NOME[g.tinta]}</b> <span className="text-xs text-stone-500">{ONDE[g.tinta]}</span>
                     <div className="text-xs text-stone-500">
-                      {g.cor?.toUpperCase() ?? "cor padrão"} · {g.area_m2.toLocaleString("pt-BR")} m² · {litros(g.litros)}
+                      {g.cor?.toUpperCase() ?? "Cor padrão"} · {g.area_m2.toLocaleString("pt-BR")} m² · {litros(g.litros)}
                     </div>
                   </td>
                   <td className="py-1 text-right text-xs">
@@ -77,7 +77,7 @@ export function PainelTinta({
             {par.rendimento_esmalte} m²/L, {Math.round(par.perda * 100)}% de perda (ajustável em [tinta] do regras.toml).
           </p>
           <a href={planilha} className="mt-1 inline-block text-sm text-sky-700 hover:underline">
-            baixar planilha (.xlsx)
+            Baixar planilha (.xlsx)
           </a>
         </>
       )}

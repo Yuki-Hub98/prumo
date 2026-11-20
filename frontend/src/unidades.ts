@@ -28,7 +28,7 @@ export type Origem = "trena" | "projeto" | "estimada";
 
 /** Como a tela pergunta a origem (decisão do usuário: sempre perguntar). */
 export const ORIGENS: { valor: Origem; rotulo: string; dica: string }[] = [
-  { valor: "trena", rotulo: "Medi", dica: "medido com trena no local" },
-  { valor: "projeto", rotulo: "Quero assim", dica: "valor decidido no projeto" },
-  { valor: "estimada", rotulo: "Chute", dica: "estimado; o desenho sai PRELIMINAR" },
+  { valor: "trena", rotulo: "Medi", dica: "Medido com trena no local" },
+  { valor: "projeto", rotulo: "Quero assim", dica: "Valor decidido no projeto" },
+  { valor: "estimada", rotulo: "Chute", dica: "Estimado; o desenho sai PRELIMINAR" },
 ];

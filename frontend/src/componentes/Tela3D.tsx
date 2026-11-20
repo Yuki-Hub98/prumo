@@ -68,16 +68,16 @@ export function Tela3D({
           ))}
         </select>
         <span className="text-xs text-stone-500">
-          ao vivo · versão {cena.data?.versao ?? "…"}
+          Ao vivo · versão {cena.data?.versao ?? "…"}
           {cena.isFetching && " · atualizando…"}
           {inteiro && " · no pavimento pintam piso, teto, rodapé e móveis"}
         </span>
-        <span className="text-xs text-stone-400">fotos realistas: aba "Imagens"</span>
+        <span className="text-xs text-stone-400">Fotos realistas: aba "Imagens"</span>
       </div>
       {cena.error && <p className="border-b border-red-200 bg-red-50 px-3 py-1 text-xs text-red-800">{cena.error.message}</p>}
       <div className="min-h-0 flex-1">
         {cena.data ? (
-          <Suspense fallback={<p className="p-4 text-stone-500">carregando o visor…</p>}>
+          <Suspense fallback={<p className="p-4 text-stone-500">Carregando o visor…</p>}>
             <Visor3D
               cena={cena.data}
               chave={inteiro ? `pavimento:${pavimento}` : `comodo:${atual}`}

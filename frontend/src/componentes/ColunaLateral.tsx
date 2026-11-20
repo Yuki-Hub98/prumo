@@ -104,7 +104,7 @@ export function ColunaLateral({ titulo, children }: { titulo: string; children: 
       <button
         type="button"
         aria-label="Ajustar a largura da coluna (arraste ou use as setas)"
-        title="arraste para ajustar a largura"
+        title="Arraste para ajustar a largura"
         className="w-1.5 shrink-0 cursor-col-resize bg-stone-200 hover:bg-stone-300 focus-visible:bg-sky-300 focus-visible:outline-none"
         onPointerDown={arrastar}
         onDoubleClick={() => setLargura(limitarLargura(LARGURA_PADRAO, window.innerWidth))}

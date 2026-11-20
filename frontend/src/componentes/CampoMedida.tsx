@@ -54,7 +54,7 @@ export function CampoMedida({
               setEditando(true);
             }}
           >
-            editar
+            Editar
           </button>
         </span>
       </div>
@@ -80,7 +80,7 @@ export function CampoMedida({
         />
         <span>{unidade}</span>
       </label>
-      {texto && mm === null && <p className="text-xs text-red-700">número inválido</p>}
+      {texto && mm === null && <p className="text-xs text-red-700">Número inválido</p>}
       <fieldset className="mt-2 flex flex-wrap gap-3">
         <legend className="mb-1 text-xs text-stone-500">De onde veio esse valor?</legend>
         {ORIGENS.map((o) => (
@@ -101,10 +101,10 @@ export function CampoMedida({
           disabled={mm === null || origem === null || ocupado}
           className="rounded bg-stone-800 px-2 py-0.5 text-white disabled:opacity-40"
         >
-          salvar
+          Salvar
         </button>
         <button type="button" onClick={() => setEditando(false)} className="text-stone-600">
-          cancelar
+          Cancelar
         </button>
       </div>
     </form>

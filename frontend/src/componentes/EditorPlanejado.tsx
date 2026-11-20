@@ -106,7 +106,7 @@ function CampoAuto({
     <input
       aria-label={rotulo}
       title={`${rotulo} em ${unidade} (vazio = automático)`}
-      placeholder="auto"
+      placeholder="Auto"
       className="w-14 rounded border px-1 text-right text-xs"
       value={mostrado}
       onFocus={() => {
@@ -181,7 +181,7 @@ export function EditorPlanejado({
             )
           }
         >
-          montar por dentro
+          Montar por dentro
         </button>
         {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}
       </section>
@@ -196,14 +196,14 @@ export function EditorPlanejado({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">Montar por dentro</h3>
         <label className="flex items-center gap-1 text-xs text-stone-500">
           <input type="checkbox" checked={verPortas} onChange={(e) => setVerPortas(e.target.checked)} />
-          ver portas
+          Ver portas
         </label>
       </div>
-      {v ? <Frente vista={v} portas={verPortas} /> : <p className="text-sm text-stone-500">calculando…</p>}
+      {v ? <Frente vista={v} portas={verPortas} /> : <p className="text-sm text-stone-500">Calculando…</p>}
       {vista.error && <p className="mt-1 text-sm text-red-700">{vista.error.message}</p>}
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-stone-500">portas</span>
+        <span className="text-stone-500">Portas</span>
         {([null, "abrir", "correr"] as const).map((t) => (
           <button
             key={t ?? "sem"}
@@ -220,7 +220,7 @@ export function EditorPlanejado({
               )
             }
           >
-            {t === null ? "sem portas" : `de ${t}`}
+            {t === null ? "Sem portas" : `De ${t}`}
           </button>
         ))}
       </div>
@@ -230,12 +230,12 @@ export function EditorPlanejado({
           <div key={i} className="min-w-[9.5rem] shrink-0 rounded border border-stone-300 bg-white p-1.5">
             <div className="mb-1 flex items-center justify-between gap-1">
               <span className="text-xs font-medium">Vão {i + 1}</span>
-              <button className={mini} title="tirar este vão" disabled={c.vaos.length <= 1 || editar.isPending} onClick={() => gravar(removerVao(c, i))}>
+              <button className={mini} title="Tirar este vão" disabled={c.vaos.length <= 1 || editar.isPending} onClick={() => gravar(removerVao(c, i))}>
                 ✕
               </button>
             </div>
             <div className="mb-1 flex items-center justify-between gap-1 text-xs text-stone-500">
-              largura
+              Largura
               <CampoAuto mm={vao.largura?.valor} unidade={unidade} rotulo={`largura do vão ${i + 1}`} aoMudar={(mm) => gravar(larguraVao(c, i, mm))} />
             </div>
             {v?.larguras_vaos[i] !== undefined && !vao.largura && (
@@ -244,7 +244,7 @@ export function EditorPlanejado({
             {portas === "abrir" && (
               <label className="mb-1 flex items-center gap-1 text-xs">
                 <input type="checkbox" checked={comPorta(i)} disabled={editar.isPending} onChange={() => gravar(alternarPorta(c, i))} />
-                com porta
+                Com porta
               </label>
             )}
             {/* de cima para baixo na tela, como no móvel */}
@@ -265,21 +265,21 @@ export function EditorPlanejado({
                         </option>
                       ))}
                     </select>
-                    <button className={mini} title="tirar" disabled={vao.espacos.length <= 1 || editar.isPending} onClick={() => gravar(removerEspaco(c, i, j))}>
+                    <button className={mini} title="Tirar" disabled={vao.espacos.length <= 1 || editar.isPending} onClick={() => gravar(removerEspaco(c, i, j))}>
                       ✕
                     </button>
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-1 text-[11px] text-stone-500">
                     <span className="flex">
-                      <button className={mini} title="subir" disabled={j === vao.espacos.length - 1 || editar.isPending} onClick={() => gravar(moverEspaco(c, i, j, 1))}>
+                      <button className={mini} title="Subir" disabled={j === vao.espacos.length - 1 || editar.isPending} onClick={() => gravar(moverEspaco(c, i, j, 1))}>
                         ↑
                       </button>
-                      <button className={mini} title="descer" disabled={j === 0 || editar.isPending} onClick={() => gravar(moverEspaco(c, i, j, -1))}>
+                      <button className={mini} title="Descer" disabled={j === 0 || editar.isPending} onClick={() => gravar(moverEspaco(c, i, j, -1))}>
                         ↓
                       </button>
                     </span>
                     <span className="flex items-center gap-1">
-                      altura
+                      Altura
                       <CampoAuto mm={esp.altura?.valor} unidade={unidade} rotulo={`altura do espaço ${j + 1} do vão ${i + 1}`} aoMudar={(mm) => gravar(alturaEspaco(c, i, j, mm))} />
                     </span>
                   </div>
@@ -291,7 +291,7 @@ export function EditorPlanejado({
             </ol>
             <div className="mt-1 flex flex-wrap gap-1">
               {TIPOS_ESPACO.map((t) => (
-                <button key={t.id} className={mini} disabled={editar.isPending} onClick={() => gravar(adicionarEspaco(c, i, t.id))} title={`pôr ${t.nome.toLowerCase()} em cima`}>
+                <button key={t.id} className={mini} disabled={editar.isPending} onClick={() => gravar(adicionarEspaco(c, i, t.id))} title={`Pôr ${t.nome.toLowerCase()} em cima`}>
                   + {t.id}
                 </button>
               ))}
@@ -299,7 +299,7 @@ export function EditorPlanejado({
           </div>
         ))}
         <button className={`${botao} shrink-0 self-start`} disabled={editar.isPending} onClick={() => gravar(adicionarVao(c))}>
-          + vão
+          + Vão
         </button>
       </div>
 
@@ -318,7 +318,7 @@ export function EditorPlanejado({
           o móvel todo. Desfazer volta cada passo.
         </p>
         <button className="text-xs text-red-700 hover:underline" disabled={editar.isPending} onClick={() => gravar(null)}>
-          desmontar
+          Desmontar
         </button>
       </div>
       {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}

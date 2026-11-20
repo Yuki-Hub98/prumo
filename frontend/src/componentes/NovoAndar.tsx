@@ -64,7 +64,7 @@ export function NovoAndar({
         aria-expanded={aberto}
         title="Criar um andar novo (sobrado, mezanino...)"
       >
-        + andar
+        + Andar
       </button>
       {aberto && (
         <form
@@ -106,16 +106,16 @@ export function NovoAndar({
         >
           <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">Andar novo</h3>
           <label className="grid text-xs text-stone-500">
-            nome
+            Nome
             <input className="rounded border px-1 text-sm text-stone-900" value={nome} onChange={(e) => setNome(e.target.value)} />
           </label>
           <div className="grid grid-cols-2 gap-1">
             <label className="grid min-w-0 text-xs text-stone-500">
-              pé-direito ({unidade})
+              Pé-direito ({unidade})
               <input className="w-full min-w-0 rounded border px-1 text-sm text-stone-900" inputMode="decimal" value={pe} onChange={(e) => setPe(e.target.value)} />
             </label>
             <label className="grid min-w-0 text-xs text-stone-500">
-              cota do piso ({unidade})
+              Cota do piso ({unidade})
               <input className="w-full min-w-0 rounded border px-1 text-sm text-stone-900" inputMode="decimal" value={cota} onChange={(e) => setCota(e.target.value)} />
             </label>
           </div>
@@ -124,7 +124,7 @@ export function NovoAndar({
             entra como chute se você não mudar.
           </p>
           <div className="flex flex-wrap items-center gap-1 text-xs">
-            <span className="text-stone-500">as medidas são:</span>
+            <span className="text-stone-500">As medidas são:</span>
             {ORIGENS.map((o) => (
               <button
                 key={o.valor}
@@ -137,7 +137,7 @@ export function NovoAndar({
             ))}
           </div>
           <button className="rounded bg-stone-800 px-3 py-1 text-sm text-white disabled:opacity-40" disabled={!pronto || editar.isPending}>
-            criar e desenhar as paredes
+            Criar e desenhar as paredes
           </button>
           {editar.error && <p className="text-xs text-red-700">{editar.error.message}</p>}
         </form>
