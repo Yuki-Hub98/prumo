@@ -106,7 +106,10 @@ def partes_do_movel(m: Movel) -> tuple[str, ...]:
     simbolo = item.simbolo if item else Simbolo.GENERICO
     if simbolo is Simbolo.FOGAO and eh_cooktop(m):
         return ("tampo", "bocas")  # sem forno: sem porta nem puxador
-    return POR_SIMBOLO[simbolo]
+    partes = POR_SIMBOLO[simbolo]
+    if m.pes == "rodape":  # sem pé: o rodapé recuado é do corpo
+        partes = tuple(p for p in partes if p != "pes")
+    return partes
 
 
 ALTURA_MAX_COOKTOP = 200

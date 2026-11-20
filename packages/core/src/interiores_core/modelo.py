@@ -286,6 +286,11 @@ class Construcao(_Modelo):
     vaos: list[Vao] = Field(min_length=1, description="Da esquerda para a direita (de frente).")
 
 
+AcabamentoMovel = Literal[
+    "madeira_clara", "madeira_escura", "amadeirado", "branco_fosco", "laca_brilho", "preto_fosco"
+]
+
+
 class Movel(_Modelo):
     """Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).
 
@@ -326,6 +331,15 @@ class Movel(_Modelo):
     )
     largura_porta: Medida | None = Field(
         None, description="Largura de cada folha de porta de abrir (para o espaço de giro)."
+    )
+    acabamento: AcabamentoMovel | None = Field(
+        None, description="Material da caixa (só visual); sem valor = o padrão do tipo."
+    )
+    puxador: Literal["barra", "botao", "perfil", "cava"] | None = Field(
+        None, description="Tipo de puxador das portas e gavetas (só visual); sem valor = barra."
+    )
+    pes: Literal["quadrado", "palito", "metalico", "rodape"] | None = Field(
+        None, description="Tipo de pé (só visual); sem valor = o padrão do tipo."
     )
     elevacao: Medida | None = Field(
         None,

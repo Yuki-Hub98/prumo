@@ -511,7 +511,12 @@ def novo_movel(
 
 def exportar() -> dict[str, Any]:
     """Catálogo em formato JSON (para o frontend)."""
+    from interiores_core.acabamentos import ACABAMENTOS, PES, PUXADORES  # evita ciclo
+
     return {
         "versao": 1,
         "itens": [i.model_dump(mode="json") for i in _ITENS],
+        "acabamentos": {k: a.nome for k, a in ACABAMENTOS.items()},
+        "puxadores": dict(PUXADORES),
+        "pes": dict(PES),
     }

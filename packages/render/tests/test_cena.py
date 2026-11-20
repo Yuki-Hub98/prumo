@@ -393,3 +393,28 @@ def test_tipos_de_porta_e_janela_no_3d(copia: Path) -> None:
         "caixilho-janela-quarto-px",
     } <= nomes
     assert not any(n.startswith("caixilho-janela-quarto-m") for n in nomes)
+
+
+def test_acabamento_puxador_e_pes(copia: Path) -> None:
+    arq = copia / "comodos" / "quarto.json"
+    original = json.loads(arq.read_text(encoding="utf-8"))
+
+    def cena_com(gr: dict[str, str], cama: dict[str, str]) -> dict[str, Any]:
+        dados = json.loads(json.dumps(original))
+        for m in dados["moveis"]:
+            m.update(gr if m["id"] == "guarda-roupa" else cama if m["id"] == "cama" else {})
+        arq.write_text(json.dumps(dados), encoding="utf-8")
+        return montar_cena(carregar(copia), "quarto")
+
+    def puxadores(cena: dict[str, Any]) -> list[dict[str, Any]]:
+        return [c for c in cena["caixas"] if c["nome"].startswith("guarda-roupa-puxador")]
+
+    cena = cena_com(
+        {"acabamento": "madeira_escura", "puxador": "perfil"}, {"acabamento": "laca_brilho"}
+    )
+    mats = cena["materiais"]
+    assert mats["movel-guarda-roupa"]["textura"] == "madeira"
+    assert mats["movel-cama"]["rugosidade"] == 0.12 and "textura" not in mats["movel-cama"]
+    assert all(p["material"] == "metal" for p in puxadores(cena))
+    cava = puxadores(cena_com({"puxador": "cava"}, {}))
+    assert cava and all(p["material"] == "sombra" and p["tamanho"][1] <= 2 for p in cava)
