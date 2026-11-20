@@ -40,7 +40,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 11
+VERSAO_CENA = 12
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -144,6 +144,22 @@ def _poligonos(geom: BaseGeometry) -> list[Polygon]:
     return [g for g in getattr(geom, "geoms", []) if isinstance(g, Polygon) and g.area > 1]
 
 
+CORTE_SUPERIOR = 120.0
+"""Altura (mm) das paredes do lado da câmera na vista de cima do cômodo (o resto sai)."""
+
+
+@dataclass
+class _PecasParede:
+    """O que uma parede gerou na cena (fatias das listas) e o corpo dela sem os vãos."""
+
+    p0: int
+    p1: int
+    c0: int
+    c1: int
+    cheio: list[Polygon]
+    material: str
+
+
 class _Cena:
     def __init__(
         self,
@@ -188,6 +204,7 @@ class _Cena:
         self.ocupado: BaseGeometry = Polygon()
         """Corpo das paredes já construídas (sem faces sobrepostas nas quinas)."""
         self.paredes_feitas: set[str] = set()
+        self.pecas_parede: dict[str, _PecasParede] = {}
         """Paredes já construídas: no pavimento, a parede entre dois cômodos sai uma vez."""
 
     def _n(self, nome: str) -> str:
@@ -277,6 +294,7 @@ class _Cena:
                         self.porta(ab, parede)
                 continue
             self.paredes_feitas.add(pid)
+            ini_p, ini_c = len(self.prismas), len(self.caixas)
             altura = float(parede.altura.valor) if parede.altura else float(self.pe)
             cor = self.cores_paredes.get(pid)  # parede de destaque
             mat = (
@@ -328,6 +346,37 @@ class _Cena:
                     self.batente(ab, parede)
                 for pol in _poligonos(vao_aqui):
                     self.prisma(f"verga-{ab.id}", pol, topo, altura, mat)
+            self.pecas_parede[pid] = _PecasParede(
+                ini_p, len(self.prismas), ini_c, len(self.caixas), _poligonos(cheio), mat
+            )
+
+    def cortar_paredes_da_frente(self, camera: dict[str, Any], outras: list[str]) -> None:
+        """Vista de cima (oblíqua, de um canto): as paredes do lado da câmera escondem o que
+        está encostado nelas. Nessa vista elas saem inteiras de cena e entram só "tocos" de
+        ``CORTE_SUPERIOR`` mm (o contorno do cômodo continua), como numa maquete cortada.
+        ``outras``: as outras vistas desta cena, onde os tocos não aparecem."""
+        c = self.util.centroid
+        dx, dy = camera["posicao"][0] - c.x, camera["posicao"][1] - c.y
+        tam = math.hypot(dx, dy)
+        if tam < 1:
+            return  # câmera bem em cima: nada esconde nada
+        dx, dy = dx / tam, dy / tam
+        for pid, pecas in self.pecas_parede.items():
+            parede = self.pav.parede(pid)
+            if parede is None:
+                continue
+            _, n = geometria.direcao(parede)
+            s = 1 if parede.lado_a == self.comodo.id else -1
+            fora = (-n[0] * s, -n[1] * s)  # normal para fora do cômodo
+            if fora[0] * dx + fora[1] * dy < 0.2:
+                continue  # parede do fundo ou de lado: fica inteira
+            for item in self.prismas[pecas.p0 : pecas.p1] + self.caixas[pecas.c0 : pecas.c1]:
+                item["oculto_em"] = [*item.get("oculto_em", []), "superior"]
+            for i, pol in enumerate(pecas.cheio):
+                extra = {"oculto_em": outras} if outras else {}
+                self.prisma(
+                    f"parede-{pid}-corte-{i}", pol, 0, CORTE_SUPERIOR, pecas.material, **extra
+                )
 
     def _no_vao(
         self, parede: Any, ao_longo: float, para_dentro: float, z: float,
@@ -676,9 +725,11 @@ class _Cena:
             "nome": "superior",
             "titulo": "De cima",
             "tipo": "ortografica",
-            "posicao": [c.x - maior * 0.6, c.y - maior * 0.75, maior * 2.2],
-            "alvo": [c.x, c.y, 0],
-            "escala": maior * 1.45,
+            # mira um pouco acima do piso e com folga: as paredes do fundo (inteiras) sobem no
+            # quadro; as da frente saem cortadas (``cortar_paredes_da_frente``)
+            "posicao": [c.x - maior * 0.6, c.y - maior * 0.75, maior * 2.2 + self.pe * 0.15],
+            "alvo": [c.x, c.y, self.pe * 0.15],
+            "escala": maior * 1.85,
         }
         return vistas
 
@@ -1126,6 +1177,12 @@ def montar_cena(
     cena.moveis_()
     cena.luminarias()
     estimadas = carregado.estimadas(comodo)
+    cameras = cena.cameras(vistas)
+    for cam in cameras:
+        if cam["nome"] == "superior":
+            cena.cortar_paredes_da_frente(
+                cam, [v["nome"] for v in cameras if v["nome"] != "superior"]
+            )
     return {
         "versao": VERSAO_CENA,
         "comodo": comodo,
@@ -1133,7 +1190,7 @@ def montar_cena(
         "prismas": cena.prismas,
         "caixas": cena.caixas,
         "materiais": cena.materiais,
-        "cameras": cena.cameras(vistas),
+        "cameras": cameras,
         "luzes": cena.luzes(),
         "aviso": f"{AVISO_OBRA} · {len(estimadas)} medida(s) estimada(s)" if estimadas else None,
         "saida": {"largura": largura, "altura": altura, "amostras": amostras},

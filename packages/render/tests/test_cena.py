@@ -11,7 +11,7 @@ from shapely.ops import unary_union
 
 from interiores_core import geometria
 from interiores_core.carregar import carregar
-from interiores_render.cena import AVISO_OBRA, montar_cena, montar_cena_pavimento
+from interiores_render.cena import AVISO_OBRA, CORTE_SUPERIOR, montar_cena, montar_cena_pavimento
 
 DADOS = Path(__file__).resolve().parents[2] / "core" / "tests" / "dados" / "casa"
 
@@ -52,8 +52,33 @@ def test_arquitetura(cena: dict[str, Any]) -> None:
 
 def test_paredes_sem_sobreposicao(cena: dict[str, Any]) -> None:
     """Nas quinas as paredes não se sobrepõem (no render as faces coincidentes saem pretas)."""
-    paredes = [Polygon(p["contorno"]) for p in cena["prismas"] if p["nome"].startswith("parede-")]
-    assert sum(p.area for p in paredes) == pytest.approx(unary_union(paredes).area, rel=1e-6)
+    for vista in [c["nome"] for c in cena["cameras"]]:  # em cada vista, o que aparece nela
+        paredes = [
+            Polygon(p["contorno"])
+            for p in cena["prismas"]
+            if p["nome"].startswith("parede-") and vista not in p.get("oculto_em", [])
+        ]
+        assert sum(p.area for p in paredes) == pytest.approx(unary_union(paredes).area, rel=1e-6)
+
+
+def test_vista_de_cima_corta_as_paredes_da_frente(cena: dict[str, Any]) -> None:
+    """De cima (de um canto), as paredes do lado da câmera viram tocos baixos só nessa vista;
+    nas outras, a parede inteira e nada de toco."""
+    cam = next(c for c in cena["cameras"] if c["nome"] == "superior")
+    tocos = [p for p in cena["prismas"] if "-corte-" in p["nome"]]
+    assert tocos and all(p["z1"] == CORTE_SUPERIOR for p in tocos)
+    assert all("perspectiva" in p["oculto_em"] and "superior" not in p["oculto_em"] for p in tocos)
+    cortadas = {p["nome"].split("-corte-")[0] for p in tocos}
+    inteiras = [
+        p for p in cena["prismas"]
+        if p["nome"].startswith("parede-") and "-corte-" not in p["nome"]
+    ]  # fmt: skip
+    for p in inteiras:
+        nome = p["nome"].rsplit("-", 1)[0]
+        assert ("superior" in p.get("oculto_em", [])) == (nome in cortadas)
+    # as cortadas estão do lado da câmera (x ou y menor que o centro, câmera no canto -x/-y)
+    assert cam["posicao"][0] < cam["alvo"][0] and cam["posicao"][1] < cam["alvo"][1]
+    assert len(cortadas) < len({p["nome"].rsplit("-", 1)[0] for p in inteiras})
 
 
 def test_moveis_e_porta(cena: dict[str, Any]) -> None:
