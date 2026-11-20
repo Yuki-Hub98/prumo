@@ -31,6 +31,10 @@ PARTES: dict[str, str] = {
     "tampo": "Tampo",
     "pes": "Pés",
     "moldura": "Moldura",
+    "bancada": "Bancada",
+    "cuba": "Cuba",
+    "torneira": "Torneira",
+    "bocas": "Bocas e grelhas",
 }
 """Id → nome para a tela, na ordem em que aparecem."""
 
@@ -44,6 +48,9 @@ POR_SIMBOLO: dict[Simbolo, tuple[str, ...]] = {
     Simbolo.MESA: ("tampo", "pes"),
     Simbolo.TELA: ("moldura",),
     Simbolo.GENERICO: (),
+    Simbolo.PIA: ("bancada", "portas", "puxadores", "cuba", "torneira"),
+    Simbolo.FOGAO: ("tampo", "bocas", "portas", "puxadores"),
+    Simbolo.GELADEIRA: ("portas", "puxadores"),
 }
 PLANEJADO: tuple[str, ...] = ("portas", "gavetas", "puxadores", "prateleiras")
 """Móvel planejado (com ``construcao``): caixa = corpo; portas, frentes de gaveta,
@@ -67,6 +74,10 @@ _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"^tampo$", "tampo"),
         (r"^pe\d+$", "pes"),
         (r"^moldura$", "moldura"),
+        (r"^bancada$", "bancada"),
+        (r"^cuba$", "cuba"),
+        (r"^torneira\d*$", "torneira"),
+        (r"^boca\d+$", "bocas"),
     )
 )
 
@@ -84,4 +95,15 @@ def partes_do_movel(m: Movel) -> tuple[str, ...]:
     if m.construcao is not None:
         return PLANEJADO
     item = item_do_tipo(m.tipo)
-    return POR_SIMBOLO[item.simbolo if item else Simbolo.GENERICO]
+    simbolo = item.simbolo if item else Simbolo.GENERICO
+    if simbolo is Simbolo.FOGAO and eh_cooktop(m):
+        return ("tampo", "bocas")  # sem forno: sem porta nem puxador
+    return POR_SIMBOLO[simbolo]
+
+
+ALTURA_MAX_COOKTOP = 200
+"""Fogão mais baixo que isto (mm) é cooktop: só o tampo com as bocas, na bancada."""
+
+
+def eh_cooktop(m: Movel) -> bool:
+    return m.altura.valor < ALTURA_MAX_COOKTOP

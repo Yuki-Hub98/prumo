@@ -26,6 +26,7 @@ class Categoria(StrEnum):
     SENTAR = "sentar"
     MESAS = "mesas"
     ELETRONICOS = "eletronicos"
+    COZINHA = "cozinha"
     SOB_MEDIDA = "sob_medida"
 
 
@@ -44,6 +45,11 @@ class Simbolo(StrEnum):
     PRATELEIRAS = "prateleiras"
     GENERICO = "generico"
     """Caixa com seta na frente."""
+    PIA = "pia"
+    """Gabinete com bancada, cuba e torneira."""
+    FOGAO = "fogao"
+    """Bocas em cima (e forno na frente, se for de piso)."""
+    GELADEIRA = "geladeira"
 
 
 class _Base(BaseModel):
@@ -62,6 +68,9 @@ class ModeloCatalogo(_Base):
     portas: Literal["abrir", "correr"] | None = None
     largura_porta: int | None = None
     polegadas: int | None = Field(None, description="Diagonal da tela (TV).")
+    energia: Literal["gas", "eletrico"] | None = Field(
+        None, description="Fogão: a gás pede ponto de gás e ventilação."
+    )
 
 
 class ItemCatalogo(_Base):
@@ -313,6 +322,54 @@ _ITENS = (
             _m("pequeno", "Pequeno (120 × 35)", 1200, 350, 500),
         ),
         modelo_padrao="padrao",
+    ),
+    # ------------------------------------------------------------ cozinha
+    ItemCatalogo(
+        tipo="pia",
+        nome="Pia (gabinete com bancada e cuba)",
+        categoria=Categoria.COZINHA,
+        simbolo=Simbolo.PIA,
+        lados_uso=("frente",),
+        modelos=(
+            _m("120", "Gabinete 120 × 55", 1200, 550, 900),
+            _m("150", "Gabinete 150 × 55", 1500, 550, 900),
+            _m("180", "Bancada 180 × 60", 1800, 600, 900),
+        ),
+        modelo_padrao="120",
+    ),
+    ItemCatalogo(
+        tipo="fogao",
+        nome="Fogão / cooktop",
+        categoria=Categoria.COZINHA,
+        simbolo=Simbolo.FOGAO,
+        lados_uso=("frente",),
+        modelos=(
+            _m("4bocas", "Fogão 4 bocas a gás (55 × 60)", 550, 600, 850, energia="gas"),
+            _m("5bocas", "Fogão 5 bocas a gás (75 × 60)", 750, 600, 850, energia="gas"),
+            _m(
+                "cooktop",
+                "Cooktop de indução (60 × 52, na bancada)",
+                600,
+                520,
+                60,
+                elevacao=900,
+                energia="eletrico",
+            ),
+        ),
+        modelo_padrao="4bocas",
+    ),
+    ItemCatalogo(
+        tipo="geladeira",
+        nome="Geladeira",
+        categoria=Categoria.COZINHA,
+        simbolo=Simbolo.GELADEIRA,
+        lados_uso=("frente",),
+        modelos=(
+            _m("duplex", "Duplex (70 × 72 × 180)", 700, 720, 1800),
+            _m("frost", "Frost free (60 × 68 × 170)", 600, 680, 1700),
+            _m("inverse", "Inverse (75 × 75 × 190)", 750, 750, 1900),
+        ),
+        modelo_padrao="duplex",
     ),
     ItemCatalogo(
         tipo="sob_medida",

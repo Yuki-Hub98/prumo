@@ -235,7 +235,9 @@ def test_regra_invalida_aparece_uma_vez(rodar: Checar) -> None:
 def test_registro_por_tipo() -> None:
     quarto = modulo_do_tipo("quarto")
     assert quarto is not None and "lateral_cama" in quarto.LIMITES and quarto.REGRAS
-    assert modulo_do_tipo("cozinha") is None
+    cozinha = modulo_do_tipo("cozinha")
+    assert cozinha is not None and "triangulo_min" in cozinha.LIMITES and cozinha.REGRAS
+    assert modulo_do_tipo("lavabo") is None
 
 
 def test_regras_toml_no_carregamento(tmp_path: Path) -> None:
