@@ -177,7 +177,20 @@ def para_linhas(conteudo: Conteudo, linha: t.Projeto) -> None:
         for j, a in enumerate(pav.get("aberturas", [])):
             c, _ = sep.separar(
                 a,
-                {"id", "tipo", "parede", "de", "para", "folha", "abre_para", "dobradica"},
+                {
+                    "id",
+                    "tipo",
+                    "parede",
+                    "de",
+                    "para",
+                    "folha",
+                    "abre_para",
+                    "dobradica",
+                    "estilo",
+                    "abertura",
+                    "folhas",
+                    "modelo",
+                },
                 f"{cam}.aberturas[{a['id']}]",
                 "abertura",
                 **ref,
@@ -321,6 +334,10 @@ def de_linhas(linha: t.Projeto) -> Conteudo:
                     "folha": a.folha,
                     "abre_para": a.abre_para,
                     "dobradica": a.dobradica,
+                    "estilo": a.estilo,
+                    "abertura": a.abertura,
+                    "folhas": a.folhas,
+                    "modelo": a.modelo,
                 },
             )
             for a in lp.aberturas

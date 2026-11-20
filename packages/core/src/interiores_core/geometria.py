@@ -108,10 +108,12 @@ def direcao(parede: Parede) -> tuple[tuple[float, float], tuple[float, float]]:
 def giro_porta(pavimento: Pavimento, porta: Porta, passos: int = 12) -> Polygon | None:
     """Quarto de círculo varrido pela folha de uma porta de giro (``None`` se for de correr).
 
-    A dobradiça fica na face da parede do lado para onde a porta abre.
+    A dobradiça fica na face da parede do lado para onde a porta abre. Porta camarão (duas
+    folhas que dobram para o lado da dobradiça) varre um quarto de círculo de raio igual à
+    metade da largura.
     """
     parede = pavimento.parede(porta.parede)
-    if porta.folha != "giro" or parede is None or comprimento(parede) == 0:
+    if porta.folha not in ("giro", "camarao") or parede is None or comprimento(parede) == 0:
         return None
     u, n = direcao(parede)
     s = 1 if porta.abre_para == parede.lado_a else -1
@@ -122,14 +124,15 @@ def giro_porta(pavimento: Pavimento, porta: Porta, passos: int = 12) -> Polygon 
     fim = (ini[0] + u[0] * larg, ini[1] + u[1] * larg)
     dobradica, outro = (ini, fim) if porta.dobradica != "fim" else (fim, ini)
     centro = (dobradica[0] + n[0] * s * meia, dobradica[1] + n[1] * s * meia)
+    raio = larg / 2 if porta.folha == "camarao" else larg
     ang_folha = math.atan2(n[1] * s, n[0] * s)
     ang_fecha = math.atan2(outro[1] - dobradica[1], outro[0] - dobradica[0])
     varredura = (ang_folha - ang_fecha) % (2 * math.pi)
     sentido = 1 if abs(varredura - math.pi / 2) < 1e-6 else -1
     arco = [
         (
-            centro[0] + larg * math.cos(ang_fecha + sentido * (math.pi / 2) * k / passos),
-            centro[1] + larg * math.sin(ang_fecha + sentido * (math.pi / 2) * k / passos),
+            centro[0] + raio * math.cos(ang_fecha + sentido * (math.pi / 2) * k / passos),
+            centro[1] + raio * math.sin(ang_fecha + sentido * (math.pi / 2) * k / passos),
         )
         for k in range(passos + 1)
     ]

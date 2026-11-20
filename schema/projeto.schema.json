@@ -134,6 +134,54 @@
         },
         "peitoril": {
           "$ref": "#/$defs/Medida"
+        },
+        "abertura": {
+          "anyOf": [
+            {
+              "enum": [
+                "correr",
+                "basculante",
+                "maxim_ar",
+                "abrir",
+                "fixa"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Como a janela abre; sem valor = de correr.",
+          "title": "Abertura"
+        },
+        "folhas": {
+          "anyOf": [
+            {
+              "maximum": 6,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Número de folhas (correr/abrir); sem valor = 2.",
+          "title": "Folhas"
+        },
+        "modelo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Modelo do catálogo de janelas de onde vieram as medidas.",
+          "title": "Modelo"
         }
       },
       "required": [
@@ -573,7 +621,8 @@
           "default": "giro",
           "enum": [
             "giro",
-            "correr"
+            "correr",
+            "camarao"
           ],
           "title": "Folha",
           "type": "string"
@@ -588,7 +637,7 @@
             }
           ],
           "default": null,
-          "description": "Cômodo (de/para) para onde a folha gira. Obrigatório se giro.",
+          "description": "Cômodo (de/para) para onde a folha gira. Obrigatório se giro ou camarão.",
           "title": "Abre Para"
         },
         "dobradica": {
@@ -607,6 +656,38 @@
           "default": null,
           "description": "Lado do vão com a dobradiça, no sentido da parede.",
           "title": "Dobradica"
+        },
+        "estilo": {
+          "anyOf": [
+            {
+              "enum": [
+                "lisa",
+                "almofadada",
+                "vidro",
+                "veneziana"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Acabamento da folha (só visual); sem valor = lisa.",
+          "title": "Estilo"
+        },
+        "modelo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Modelo do catálogo de portas de onde vieram as medidas.",
+          "title": "Modelo"
         }
       },
       "required": [

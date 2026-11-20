@@ -46,7 +46,7 @@ from interiores_api.esquemas import (
 )
 from interiores_api.servicos import Servico
 from interiores_banco.conexao import sessao as abrir_sessao
-from interiores_core import catalogo, edicao
+from interiores_core import catalogo, catalogo_aberturas, edicao
 from interiores_core import edicao_moveis as em
 from interiores_core.modelo import Parede, Variacao
 from interiores_core.tela import PavimentoTela, PlanejadoTela
@@ -84,6 +84,12 @@ def salvar_preferencias(svc: Svc, novas: Preferencias) -> Preferencias:
 def ver_catalogo() -> dict[str, object]:
     """Tipos de móvel, modelos com medidas padrão, lados de uso e símbolo na planta."""
     return catalogo.exportar()
+
+
+@geral.get("/catalogo/aberturas")
+def ver_catalogo_aberturas() -> catalogo_aberturas.CatalogoAberturas:
+    """Portas e janelas prontas: tipos e tamanhos comerciais (para escolher ao criar)."""
+    return catalogo_aberturas.exportar()
 
 
 # ---------------------------------------------------------------- projetos
