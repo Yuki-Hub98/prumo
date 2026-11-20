@@ -19,6 +19,7 @@ from interiores_api.esquemas import (
     AlterarParede,
     Apagado,
     Campos,
+    DefinirConstrucao,
     DividirParede,
     InfoRender,
     ItemHistorico,
@@ -46,7 +47,7 @@ from interiores_banco.conexao import sessao as abrir_sessao
 from interiores_core import catalogo, edicao
 from interiores_core import edicao_moveis as em
 from interiores_core.modelo import Parede, Variacao
-from interiores_core.tela import PavimentoTela
+from interiores_core.tela import PavimentoTela, PlanejadoTela
 from interiores_core.validacao import Problema
 
 
@@ -417,6 +418,37 @@ def alterar_movel(
         codigo, versao, comodo, "alterar_movel",
         lambda p, d, r: em.alterar_movel(p, comodo, d, id_, campos, r),
     )  # fmt: skip
+
+
+@moveis.put("/{id_}/construcao")
+def definir_construcao(
+    svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao, pedido: DefinirConstrucao
+) -> ResultadoEdicao:
+    """Monta o móvel por dentro (vãos, gavetas, nichos, cabideiros, portas) ou tira (null)."""
+    construcao = (
+        pedido.construcao.model_dump(mode="json", exclude_none=True) if pedido.construcao else None
+    )
+    return svc.editar_moveis(
+        codigo, versao, comodo, "definir_construcao",
+        lambda p, d, r: em.definir_construcao(p, comodo, d, id_, construcao, r),
+    )  # fmt: skip
+
+
+@moveis.post("/{id_}/construcao/sugerir")
+def sugerir_construcao(
+    svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao
+) -> ResultadoEdicao:
+    """Monta o móvel com o interior padrão do tipo, para ajustar a partir daí."""
+    return svc.editar_moveis(
+        codigo, versao, comodo, "sugerir_construcao",
+        lambda p, d, r: em.sugerir_construcao(p, comodo, d, id_, r),
+    )  # fmt: skip
+
+
+@moveis.get("/{id_}/planejado")
+def ver_planejado(svc: Svc, codigo: str, comodo: str, id_: str) -> PlanejadoTela:
+    """Vista de frente calculada do móvel planejado (para o editor desenhar)."""
+    return svc.planejado(codigo, comodo, id_)
 
 
 @moveis.delete("/{id_}")

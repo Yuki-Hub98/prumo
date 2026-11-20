@@ -63,3 +63,45 @@ def test_checagem_volta_na_resposta(api: TestClient) -> None:
     r = api.post(f"{MOVEIS}/cama/mover", params={"versao": 1}, json={"centro": [900, 1325]})
     assert r.status_code == 200
     assert r.json()["novos"], "cama em cima do guarda-roupa deveria gerar problema"
+
+
+def test_criar_do_zero_e_montar_por_dentro(api: TestClient) -> None:
+    med = {k: {"valor": v, "origem": "projeto"} for k, v in
+           (("largura", 1200), ("profundidade", 500), ("altura", 850))}  # fmt: skip
+    pedido = {"tipo": "sob_medida", "nome": "Gabinete", "centro": [1500, 1500], "medidas": med}
+    r = api.post(MOVEIS, params={"versao": 1}, json=pedido)
+    assert r.status_code == 200, r.text
+    geo = api.get("/projetos/casa/pavimentos/terreo/geometria").json()
+    novo = next(m for m in geo["moveis"] if m["id"] == "sob-medida")
+    assert (novo["planejavel"], novo["planejado"]) == (True, False)
+    assert api.get(f"{MOVEIS}/sob-medida/planejado").status_code == 422  # ainda não montado
+
+    r = api.post(f"{MOVEIS}/sob-medida/construcao/sugerir", params={"versao": 2})
+    assert r.status_code == 200, r.text
+    vista = api.get(f"{MOVEIS}/sob-medida/planejado").json()
+    assert vista["largura"] == 1200 and vista["pecas"] > 0 and vista["chapas"]
+
+    construcao = {
+        "chapa": {"material": "MDF branco", "espessura": {"valor": 18, "origem": "projeto"}},
+        "fundo": {"material": "HDF branco", "espessura": {"valor": 6, "origem": "projeto"}},
+        "vaos": [{"espacos": [{"tipo": "gaveta"}, {"tipo": "gaveta"}, {"tipo": "gaveta"}]}],
+    }
+    r = api.put(
+        f"{MOVEIS}/sob-medida/construcao", params={"versao": 3}, json={"construcao": construcao}
+    )
+    assert r.status_code == 200, r.text
+    tipos = [x["tipo"] for x in api.get(f"{MOVEIS}/sob-medida/planejado").json()["retangulos"]]
+    assert tipos.count("gaveta") == 3
+    ruim = {
+        **construcao,
+        "vaos": [{"largura": {"valor": 9000, "origem": "projeto"}, "espacos": [{"tipo": "nicho"}]}],
+    }
+    assert (
+        api.put(
+            f"{MOVEIS}/sob-medida/construcao", params={"versao": 4}, json={"construcao": ruim}
+        ).status_code
+        == 422
+    )
+    r = api.put(f"{MOVEIS}/sob-medida/construcao", params={"versao": 4}, json={"construcao": None})
+    assert r.status_code == 200
+    assert api.post(f"{MOVEIS}/cama/construcao/sugerir", params={"versao": 5}).status_code == 422

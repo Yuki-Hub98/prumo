@@ -48,7 +48,12 @@ from interiores_core.edicao_moveis import EdicaoMoveis
 from interiores_core.edicao_variacoes import validar_variacao
 from interiores_core.modelo import DadosComodo, Projeto, Variacao
 from interiores_core.regras import checar
-from interiores_core.tela import PavimentoTela, pavimento_para_tela
+from interiores_core.tela import (
+    PavimentoTela,
+    PlanejadoTela,
+    pavimento_para_tela,
+    planejado_para_tela,
+)
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
 from interiores_render.cena import VISTAS_PAVIMENTO, vistas_do_comodo
 from interiores_render.gerar import IMAGENS_POR_RENDER, QUALIDADES
@@ -179,6 +184,15 @@ class Servico:
         if pav is None:
             raise KeyError(f"pavimento '{pavimento}' não existe")
         return pavimento_para_tela(pav, c.comodos)
+
+    def planejado(self, codigo: str, comodo: str, id_: str) -> PlanejadoTela:
+        """Vista de frente do móvel planejado (versão atual, rascunho incluído)."""
+        c, _ = repositorio.ler(self.sessao, codigo)
+        dados = c.comodos.get(comodo)
+        movel = next((m for m in dados.moveis if m.id == id_), None) if dados else None
+        if movel is None:
+            raise KeyError(f"móvel '{id_}' não existe em '{comodo}'")
+        return planejado_para_tela(movel)
 
     def preferencias(self) -> Preferencias:
         linhas = self.sessao.scalars(select(t.Preferencia))
