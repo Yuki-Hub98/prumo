@@ -266,7 +266,9 @@ export function TelaProjeto({
                         Clique num móvel na planta para editar medidas, girar ou encostar na parede.
                       </p>
                     )}
-                    {geometria.data && <AdicionarMovel codigo={codigo} geometria={geometria.data} />}
+                    {geometria.data && (
+                      <AdicionarMovel codigo={codigo} geometria={geometria.data} unidade={unidade} aoCriado={selecionar} />
+                    )}
                   </>
                 )}
                 {aba === "cores" &&
