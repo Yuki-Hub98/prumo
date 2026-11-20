@@ -10,7 +10,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, model_validator
 
 from interiores_core.medidas import Medida
 
@@ -321,6 +321,35 @@ class Movel(_Modelo):
     construcao: Construcao | None = Field(
         None, description="Móvel planejado: estrutura interna para desenho e lista de corte."
     )
+    forma: Literal["arredondado", "redondo", "L"] | None = Field(
+        None,
+        description=(
+            "Forma vista de cima (vazio = retangular): cantos arredondados (``raio``), redondo "
+            "ou oval (círculo se largura = profundidade) ou em L (``braco``, ``lado_l``). "
+            "Largura e profundidade continuam sendo a caixa em volta."
+        ),
+    )
+    raio: Medida | None = Field(None, description="Raio dos cantos (forma arredondado).")
+    braco: Medida | None = Field(
+        None, description="Largura dos braços do L (forma L): a faixa das costas e a do lado."
+    )
+    lado_l: Literal["esquerda", "direita"] | None = Field(
+        None,
+        description="Lado do braço que vem para a frente, olhando de frente (padrão: esquerda).",
+    )
+
+    @model_validator(mode="after")
+    def _forma_cabe(self) -> Movel:
+        menor = min(self.largura.valor, self.profundidade.valor)
+        if self.forma is not None and self.construcao is not None:
+            raise ValueError("móvel planejado (com construção) só pode ser retangular")
+        if self.forma == "arredondado" and self.raio and self.raio.valor * 2 > menor:
+            raise ValueError(f"raio de {self.raio.valor} mm não cabe: no máximo {menor // 2} mm")
+        if self.forma == "L" and self.braco and not 0 < self.braco.valor < menor:
+            raise ValueError(
+                f"braço do L de {self.braco.valor} mm: precisa ser menor que {menor} mm"
+            )
+        return self
 
     @property
     def ocupa_piso(self) -> bool:

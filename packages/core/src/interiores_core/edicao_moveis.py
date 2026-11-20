@@ -32,8 +32,8 @@ from interiores_core.validacao import Problema, Severidade, validar
 
 Dados = dict[str, Any]
 
-CAMPOS_MEDIDA = {"largura", "profundidade", "altura", "elevacao", "largura_porta"}
-CAMPOS_MOVEL = CAMPOS_MEDIDA | {"nome", "modelo", "portas", "polegadas"}
+CAMPOS_MEDIDA = {"largura", "profundidade", "altura", "elevacao", "largura_porta", "raio", "braco"}
+CAMPOS_MOVEL = CAMPOS_MEDIDA | {"nome", "modelo", "portas", "polegadas", "forma", "lado_l"}
 """Campos editáveis com :func:`alterar_movel` (posição e giro: :func:`mover_movel`)."""
 
 
