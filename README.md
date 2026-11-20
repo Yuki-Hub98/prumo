@@ -305,16 +305,18 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 
 ### Próximos
 
-- [ ] Modelos prontos (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
+- [x] **Portas e janelas prontas** (1ª parte dos Modelos prontos): porta de giro, de correr ou
+      camarão, lisa, almofadada, com vidro ou veneziana; janela de correr (2 ou 4 folhas),
+      basculante, maxim-ar, de abrir ou fixa; tamanhos comerciais para escolher ao criar; na
+      planta, nas elevações e no 3D
+- [ ] Modelos prontos — o que falta (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
       escolher e posicionar, com símbolo na planta e 3D detalhado. **Tudo editável pela
       pessoa**: partir de um modelo pronto e mudar medidas, acabamento/cor, número de
       portas/folhas/gavetas, puxador, sentido de abertura etc., podendo **salvar a versão
       editada como modelo próprio**:
       - **móveis mais comuns** do mercado, com acabamento, puxadores, pés e portas visíveis;
-      - **portas**: de giro (lisa, almofadada, com vidro), de correr (aparente e embutida),
-        camarão, pivotante, de banheiro com veneziana; com batente, guarnição e maçaneta;
-      - **janelas**: de correr (2 e 4 folhas), basculante, maxim-ar, de abrir, veneziana,
-        com caixilho, vidro e peitoril padrão; tamanhos comerciais (ex.: 120 × 100, 150 × 120)
+      - **salvar um móvel editado como modelo próprio** (2ª parte);
+      - portas: correr embutida, pivotante, guarnição; janelas com veneziana
 - [ ] Cotas na planta da tela (pedido do usuário, 2026-11-20, para depois): hoje só o DXF/PDF
       tem cotas. Desenhar as cotas das paredes e dos vãos na planta do frontend, em Mono, na cor
       da origem da medida (Medi verde, Quero assim azul, Chute laranja tracejado), como pede a

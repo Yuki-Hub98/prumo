@@ -3,7 +3,7 @@ import { btn } from "../estilo";
 import { useState } from "react";
 import { api, ou, type Medida, type PavimentoTela } from "../api/cliente";
 import { CampoMedida } from "../componentes/CampoMedida";
-import { useEditar, useProjeto } from "../dados";
+import { useCatalogoAberturas, useEditar, useProjeto } from "../dados";
 import { formatar, paraMm, type Origem, type Unidade } from "../unidades";
 import type { Item } from "../componentes/Planta";
 import { paraId, proximoId } from "./geometria";
@@ -384,25 +384,67 @@ function NovaAbertura({
   parede: Pav["paredes"] extends (infer P)[] | undefined ? P : never;
   aoFim: () => void;
 }) {
+  const cat = useCatalogoAberturas().data;
+  const modelos = (tipo === "porta" ? cat?.portas : cat?.janelas) ?? [];
+  const [modelo, setModelo] = useState("");
+  const escolhido = modelos.find((x) => x.id === modelo) as
+    | { largura: number; altura: number; peitoril?: number; folha?: Folha; estilo?: Estilo; abertura?: TipoJanela; folhas?: number }
+    | undefined;
   const [m, setM] = useState<Record<string, Medida | null>>({});
+  const [folha, setFolha] = useState<Folha>("giro");
+  const [estilo, setEstilo] = useState<Estilo>("lisa");
+  const [abertura, setAbertura] = useState<TipoJanela>("correr");
+  const [folhas, setFolhas] = useState(2);
   const lados = [parede.lado_a, parede.lado_b];
   const [abrePara, setAbrePara] = useState(lados.find((l) => l !== "externo") ?? lados[0]);
   const campos = tipo === "porta" ? ["distancia_inicio", "largura", "altura"] : ["distancia_inicio", "largura", "altura", "peitoril"];
   const rotulos: Record<string, string> = { distancia_inicio: "Do início", largura: "Largura", altura: "Altura", peitoril: "Peitoril" };
-  const iniciais: Record<string, Record<Unidade, string>> = {
-    largura: { cm: tipo === "porta" ? "80" : "120", m: tipo === "porta" ? "0,8" : "1,2", mm: tipo === "porta" ? "800" : "1200" },
-    altura: { cm: tipo === "porta" ? "210" : "100", m: tipo === "porta" ? "2,1" : "1", mm: tipo === "porta" ? "2100" : "1000" },
-    peitoril: { cm: "110", m: "1,1", mm: "1100" },
+  const padrao: Record<string, number> =
+    tipo === "porta" ? { largura: 800, altura: 2100 } : { largura: 1200, altura: 1000, peitoril: 1100 };
+  const inicial = (c: string) => {
+    const mm = (escolhido as Record<string, number> | undefined)?.[c] ?? padrao[c];
+    return mm === undefined ? "" : formatar(mm, unidade, false);
+  };
+  const escolher = (id: string) => {
+    setModelo(id);
+    const x = modelos.find((y) => y.id === id) as typeof escolhido;
+    if (x?.folha) setFolha(x.folha);
+    if (x?.estilo) setEstilo(x.estilo);
+    if (x?.abertura) setAbertura(x.abertura);
+    if (x?.folhas) setFolhas(x.folhas);
+    setM((v) => ({ distancia_inicio: v.distancia_inicio ?? null })); // tamanhos novos: perguntar a origem de novo
   };
   const pronto = campos.every((c) => m[c]);
   const id = proximoId(`${tipo}-`, (pav.aberturas ?? []).map((a) => a.id));
   return (
     <div className="mt-2 rounded-md border border-linha bg-superficie p-2">
       <p className="mb-1 text-sm font-medium">Nova {tipo} ({id})</p>
+      <label className="flex items-center gap-2 py-1 text-sm">
+        <span className="w-28 text-tinta-suave">Modelo pronto</span>
+        <select className="min-w-0 flex-1 rounded-md border" value={modelo} onChange={(e) => escolher(e.target.value)}>
+          <option value="">Sob medida (digitar)</option>
+          {modelos.map((x) => (
+            <option key={x.id} value={x.id}>
+              {x.nome}
+            </option>
+          ))}
+        </select>
+      </label>
       {campos.map((c) => (
-        <NovaMedida key={c} rotulo={rotulos[c]} unidade={unidade} inicial={iniciais[c]?.[unidade] ?? ""} aoMudar={(v) => setM((x) => ({ ...x, [c]: v }))} />
+        <NovaMedida
+          key={`${c}-${modelo}`}
+          rotulo={rotulos[c]}
+          unidade={unidade}
+          inicial={c === "distancia_inicio" ? "" : inicial(c)}
+          aoMudar={(v) => setM((x) => ({ ...x, [c]: v }))}
+        />
       ))}
-      {tipo === "porta" && (
+      {tipo === "porta" ? (
+        <TipoPorta folha={folha} estilo={estilo} cat={cat} aoMudar={(f, e) => (setFolha(f), setEstilo(e))} />
+      ) : (
+        <TipoJanelaCampos abertura={abertura} folhas={folhas} cat={cat} aoMudar={(a, n) => (setAbertura(a), setFolhas(n))} />
+      )}
+      {tipo === "porta" && folha !== "correr" && (
         <label className="flex items-center gap-2 py-1 text-sm">
           <span className="w-28 text-tinta-suave">Abre para</span>
           <select className="rounded-md border" value={abrePara} onChange={(e) => setAbrePara(e.target.value)}>
@@ -417,11 +459,12 @@ function NovaAbertura({
           className={botao}
           disabled={!pronto || ocupado}
           onClick={() => {
+            const comum = { id, parede: parede.id, distancia_inicio: m.distancia_inicio!, largura: m.largura!, altura: m.altura!, ...(modelo ? { modelo } : {}) };
             const corpo =
               tipo === "porta"
-                ? { id, tipo, parede: parede.id, de: lados[0], para: lados[1], folha: "giro" as const, abre_para: abrePara, dobradica: "inicio" as const,
-                    distancia_inicio: m.distancia_inicio!, largura: m.largura!, altura: m.altura! } // prettier-ignore
-                : { id, tipo, parede: parede.id, distancia_inicio: m.distancia_inicio!, largura: m.largura!, altura: m.altura!, peitoril: m.peitoril! };
+                ? { ...comum, tipo, de: lados[0], para: lados[1], folha, ...(estilo !== "lisa" ? { estilo } : {}),
+                    ...(folha !== "correr" ? { abre_para: abrePara, dobradica: "inicio" as const } : {}) } // prettier-ignore
+                : { ...comum, tipo, peitoril: m.peitoril!, abertura, folhas };
             fazer(
               (versao) => ou(api.POST("/projetos/{codigo}/pavimentos/{pavimento}/aberturas", { params: { path: base, query: { versao } }, body: corpo })),
               () => {
@@ -436,6 +479,61 @@ function NovaAbertura({
         <button className={botao} onClick={aoFim}>Cancelar</button>
       </div>
     </div>
+  );
+}
+
+type CatAberturas = ReturnType<typeof useCatalogoAberturas>["data"];
+type Folha = "giro" | "correr" | "camarao";
+type Estilo = "lisa" | "almofadada" | "vidro" | "veneziana";
+type TipoJanela = "correr" | "basculante" | "maxim_ar" | "abrir" | "fixa";
+
+/** Folha (giro / correr / camarão) e estilo da porta. */
+function TipoPorta({ folha, estilo, cat, aoMudar }: { folha: Folha; estilo: Estilo; cat: CatAberturas; aoMudar: (f: Folha, e: Estilo) => void }) {
+  return (
+    <>
+      <label className="flex items-center gap-2 py-1 text-sm">
+        <span className="w-28 text-tinta-suave">Folha</span>
+        <select className="rounded-md border" value={folha} onChange={(e) => aoMudar(e.target.value as Folha, estilo)}>
+          {Object.entries(cat?.folhas_porta ?? { giro: "De abrir (giro)" }).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </label>
+      <label className="flex items-center gap-2 py-1 text-sm">
+        <span className="w-28 text-tinta-suave">Estilo</span>
+        <select className="rounded-md border" value={estilo} onChange={(e) => aoMudar(folha, e.target.value as Estilo)}>
+          {Object.entries(cat?.estilos_porta ?? { lisa: "Lisa" }).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </label>
+    </>
+  );
+}
+
+/** Como a janela abre e quantas folhas tem. */
+function TipoJanelaCampos({ abertura, folhas, cat, aoMudar }: { abertura: TipoJanela; folhas: number; cat: CatAberturas; aoMudar: (a: TipoJanela, n: number) => void }) {
+  return (
+    <>
+      <label className="flex items-center gap-2 py-1 text-sm">
+        <span className="w-28 text-tinta-suave">Abertura</span>
+        <select className="rounded-md border" value={abertura} onChange={(e) => aoMudar(e.target.value as TipoJanela, folhas)}>
+          {Object.entries(cat?.aberturas_janela ?? { correr: "De correr" }).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </label>
+      {(abertura === "correr" || abertura === "abrir") && (
+        <label className="flex items-center gap-2 py-1 text-sm">
+          <span className="w-28 text-tinta-suave">Folhas</span>
+          <select className="rounded-md border" value={folhas} onChange={(e) => aoMudar(abertura, Number(e.target.value))}>
+            {[1, 2, 3, 4].map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+      )}
+    </>
   );
 }
 
@@ -507,6 +605,7 @@ function NovaInstalacao({
 // ------------------------------------------------------------------ abertura
 
 function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & { id: string }) {
+  const cat = useCatalogoAberturas().data;
   const a = pav.aberturas?.find((x) => x.id === id);
   if (!a) return null;
   const caminho = { ...base, id_: id };
@@ -527,7 +626,32 @@ function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx 
       {medidas.map((c) => (
         <CampoMedida key={c} rotulo={rotulos[c]} medida={(a as Record<string, unknown>)[c] as Medida} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ [c]: m })} />
       ))}
-      {a.tipo === "porta" && (
+      {a.tipo === "porta" ? (
+        <TipoPorta
+          folha={(a.folha ?? "giro") as Folha}
+          estilo={(a.estilo ?? "lisa") as Estilo}
+          cat={cat}
+          aoMudar={(f, e) => {
+            const mudou: Record<string, unknown> = {};
+            if (f !== (a.folha ?? "giro")) {
+              mudou.folha = f;
+              // giro/camarão precisam de sentido e dobradiça; correr não usa
+              if (f !== "correr" && !a.abre_para) Object.assign(mudou, { abre_para: a.para, dobradica: "inicio" });
+            }
+            if (e !== (a.estilo ?? "lisa")) mudou.estilo = e === "lisa" ? null : e;
+            if (Object.keys(mudou).length) alterar({ ...mudou, modelo: null });
+          }}
+        />
+      ) : (
+        <TipoJanelaCampos
+          abertura={(a.abertura ?? "correr") as TipoJanela}
+          folhas={a.folhas ?? 2}
+          cat={cat}
+          aoMudar={(ab, n) => alterar({ abertura: ab, folhas: n, modelo: null })}
+        />
+      )}
+      {a.modelo && <p className="text-xs text-tinta-suave">Modelo: {[...(cat?.portas ?? []), ...(cat?.janelas ?? [])].find((x) => x.id === a.modelo)?.nome ?? a.modelo}</p>}
+      {a.tipo === "porta" && a.folha !== "correr" && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-tinta-suave">Abre para</span>
           <select className="rounded-md border" value={a.abre_para ?? ""} onChange={(e) => alterar({ abre_para: e.target.value })}>
