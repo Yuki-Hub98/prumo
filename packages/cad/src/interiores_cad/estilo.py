@@ -33,7 +33,7 @@ CAMADAS = (
     Camada("COTA", (50, 50, 50), 13),
     Camada("TEXTO", (0, 0, 0), 18),
     Camada("RESTRICAO", (210, 0, 0), 25),
-    Camada("AVISO", (210, 0, 0), 35),
+    Camada("AVISO", (192, 43, 34), 35),  # --erro da identidade visual
 )
 """Camadas padronizadas (CLAUDE.md §5.4). Todas existem em todo DXF, mesmo vazias.
 
