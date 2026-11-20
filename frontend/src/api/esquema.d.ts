@@ -547,7 +547,7 @@ export interface paths {
         put?: never;
         /**
          * Adicionar Movel
-         * @description Do catálogo; pelo centro ou preso numa parede (virado para o cômodo).
+         * @description Do catálogo (ou de um modelo próprio); pelo centro ou preso numa parede.
          */
         post: operations["adicionar_movel_projetos__codigo__comodos__comodo__moveis_post"];
         delete?: never;
@@ -965,6 +965,47 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/modelos-proprios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Modelos Proprios
+         * @description Móveis guardados como modelo próprio (valem para todos os projetos).
+         */
+        get: operations["listar_modelos_proprios_modelos_proprios_get"];
+        put?: never;
+        /**
+         * Criar Modelo Proprio
+         * @description Guarda um móvel de um projeto (como está agora) como modelo próprio.
+         */
+        post: operations["criar_modelo_proprio_modelos_proprios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/modelos-proprios/{codigo_modelo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Apagar Modelo Proprio */
+        delete: operations["apagar_modelo_proprio_modelos_proprios__codigo_modelo__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1686,6 +1727,25 @@ export interface components {
              */
             altura?: number;
         };
+        /** ModeloProprioResumo */
+        ModeloProprioResumo: {
+            /** Codigo */
+            codigo: string;
+            /** Nome */
+            nome: string;
+            /** Tipo */
+            tipo: string;
+            /** Largura */
+            largura: number;
+            /** Profundidade */
+            profundidade: number;
+            /** Altura */
+            altura: number;
+            /** Planejado */
+            planejado: boolean;
+            /** Estimadas */
+            estimadas: number;
+        };
         /**
          * Movel
          * @description Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).
@@ -1907,6 +1967,20 @@ export interface components {
             ajustar_lados?: boolean;
         };
         /**
+         * NovoModeloProprio
+         * @description Guardar um móvel de um projeto como modelo próprio.
+         */
+        NovoModeloProprio: {
+            /** Projeto */
+            projeto: string;
+            /** Comodo */
+            comodo: string;
+            /** Movel */
+            movel: string;
+            /** Nome */
+            nome: string;
+        };
+        /**
          * NovoMovel
          * @description Móvel do catálogo. Posição: ``centro`` (+ ``rotacao``) **ou** ``parede`` (+ ``distancia``).
          *
@@ -1944,6 +2018,11 @@ export interface components {
             medidas?: {
                 [key: string]: components["schemas"]["Medida"];
             };
+            /**
+             * Modelo Proprio
+             * @description Código de um modelo próprio: o móvel sai igual a ele (``tipo`` é ignorado).
+             */
+            modelo_proprio?: string | null;
         };
         /** NovoPavimento */
         NovoPavimento: {
@@ -4699,6 +4778,88 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    listar_modelos_proprios_modelos_proprios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModeloProprioResumo"][];
+                };
+            };
+        };
+    };
+    criar_modelo_proprio_modelos_proprios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NovoModeloProprio"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModeloProprioResumo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apagar_modelo_proprio_modelos_proprios__codigo_modelo__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo_modelo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

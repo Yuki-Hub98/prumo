@@ -66,6 +66,14 @@ export function useVersoes(codigo: string) {
   });
 }
 
+/** Móveis guardados como modelo próprio (valem para todos os projetos). */
+export function useModelosProprios() {
+  return useQuery({
+    queryKey: ["modelos-proprios"],
+    queryFn: () => ou(api.GET("/modelos-proprios")),
+  });
+}
+
 /** Portas e janelas prontas (tipos e tamanhos comerciais). */
 export function useCatalogoAberturas() {
   return useQuery({

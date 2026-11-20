@@ -309,13 +309,14 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       camarão, lisa, almofadada, com vidro ou veneziana; janela de correr (2 ou 4 folhas),
       basculante, maxim-ar, de abrir ou fixa; tamanhos comerciais para escolher ao criar; na
       planta, nas elevações e no 3D
+- [x] **Meus modelos** (2ª parte dos Modelos prontos): salvar um móvel editado (medidas, forma,
+      montagem por dentro) como modelo próprio e reaproveitar em qualquer cômodo ou projeto
 - [ ] Modelos prontos — o que falta (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
       escolher e posicionar, com símbolo na planta e 3D detalhado. **Tudo editável pela
       pessoa**: partir de um modelo pronto e mudar medidas, acabamento/cor, número de
       portas/folhas/gavetas, puxador, sentido de abertura etc., podendo **salvar a versão
       editada como modelo próprio**:
       - **móveis mais comuns** do mercado, com acabamento, puxadores, pés e portas visíveis;
-      - **salvar um móvel editado como modelo próprio** (2ª parte);
       - portas: correr embutida, pivotante, guarnição; janelas com veneziana
 - [ ] Cotas na planta da tela (pedido do usuário, 2026-11-20, para depois): hoje só o DXF/PDF
       tem cotas. Desenhar as cotas das paredes e dos vãos na planta do frontend, em Mono, na cor
