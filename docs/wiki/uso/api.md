@@ -49,8 +49,10 @@ make api                # http://localhost:8010/docs (documentação interativa)
 | GET | `/projetos/{p}/historico?desde=` | mudanças (antes → depois) |
 | GET | `/projetos/{p}/versoes` | lista de versões + para onde o desfazer/refazer levariam |
 | GET | `/projetos/{p}/versoes/{v}` | projeto numa versão antiga |
-| POST | `/projetos/{p}/desfazer` | volta ao estado de antes da última edição |
+| POST | `/projetos/{p}/desfazer` | volta ao estado de antes da última edição (no rascunho: um passo) |
 | POST | `/projetos/{p}/refazer` | refaz o último desfazer (só logo depois de desfazer) |
+| POST | `/projetos/{p}/rascunho/salvar` | salva o rascunho: cada passo vira versão; reexporta `projetos/<p>` |
+| POST | `/projetos/{p}/rascunho/descartar` | volta para a versão salva e apaga os passos |
 | POST | `/projetos/{p}/versoes/{v}/restaurar` | volta para o conteúdo da versão `v` |
 | PATCH | `/projetos/{p}/imovel` | tipo (casa/apartamento) e apelido |
 | POST | `/projetos/{p}/renomear` | troca o código (a pasta em `projetos/` vai junto) |
@@ -77,6 +79,14 @@ móvel, distância sofá-TV), para a tela mostrar na hora.
 `reverter:N` no histórico. Assim dá para desfazer um desfazer, e o histórico conta tudo.
 Qualquer edição nova depois de desfazer zera o refazer. Voltar para antes de um
 `renomear` mantém o código atual do projeto.
+
+**Rascunho:** toda edição pela API entra como **passo de rascunho**: uma versão normal
+(snapshot e histórico), acima de `projeto.rascunho_desde`. Enquanto há rascunho, o JSON em
+`projetos/` não é reexportado (fica igual ao salvo), `interiores importar`/`exportar` recusam
+e "restaurar" pede para salvar ou descartar antes. **Desfazer no rascunho** restaura o passo
+anterior e **desce a versão**; o passo desfeito fica guardado para o refazer até a próxima
+edição. **Salvar** fecha o rascunho (cada passo que ficou vira versão) e exporta; **Descartar**
+volta para `rascunho_desde`. `GET .../versoes` traz `rascunho: {desde, passos, refazer}`.
 
 O esquema completo (para gerar os tipos do frontend) está em `/openapi.json`.
 
