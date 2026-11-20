@@ -253,7 +253,7 @@ def faixa_aviso(cam, saida, aviso, objetos):
         f"aviso-fundo-{cam.name}",
         [(-w2, -h2, 0), (w2, -h2, 0), (w2, h2, 0), (-w2, h2, 0)],
         [[0, 1, 2, 3]],
-        emissivo("aviso-fundo", (0.55, 0, 0, 1)),
+        emissivo("aviso-fundo", (0.527, 0.024, 0.016, 1)),  # --erro #C02B22 (linear)
     )
     fundo.parent = cam
     fundo.location = (0, y, -dist)
