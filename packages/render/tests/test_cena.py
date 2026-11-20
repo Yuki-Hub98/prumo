@@ -188,7 +188,7 @@ def test_janela_porta_e_luz(cena: dict[str, Any]) -> None:
     nomes = _nomes(cena["caixas"])
     assert {
         "caixilho-janela-quarto-b",
-        "caixilho-janela-quarto-m",
+        "caixilho-janela-quarto-m1",
         "soleira-janela-quarto",
     } <= nomes
     assert {"batente-porta-quarto-e", "batente-porta-quarto-t"} <= nomes
@@ -368,3 +368,28 @@ def test_mesa_redonda_e_puff_em_l() -> None:
     assert all(Polygon(tampo["contorno"]).contains(Point(cx["centro"][:2])) for cx in pes)
     puff = prismas["puff-corpo"]
     assert len(puff["contorno"]) == 6 and (puff["z0"], puff["z1"]) == (0, 750)
+
+
+def test_tipos_de_porta_e_janela_no_3d(copia: Path) -> None:
+    arq = copia / "projeto.json"
+    dados = json.loads(arq.read_text(encoding="utf-8"))
+    for a in dados["pavimentos"][0]["aberturas"]:
+        if a["id"] == "porta-quarto":
+            a.update(folha="camarao", estilo="vidro")
+        elif a["id"] == "janela-quarto":
+            a.update(abertura="basculante", folhas=1)
+    arq.write_text(json.dumps(dados), encoding="utf-8")
+    cena = montar_cena(carregar(copia), "quarto")
+    nomes = _nomes(cena["caixas"])
+    # camarão: duas folhas de meia largura, cada uma com o visor de vidro
+    assert {"porta-porta-quarto-0", "porta-porta-quarto-1"} <= nomes
+    assert {"porta-porta-quarto-0-vidro", "porta-porta-quarto-1-vidro"} <= nomes
+    folha = next(c for c in cena["caixas"] if c["nome"] == "porta-porta-quarto-0")
+    assert folha["tamanho"][0] < 400  # meia folha (porta de 800)
+    # basculante: palhetas horizontais e puxador, sem montante
+    assert {
+        "caixilho-janela-quarto-p1",
+        "caixilho-janela-quarto-p2",
+        "caixilho-janela-quarto-px",
+    } <= nomes
+    assert not any(n.startswith("caixilho-janela-quarto-m") for n in nomes)
