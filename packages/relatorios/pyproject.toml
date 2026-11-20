@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "interiores-core",
     "openpyxl>=3.1.5",
+    "pillow>=11",
 ]
 
 [build-system]
