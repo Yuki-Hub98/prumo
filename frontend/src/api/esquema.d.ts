@@ -1011,6 +1011,11 @@ export interface components {
             ][] | null;
             /** Largura */
             largura: number;
+            /**
+             * Estimada
+             * @default false
+             */
+            estimada?: boolean;
         };
         /** AdicionarPavimento */
         AdicionarPavimento: {
@@ -1928,6 +1933,11 @@ export interface components {
             lado_a: string;
             /** Lado B */
             lado_b: string;
+            /**
+             * Estimada
+             * @default false
+             */
+            estimada?: boolean;
         };
         /** ParteTela */
         ParteTela: {

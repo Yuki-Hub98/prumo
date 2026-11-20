@@ -21,7 +21,10 @@ export type ModoEditor = {
   aoNovaParede: (a: Pt, b: Pt) => void;
 };
 
-const AZUL = "#0284c7";
+// identidade visual: amarelo trena = selecionado; azul "projeto" = guia de desenho;
+// traço em px de tela (non-scaling-stroke), não em mm
+const SEL = "var(--trena)";
+const GUIA = "var(--projeto)";
 
 /** y do pavimento é para cima; no SVG é para baixo: inverte só aqui. */
 const xy = ([x, y]: Pt | readonly number[]) => `${x},${-y}`;
@@ -29,21 +32,20 @@ const pontos = (lista: (Pt | readonly number[])[]) => lista.map(xy).join(" ");
 
 const PASSO = 10; // arrastar anda de 1 em 1 cm
 
-const COR_MOVEL: Record<string, string> = {
-  cama: "#e7d3b8",
-  guarda_roupa: "#c9b08f",
-  armario: "#c9b08f",
-  sofa: "#b8c7d9",
-  tv: "#55606b",
-  pia: "#e7e5e4",
-  fogao: "#a8a29e",
-  geladeira: "#d6d3d1",
-  lavatorio: "#e7e5e4",
-  vaso: "#fafaf9",
-  box: "#cfe6f2",
-};
 
 const COR_GRAV: Record<string, string> = { erro: "var(--erro)", aviso: "var(--aviso)", info: "var(--info)" };
+
+/** Cor de cada instalação (identidade visual). */
+const COR_INST: Record<string, string> = {
+  tomada: "var(--tinta)",
+  interruptor: "var(--tinta)",
+  ponto_luz: "var(--tinta)",
+  agua_fria: "var(--projeto)",
+  agua_quente: "var(--erro)",
+  gas: "var(--aviso)",
+  esgoto: "var(--tinta-suave)",
+  ralo: "var(--tinta-suave)",
+};
 
 const LETRA: Record<string, string> = {
   tomada: "T",
@@ -100,6 +102,12 @@ export function Planta({
   useEffect(() => {
     if (!desenhando) setTrilha(null); // parou de desenhar: a próxima sequência começa do zero
   }, [desenhando]);
+  // halo nos elementos com problema: o pior (erro > aviso) de cada um
+  const HALO: Record<string, string> = {};
+  for (const p of problemas) {
+    if (!p.elemento || (p.severidade !== "erro" && p.severidade !== "aviso")) continue;
+    if (HALO[p.elemento] !== "var(--erro)") HALO[p.elemento] = COR_GRAV[p.severidade];
+  }
   const ehSel = (tipo: Item["tipo"], id: string) => editor?.item?.tipo === tipo && editor.item.id === id;
 
   const lim = geometria.limites ?? fundo?.limites ?? [
@@ -124,7 +132,7 @@ export function Planta({
     <svg
       ref={svg}
       viewBox={viewBox}
-      className="h-full w-full touch-none select-none bg-superficie"
+      className="h-full w-full touch-none select-none bg-papel"
       onPointerDown={(e) => {
         if (editor?.desenhando) {
           if (e.button !== 0) return;
@@ -174,9 +182,18 @@ export function Planta({
         setArrasto(null);
       }}
     >
+      {/* malha do papel: 10 cm, mais forte a cada 1 m */}
+      <rect
+        x={x0 - margem * 4}
+        y={-y1 - margem * 4}
+        width={x1 - x0 + margem * 8}
+        height={y1 - y0 + margem * 8}
+        fill="url(#malha)"
+        pointerEvents="none"
+      />
       {/* andar de baixo, de referência */}
       {fundo?.paredes.map((p) => (
-        <polygon key={`fundo-${p.id}`} points={pontos(p.corpo)} fill="#a8a29e" fillOpacity={0.3} pointerEvents="none" />
+        <polygon key={`fundo-${p.id}`} points={pontos(p.corpo)} fill="var(--tinta)" fillOpacity={0.12} pointerEvents="none" />
       ))}
       {/* cômodos */}
       {geometria.comodos.map((c) => {
@@ -186,9 +203,11 @@ export function Planta({
             <polygon
               key={c.id}
               points={pontos(c.poligono)}
-              fill={pintado && cores.piso ? cores.piso : "#f5f1ea"}
-              stroke={(editor ? ehSel("comodo", c.id) : c.id === comodoSelecionado) ? "#0369a1" : "none"}
-              strokeWidth={20}
+              fill={pintado && cores.piso ? cores.piso : "var(--superficie)"}
+              fillOpacity={pintado && cores.piso ? 1 : 0.55}
+              stroke={(editor ? ehSel("comodo", c.id) : c.id === comodoSelecionado) ? SEL : "none"}
+              strokeWidth={3}
+              vectorEffect="non-scaling-stroke"
               className="cursor-pointer"
               onPointerDown={(e) => {
                 if (editor?.desenhando) return;
@@ -209,7 +228,13 @@ export function Planta({
           <polygon
             key={p.id}
             points={pontos(p.corpo)}
-            fill={marcada ? AZUL : "#3f3a36"}
+            fill="var(--tinta)"
+            fillOpacity={0.85}
+            stroke={marcada ? SEL : p.estimada ? "var(--chute)" : HALO[p.id] ?? "none"}
+            strokeWidth={marcada ? 3 : p.estimada ? 1.5 : 3}
+            strokeDasharray={!marcada && p.estimada ? "6 4" : undefined}
+            strokeOpacity={!marcada && !p.estimada && HALO[p.id] ? 0.6 : 1}
+            vectorEffect="non-scaling-stroke"
             className={editor && !editor.desenhando ? "cursor-pointer" : undefined}
             onPointerDown={(e) => {
               if (!editor || editor.desenhando) return;
@@ -233,17 +258,20 @@ export function Planta({
         >
           <polygon
             points={pontos(a.vao)}
-            fill={a.tipo === "janela" ? "#dbeafe" : "#f5f1ea"}
-            stroke={ehSel("abertura", a.id) ? AZUL : "none"}
-            strokeWidth={25}
+            fill={a.tipo === "janela" ? "var(--superficie)" : "var(--papel)"}
+            stroke={ehSel("abertura", a.id) ? SEL : a.estimada ? "var(--chute)" : HALO[a.id] ?? "var(--tinta-suave)"}
+            strokeWidth={ehSel("abertura", a.id) ? 3 : a.tipo === "janela" || a.estimada ? 1 : 0}
+            strokeDasharray={!ehSel("abertura", a.id) && a.estimada ? "6 4" : undefined}
+            vectorEffect="non-scaling-stroke"
           />
           {a.giro && (
             <polygon
               points={pontos(a.giro)}
               fill="none"
-              stroke="#8a817a"
-              strokeWidth={12}
-              strokeDasharray="40 30"
+              stroke="var(--tinta-suave)"
+              strokeWidth={1}
+              strokeDasharray="4 3"
+              vectorEffect="non-scaling-stroke"
             />
           )}
         </g>
@@ -281,8 +309,14 @@ export function Planta({
                 editor.aoItem({ tipo: "instalacao", id: i.id });
               }}
             >
-              <circle r={85} fill={ehSel("instalacao", i.id) ? "#e0f2fe" : "#fff"} stroke={ehSel("instalacao", i.id) ? AZUL : "#b45309"} strokeWidth={ehSel("instalacao", i.id) ? 24 : 12} />
-              <text fontSize={LETRA[i.tipo]?.length === 2 ? 70 : 90} textAnchor="middle" dy={30} fill="#b45309" fontWeight={600}>
+              <circle
+                r={85}
+                fill="var(--superficie)"
+                stroke={ehSel("instalacao", i.id) ? SEL : HALO[i.id] ?? COR_INST[i.tipo] ?? "var(--tinta)"}
+                strokeWidth={ehSel("instalacao", i.id) || HALO[i.id] ? 3 : 1.5}
+                vectorEffect="non-scaling-stroke"
+              />
+              <text fontSize={LETRA[i.tipo]?.length === 2 ? 70 : 90} textAnchor="middle" dy={30} fill={COR_INST[i.tipo] ?? "var(--tinta)"} fontWeight={600}>
                 {LETRA[i.tipo] ?? "?"}
               </text>
             </g>
@@ -315,28 +349,41 @@ export function Planta({
               setArrasto({ id: m.id, ini: emMm(e), d: [0, 0], tela: [e.clientX, e.clientY], solto: false });
             }}
           >
+            {/* halo do problema: 8 px na cor da gravidade, 40 % */}
+            {HALO[m.id] && !sel && (
+              <polygon
+                points={pontos(m.contorno?.length ? m.contorno : m.cantos)}
+                fill="none"
+                stroke={HALO[m.id]}
+                strokeOpacity={0.4}
+                strokeWidth={8}
+                vectorEffect="non-scaling-stroke"
+                pointerEvents="none"
+              />
+            )}
             <polygon
               points={pontos(m.contorno?.length ? m.contorno : m.cantos)}
               fill={
                 (m.comodo === comodoSelecionado && (cores?.moveis?.[m.id] ?? cores?.moveis?.[m.tipo])) ||
-                COR_MOVEL[m.tipo] ||
-                "#d6d3d1"
+                "var(--superficie)"
               }
-              fillOpacity={m.elevado ? 0.5 : 0.9}
-              stroke={sel ? "#0369a1" : "#57534e"}
-              strokeWidth={sel ? 30 : 12}
-              strokeDasharray={m.elevado ? "50 30" : undefined}
+              fillOpacity={m.elevado ? 0.6 : 1}
+              stroke={sel ? SEL : "var(--tinta-suave)"}
+              strokeWidth={sel ? 3 : 1}
+              strokeDasharray={m.elevado ? "6 4" : undefined}
+              vectorEffect="non-scaling-stroke"
             />
             {!fino && <line
               x1={ini[0]}
               y1={-ini[1]}
               x2={fim[0]}
               y2={-fim[1]}
-              stroke="#57534e"
-              strokeWidth={10}
+              stroke="var(--tinta-suave)"
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
               markerEnd="url(#seta)"
             />}
-            <text x={rotulo[0]} y={-rotulo[1]} fontSize={90} textAnchor="middle" dy={30} fill="#292524">
+            <text x={rotulo[0]} y={-rotulo[1]} fontSize={90} textAnchor="middle" dy={30} fill="var(--tinta)">
               {m.nome ?? m.tipo}
             </text>
           </g>
@@ -353,8 +400,8 @@ export function Planta({
               y={-c.centro[1] - 320}
               fontSize={130}
               textAnchor="middle"
-              fill="#57534e"
-              stroke="#ffffff"
+              fill="var(--tinta-suave)"
+              stroke="var(--papel)"
               strokeWidth={12}
               strokeOpacity={0.85}
               paintOrder="stroke"
@@ -418,14 +465,16 @@ export function Planta({
           const movendo = canto && canto.de[0] === c[0] && canto.de[1] === c[1];
           const [x, y] = movendo ? canto.para : c;
           return (
-            <circle
+            <rect
               key={`${c[0]},${c[1]}`}
-              cx={x}
-              cy={-y}
-              r={movendo ? 90 : 60}
-              fill="#fff"
-              stroke={AZUL}
-              strokeWidth={18}
+              x={x - (movendo ? 80 : 55)}
+              y={-y - (movendo ? 80 : 55)}
+              width={movendo ? 160 : 110}
+              height={movendo ? 160 : 110}
+              fill="var(--superficie)"
+              stroke={movendo ? SEL : "var(--tinta)"}
+              strokeWidth={movendo ? 3 : 1.5}
+              vectorEffect="non-scaling-stroke"
               className="cursor-grab"
               onPointerDown={(e) => {
                 e.stopPropagation();
@@ -436,11 +485,11 @@ export function Planta({
               <title>
                 canto ({formatar(c[0], unidade)}, {formatar(c[1], unidade)}) — arraste para mover
               </title>
-            </circle>
+            </rect>
           );
         })}
       {canto && (
-        <text x={canto.para[0]} y={-canto.para[1] - 140} fontSize={90} textAnchor="middle" fill={AZUL}>
+        <text className="num" x={canto.para[0]} y={-canto.para[1] - 140} fontSize={90} textAnchor="middle" fill="var(--tinta)">
           {formatar(canto.para[0], unidade)}, {formatar(canto.para[1], unidade)}
         </text>
       )}
@@ -450,28 +499,35 @@ export function Planta({
         <g pointerEvents="none">
           {trilha && (
             <>
-              <line x1={trilha[0]} y1={-trilha[1]} x2={cursor[0]} y2={-cursor[1]} stroke={AZUL} strokeWidth={40} strokeDasharray="80 40" />
-              <text x={(trilha[0] + cursor[0]) / 2} y={-(trilha[1] + cursor[1]) / 2 - 80} fontSize={100} textAnchor="middle" fill={AZUL}>
+              <line x1={trilha[0]} y1={-trilha[1]} x2={cursor[0]} y2={-cursor[1]} stroke={GUIA} strokeWidth={1.5} strokeDasharray="8 5" vectorEffect="non-scaling-stroke" />
+              <text x={(trilha[0] + cursor[0]) / 2} y={-(trilha[1] + cursor[1]) / 2 - 80} fontSize={100} textAnchor="middle" fill={GUIA} className="num">
                 {formatar(Math.round(Math.hypot(cursor[0] - trilha[0], cursor[1] - trilha[1])), unidade)}
               </text>
             </>
           )}
-          <circle cx={cursor[0]} cy={-cursor[1]} r={50} fill={AZUL} />
+          <circle cx={cursor[0]} cy={-cursor[1]} r={45} fill={GUIA} />
         </g>
       )}
 
       {/* escala: 1 m */}
       <g transform={`translate(${x0},${-y0 + margem / 2})`}>
-        <line x1={0} y1={0} x2={1000} y2={0} stroke="#57534e" strokeWidth={15} />
-        <text x={500} y={-30} fontSize={80} textAnchor="middle" fill="#57534e">
+        <line x1={0} y1={0} x2={1000} y2={0} stroke="var(--tinta-suave)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+        <text x={500} y={-30} fontSize={80} textAnchor="middle" fill="var(--tinta-suave)" className="num">
           {formatar(1000, unidade)}
         </text>
       </g>
 
       <defs>
         <marker id="seta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" fill="#57534e" />
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--tinta-suave)" />
         </marker>
+        <pattern id="malha-10" width={100} height={100} patternUnits="userSpaceOnUse">
+          <path d="M100,0 L0,0 L0,100" fill="none" stroke="var(--malha)" strokeWidth={6} />
+        </pattern>
+        <pattern id="malha" width={1000} height={1000} patternUnits="userSpaceOnUse">
+          <rect width={1000} height={1000} fill="url(#malha-10)" />
+          <path d="M1000,0 L0,0 L0,1000" fill="none" stroke="var(--linha)" strokeWidth={12} />
+        </pattern>
       </defs>
     </svg>
   );

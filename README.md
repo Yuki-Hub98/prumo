@@ -315,6 +315,10 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
         camarão, pivotante, de banheiro com veneziana; com batente, guarnição e maçaneta;
       - **janelas**: de correr (2 e 4 folhas), basculante, maxim-ar, de abrir, veneziana,
         com caixilho, vidro e peitoril padrão; tamanhos comerciais (ex.: 120 × 100, 150 × 120)
+- [ ] Cotas na planta da tela (pedido do usuário, 2026-11-20, para depois): hoje só o DXF/PDF
+      tem cotas. Desenhar as cotas das paredes e dos vãos na planta do frontend, em Mono, na cor
+      da origem da medida (Medi verde, Quero assim azul, Chute laranja tracejado), como pede a
+      identidade visual
 - [ ] Editor de móveis — o que falta: redimensionar puxando as bordas na planta, mover e girar
       direto no 3D, sofá e bancada planejada em L, lista de corte e desenho do planejado pela tela
 - [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis

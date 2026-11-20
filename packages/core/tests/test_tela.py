@@ -34,3 +34,19 @@ def test_comodo_que_nao_fecha_e_pavimento_vazio() -> None:
     tela = pavimento_para_tela(pav)
     assert tela.limites is None and tela.paredes == [] and tela.moveis == []
     assert all(x.poligono is None and x.centro is None for x in tela.comodos)
+
+
+def test_parede_e_abertura_marcam_chute() -> None:
+    """A tela desenha tracejado onde há medida estimada; medido não."""
+    c = carregar(CASA)
+    pav = c.projeto.pavimentos[0]
+    tela = pavimento_para_tela(pav, c.dados_comodos)
+    assert all(p.estimada for p in tela.paredes)  # exemplo: tudo chute
+    medido = pav.model_copy(deep=True)
+    for p in medido.paredes:
+        p.espessura = p.espessura.model_copy(update={"origem": "trena"})
+        if p.altura is not None:
+            p.altura = p.altura.model_copy(update={"origem": "trena"})
+    tela = pavimento_para_tela(medido, c.dados_comodos)
+    assert not any(p.estimada for p in tela.paredes)
+    assert any(a.estimada for a in tela.aberturas)
