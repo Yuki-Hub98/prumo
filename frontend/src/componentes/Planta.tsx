@@ -37,6 +37,9 @@ const COR_MOVEL: Record<string, string> = {
   pia: "#e7e5e4",
   fogao: "#a8a29e",
   geladeira: "#d6d3d1",
+  lavatorio: "#e7e5e4",
+  vaso: "#fafaf9",
+  box: "#cfe6f2",
 };
 
 const LETRA: Record<string, string> = {
