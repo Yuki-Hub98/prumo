@@ -1,10 +1,11 @@
+import { History, Redo2, Undo2 } from "lucide-react";
+import { btn } from "../estilo";
 import { useEffect, useState } from "react";
 import { api, ou, type Problema } from "../api/cliente";
 import { useEditar, useVersoes } from "../dados";
 import { nomeOperacao, resumoCaminho } from "../historico";
 
-const botao =
-  "rounded border border-stone-300 px-2 py-0.5 text-sm hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40";
+const botao = btn("fantasma", "sm");
 
 function digitando(alvo: EventTarget | null): boolean {
   const el = alvo as HTMLElement | null;
@@ -69,31 +70,32 @@ export function BotoesDesfazer({
   return (
     <div className="flex items-center gap-1">
       <button className={botao} disabled={!podeDesfazer} onClick={() => voltar("desfazer")} title="Desfazer (Ctrl+Z)">
-        ↶ Desfazer
+        <Undo2 size={16} /> Desfazer
       </button>
       <button className={botao} disabled={!podeRefazer} onClick={() => voltar("refazer")} title="Refazer (Ctrl+Shift+Z)">
-        ↷ Refazer
+        <Redo2 size={16} /> Refazer
       </button>
       <button className={botao} onClick={aoHistorico} title="Ver e voltar para uma versão">
-        Histórico
+        <History size={16} /> Histórico
       </button>
       {rascunho && rascunho.passos > 0 && (
-        <span className="ml-2 flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-sm text-amber-900">
+        <span className="ml-2 flex items-center gap-1.5 rounded-md border border-linha bg-superficie px-2 py-0.5 text-sm shadow-flutuante">
+          <span className="size-2 rounded-full bg-trena" aria-hidden="true" />
           {rascunho.passos === 1 ? "1 mudança não salva" : `${rascunho.passos} mudanças não salvas`}
           {confirmar ? (
             <>
               <span className="ml-1">Descartar tudo?</span>
-              <button className="rounded bg-red-700 px-2 text-white" onClick={() => fechar("descartar")}>
+              <button className={btn("perigo", "xs")} onClick={() => fechar("descartar")}>
                 Sim
               </button>
-              <button className="rounded border border-amber-300 bg-white px-2" onClick={() => setConfirmar(false)}>
+              <button className={btn("secundario", "xs")} onClick={() => setConfirmar(false)}>
                 Não
               </button>
             </>
           ) : (
             <>
               <button
-                className="ml-1 rounded bg-stone-800 px-2 text-white disabled:opacity-40"
+                className={`ml-1 ${btn("primario", "xs")}`}
                 disabled={editar.isPending}
                 onClick={() => fechar("salvar")}
                 title="Salvar (Ctrl+S): cada mudança vira uma versão"
@@ -101,7 +103,7 @@ export function BotoesDesfazer({
                 Salvar
               </button>
               <button
-                className="rounded border border-amber-300 bg-white px-2 disabled:opacity-40"
+                className={btn("secundario", "xs")}
                 disabled={editar.isPending}
                 onClick={() => setConfirmar(true)}
                 title="Voltar para o que estava salvo"
@@ -112,7 +114,7 @@ export function BotoesDesfazer({
           )}
         </span>
       )}
-      {editar.error && <span className="text-sm text-red-700">{editar.error.message}</span>}
+      {editar.error && <span className="text-sm text-erro">{editar.error.message}</span>}
     </div>
   );
 }
@@ -137,56 +139,56 @@ export function PainelHistorico({ codigo, aoFechar }: { codigo: string; aoFechar
       { onSuccess: () => setConfirmar(null) },
     );
   return (
-    <section className="border-b border-stone-200 p-3">
+    <section className="border-b border-linha p-3">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-stone-500">Histórico</h2>
-        <button className="text-sm text-sky-700 hover:underline" onClick={aoFechar}>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-tinta-suave">Histórico</h2>
+        <button className="text-sm link" onClick={aoFechar}>
           Fechar
         </button>
       </div>
-      <p className="mb-2 text-xs text-stone-500">
+      <p className="mb-2 text-xs text-tinta-suave">
         {versoes?.rascunho
           ? "Há mudanças não salvas: salve ou descarte para voltar a uma versão antiga. Enquanto isso, Desfazer volta um passo de cada vez."
           : "Voltar para uma versão grava o conteúdo dela como versão nova: nada é apagado e dá para desfazer."}
       </p>
-      {editar.error && <p className="mb-2 text-sm text-red-700">{editar.error.message}</p>}
+      {editar.error && <p className="mb-2 text-sm text-erro">{editar.error.message}</p>}
       <ol className="space-y-1 text-sm">
         {versoes?.versoes.map((v) => {
           const atual = v.versao === versoes.atual;
           return (
-            <li key={v.versao} className={`rounded px-2 py-1 ${atual ? "bg-stone-200" : "hover:bg-stone-100"}`}>
+            <li key={v.versao} className={`rounded-md px-2 py-1 ${atual ? "bg-superficie-2" : "hover:bg-superficie-2"}`}>
               <div className="flex items-baseline gap-2">
-                <span className="w-8 shrink-0 text-xs text-stone-400">v{v.versao}</span>
+                <span className="w-8 shrink-0 text-xs text-tinta-suave">v{v.versao}</span>
                 <span className="flex-1">
                   {nomeOperacao(v.operacao)}
                   {versoes.rascunho && v.versao > versoes.rascunho.desde && (
-                    <span className="ml-1 rounded bg-amber-100 px-1 text-xs text-amber-800">Não salva</span>
+                    <span className="ml-1 rounded-md bg-aviso-fundo px-1 text-xs text-aviso">Não salva</span>
                   )}
                 </span>
-                <span className="text-xs text-stone-400">{quando(v.quando)}</span>
+                <span className="text-xs text-tinta-suave">{quando(v.quando)}</span>
               </div>
               {v.caminhos.length > 0 && (
-                <div className="ml-10 truncate text-xs text-stone-500" title={v.caminhos.join("\n")}>
+                <div className="ml-10 truncate text-xs text-tinta-suave" title={v.caminhos.join("\n")}>
                   {v.caminhos.map(resumoCaminho).join(", ")}
                   {v.alteracoes > v.caminhos.length && ` e mais ${v.alteracoes - v.caminhos.length}`}
                 </div>
               )}
               <div className="ml-10 mt-0.5">
                 {atual ? (
-                  <span className="text-xs font-medium text-stone-600">Atual</span>
+                  <span className="text-xs font-medium text-tinta-suave">Atual</span>
                 ) : confirmar === v.versao ? (
                   <span className="text-xs">
                     Voltar para a v{v.versao}?{" "}
-                    <button className="text-sky-700 hover:underline" disabled={editar.isPending} onClick={() => restaurar(v.versao)}>
+                    <button className="link" disabled={editar.isPending} onClick={() => restaurar(v.versao)}>
                       Sim
                     </button>{" "}
                     ·{" "}
-                    <button className="text-stone-500 hover:underline" onClick={() => setConfirmar(null)}>
+                    <button className="text-tinta-suave hover:underline" onClick={() => setConfirmar(null)}>
                       Não
                     </button>
                   </span>
                 ) : versoes.rascunho ? null : (
-                  <button className="text-xs text-sky-700 hover:underline" onClick={() => setConfirmar(v.versao)}>
+                  <button className="text-xs link" onClick={() => setConfirmar(v.versao)}>
                     Voltar para esta
                   </button>
                 )}

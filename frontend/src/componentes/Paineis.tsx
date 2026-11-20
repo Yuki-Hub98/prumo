@@ -1,3 +1,4 @@
+import { btn, opcao } from "../estilo";
 import { maiuscula } from "../texto";
 import { useState } from "react";
 import { api, ou, type Medida, type PavimentoTela, type Problema } from "../api/cliente";
@@ -16,14 +17,14 @@ type ItemCatalogo = {
 
 function Caixa({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section className="border-b border-stone-200 p-3">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">{titulo}</h2>
+    <section className="border-b border-linha p-3">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-tinta-suave">{titulo}</h2>
       {children}
     </section>
   );
 }
 
-const botao = "rounded border border-stone-300 px-2 py-0.5 text-sm hover:bg-stone-100 disabled:opacity-40";
+const botao = btn("secundario", "xs");
 
 // ------------------------------------------------------------------ móvel selecionado
 
@@ -72,7 +73,7 @@ export function PainelMovel({
 
   return (
     <Caixa titulo={`Móvel: ${movel.nome ?? movel.tipo}`}>
-      <p className="mb-2 text-xs text-stone-500">
+      <p className="mb-2 text-xs text-tinta-suave">
         {movel.tipo}
         {movel.modelo ? ` · ${movel.modelo}` : ""} · arraste na planta para mover
       </p>
@@ -85,7 +86,7 @@ export function PainelMovel({
           Girar 90°
         </button>
         <button
-          className={`${botao} text-red-700`}
+          className={`${botao} text-erro`}
           disabled={editar.isPending}
           onClick={() =>
             editar.mutate(
@@ -110,8 +111,8 @@ export function PainelMovel({
           if (parede && mm !== null) mover({ parede, distancia: mm });
         }}
       >
-        <span className="text-stone-500">Encostar na</span>
-        <select className="rounded border" value={parede} onChange={(e) => setParede(e.target.value)}>
+        <span className="text-tinta-suave">Encostar na</span>
+        <select className="rounded-md border" value={parede} onChange={(e) => setParede(e.target.value)}>
           <option value="">parede…</option>
           {paredesDoComodo.map((p) => (
             <option key={p.id} value={p.id}>
@@ -119,9 +120,9 @@ export function PainelMovel({
             </option>
           ))}
         </select>
-        <span className="text-stone-500">a</span>
-        <input className="w-16 rounded border px-1" value={distancia} onChange={(e) => setDistancia(e.target.value)} />
-        <span className="text-stone-500">{unidade} do início</span>
+        <span className="text-tinta-suave">a</span>
+        <input className="w-16 rounded-md border px-1" value={distancia} onChange={(e) => setDistancia(e.target.value)} />
+        <span className="text-tinta-suave">{unidade} do início</span>
         <button className={botao} disabled={!parede || editar.isPending}>
           Ok
         </button>
@@ -156,9 +157,9 @@ export function PainelMovel({
           }
         />
       )}
-      {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}
+      {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
       {geometria.moveis.find((m) => m.id === id)?.planejavel && (
-        <div className="-mx-3 mt-2 border-t border-stone-200">
+        <div className="-mx-3 mt-2 border-t border-linha">
           <EditorPlanejado
             codigo={codigo}
             comodo={comodo}
@@ -199,8 +200,8 @@ function Forma({
   aoMudar: (campos: Record<string, unknown>) => void;
 }) {
   return (
-    <div className="mt-2 border-t border-stone-200 pt-2 text-sm">
-      <span className="text-stone-500">Forma</span>
+    <div className="mt-2 border-t border-linha pt-2 text-sm">
+      <span className="text-tinta-suave">Forma</span>
       <div className="mt-1 flex flex-wrap gap-1">
         {FORMAS.map((f) => (
           <button
@@ -208,7 +209,7 @@ function Forma({
             type="button"
             disabled={ocupado || forma === f.id}
             onClick={() => aoMudar({ forma: f.id })}
-            className={`rounded px-2 py-0.5 text-xs ${forma === f.id ? "bg-stone-800 text-white" : "border border-stone-300 hover:bg-stone-100"}`}
+            className={`rounded-md px-2 py-0.5 text-xs ${opcao(forma === f.id)}`}
           >
             {f.nome}
           </button>
@@ -217,20 +218,20 @@ function Forma({
       {forma === "arredondado" && (
         <CampoMedida rotulo="Raio dos cantos" medida={raio} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => aoMudar({ raio: m })} />
       )}
-      {forma === "arredondado" && !raio && <p className="text-xs text-stone-400">Sem raio: 10 cm</p>}
+      {forma === "arredondado" && !raio && <p className="text-xs text-tinta-suave">Sem raio: 10 cm</p>}
       {forma === "L" && (
         <>
           <CampoMedida rotulo="Largura do braço" medida={braco} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => aoMudar({ braco: m })} />
-          {!braco && <p className="text-xs text-stone-400">Sem medida: 40 % do lado menor</p>}
+          {!braco && <p className="text-xs text-tinta-suave">Sem medida: 40 % do lado menor</p>}
           <div className="mt-1 flex items-center gap-1 text-xs">
-            <span className="text-stone-500">Braço para a frente do lado</span>
+            <span className="text-tinta-suave">Braço para a frente do lado</span>
             {(["esquerda", "direita"] as const).map((l) => (
               <button
                 key={l}
                 type="button"
                 disabled={ocupado || lado === l}
                 onClick={() => aoMudar({ lado_l: l })}
-                className={`rounded px-1.5 py-0.5 ${lado === l ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+                className={`rounded-md px-1.5 py-0.5 ${opcao(lado === l)}`}
               >
                 {l}
               </button>
@@ -278,7 +279,7 @@ function CriarDoZero({
   const pronto = !!centro && !!origem && Object.values(mm).every((v) => v !== null && v > 0);
   return (
     <form
-      className="mt-3 flex flex-col gap-1 border-t border-stone-200 pt-2 text-sm"
+      className="mt-3 flex flex-col gap-1 border-t border-linha pt-2 text-sm"
       onSubmit={(e) => {
         e.preventDefault();
         if (!pronto) return;
@@ -309,9 +310,9 @@ function CriarDoZero({
         );
       }}
     >
-      <h3 className="text-xs font-semibold text-stone-500">Criar do zero</h3>
+      <h3 className="text-xs font-semibold text-tinta-suave">Criar do zero</h3>
       <input
-        className="rounded border px-1"
+        className="rounded-md border px-1"
         placeholder="Nome (ex.: gabinete, nicho, bancada)"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
@@ -320,12 +321,12 @@ function CriarDoZero({
         {(["largura", "profundidade", "altura"] as const).map((k) => (
           // min-w-0 + w-full: o campo cabe no terço da grade (sem isso o input do navegador
           // tem largura mínima própria, os três se sobrepõem e vazam do painel)
-          <label key={k} className="grid min-w-0 text-xs text-stone-500">
+          <label key={k} className="grid min-w-0 text-xs text-tinta-suave">
             <span className="truncate" title={`${maiuscula(k)} (${unidade})`}>
               {maiuscula(k)} ({unidade})
             </span>
             <input
-              className={`w-full min-w-0 rounded border px-1 text-sm ${medidas[k] && mm[k] === null ? "border-red-400" : ""}`}
+              className={`w-full min-w-0 rounded-md border px-1 text-sm ${medidas[k] && mm[k] === null ? "border-erro" : ""}`}
               inputMode="decimal"
               value={medidas[k]}
               onChange={(e) => setMedidas((m) => ({ ...m, [k]: e.target.value }))}
@@ -334,12 +335,12 @@ function CriarDoZero({
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-1 text-xs">
-        <span className="text-stone-500">As medidas são:</span>
+        <span className="text-tinta-suave">As medidas são:</span>
         {ORIGENS.map((o) => (
           <button
             key={o.valor}
             type="button"
-            className={`rounded px-1.5 py-0.5 ${origem === o.valor ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+            className={`rounded-md px-1.5 py-0.5 ${opcao(origem === o.valor)}`}
             onClick={() => setOrigem(o.valor)}
           >
             {o.rotulo}
@@ -349,7 +350,7 @@ function CriarDoZero({
       <button className={botao} disabled={!pronto || editar.isPending}>
         Criar no centro do cômodo
       </button>
-      {editar.error && <p className="text-red-700">{editar.error.message}</p>}
+      {editar.error && <p className="text-erro">{editar.error.message}</p>}
     </form>
   );
 }
@@ -378,7 +379,7 @@ export function AdicionarMovel({
   return (
     <Caixa titulo="Adicionar móvel">
       <div className="flex flex-col gap-1 text-sm">
-        <select className="rounded border" value={alvo} onChange={(e) => setComodo(e.target.value)}>
+        <select className="rounded-md border" value={alvo} onChange={(e) => setComodo(e.target.value)}>
           {comodos.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nome}
@@ -386,7 +387,7 @@ export function AdicionarMovel({
           ))}
         </select>
         <select
-          className="rounded border"
+          className="rounded-md border"
           value={tipo}
           onChange={(e) => {
             setTipo(e.target.value);
@@ -401,7 +402,7 @@ export function AdicionarMovel({
           ))}
         </select>
         {item && (
-          <select className="rounded border" value={modelo || item.modelo_padrao} onChange={(e) => setModelo(e.target.value)}>
+          <select className="rounded-md border" value={modelo || item.modelo_padrao} onChange={(e) => setModelo(e.target.value)}>
             {item.modelos.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.nome} ({m.largura} × {m.profundidade} mm)
@@ -429,8 +430,8 @@ export function AdicionarMovel({
         >
           Pôr no centro do cômodo
         </button>
-        <p className="text-xs text-stone-500">As medidas do catálogo entram como chute; ajuste depois.</p>
-        {editar.error && <p className="text-red-700">{editar.error.message}</p>}
+        <p className="text-xs text-tinta-suave">As medidas do catálogo entram como chute; ajuste depois.</p>
+        {editar.error && <p className="text-erro">{editar.error.message}</p>}
       </div>
       <CriarDoZero
         codigo={codigo}
@@ -446,9 +447,9 @@ export function AdicionarMovel({
 // ------------------------------------------------------------------ problemas e falta medir
 
 const COR_SEV: Record<string, string> = {
-  erro: "text-red-700",
-  aviso: "text-amber-700",
-  info: "text-stone-500",
+  erro: "text-erro",
+  aviso: "text-aviso",
+  info: "text-tinta-suave",
 };
 
 export function PainelProblemas({ problemas, novos }: { problemas: Problema[]; novos: Problema[] }) {
@@ -456,13 +457,13 @@ export function PainelProblemas({ problemas, novos }: { problemas: Problema[]; n
   const recentes = new Set(novos.map(chave));
   return (
     <Caixa titulo={`Problemas (${problemas.length})`}>
-      {problemas.length === 0 && <p className="text-sm text-stone-500">Nenhum</p>}
+      {problemas.length === 0 && <p className="text-sm text-tinta-suave">Nenhum</p>}
       <ul className="space-y-1 text-sm">
         {problemas.map((p, i) => (
           <li key={i} className={COR_SEV[p.severidade]}>
-            {recentes.has(chave(p)) && <span className="mr-1 rounded bg-red-100 px-1 text-xs">Novo</span>}
+            {recentes.has(chave(p)) && <span className="mr-1 rounded-md bg-erro-fundo px-1 text-xs">Novo</span>}
             <b>{maiuscula(p.severidade)}</b> {maiuscula(p.mensagem)}
-            {p.comodo && <span className="text-stone-400"> · {p.comodo}</span>}
+            {p.comodo && <span className="text-tinta-suave"> · {p.comodo}</span>}
           </li>
         ))}
       </ul>
@@ -476,13 +477,13 @@ export function FaltaMedir({ codigo, unidade }: { codigo: string; unidade: Unida
   return (
     <Caixa titulo={`Falta medir (${estimadas.length})`}>
       {estimadas.length === 0 ? (
-        <p className="text-sm text-emerald-700">Tudo medido: os desenhos saem sem PRELIMINAR</p>
+        <p className="text-sm text-medido">Tudo medido: os desenhos saem sem PRELIMINAR</p>
       ) : (
         <>
-          <p className="text-sm text-amber-800">
+          <p className="text-sm text-aviso">
             Enquanto houver chute, os desenhos saem PRELIMINAR — NÃO USAR PARA OBRA.
           </p>
-          <button className="text-xs text-sky-700 hover:underline" onClick={() => setAberto(!aberto)}>
+          <button className="text-xs link" onClick={() => setAberto(!aberto)}>
             {aberto ? "Esconder" : "Ver lista"}
           </button>
           {aberto && (

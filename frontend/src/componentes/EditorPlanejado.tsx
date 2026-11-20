@@ -1,3 +1,4 @@
+import { btn, opcao } from "../estilo";
 import { useState } from "react";
 import { api, ou, type Esquemas } from "../api/cliente";
 import { useEditar, usePlanejado } from "../dados";
@@ -19,8 +20,8 @@ import { formatar, paraMm, type Unidade } from "../unidades";
 
 type Vista = Esquemas["PlanejadoTela"];
 
-const botao = "rounded border border-stone-300 px-2 py-0.5 text-sm hover:bg-stone-100 disabled:opacity-40";
-const mini = "rounded px-1 text-xs text-stone-500 hover:bg-stone-200 disabled:opacity-30";
+const botao = btn("secundario", "xs");
+const mini = "rounded-sm px-1 text-xs text-tinta-suave hover:bg-superficie-2 hover:text-tinta disabled:opacity-30";
 
 /** Cor de cada elemento na vista de frente. */
 const PINTURA: Record<string, { fill: string; stroke: string }> = {
@@ -40,7 +41,7 @@ function Frente({ vista, portas }: { vista: Vista; portas: boolean }) {
   const { largura: L, altura: A } = vista;
   const y = (r: { y: number; altura: number }) => A - r.y - r.altura; // SVG: y para baixo
   return (
-    <svg viewBox={`-20 -20 ${L + 40} ${A + 40}`} className="max-h-72 w-full rounded border border-stone-200 bg-white">
+    <svg viewBox={`-20 -20 ${L + 40} ${A + 40}`} className="max-h-72 w-full rounded-md border border-linha bg-superficie">
       {vista.retangulos
         .filter((r) => r.tipo !== "porta")
         .map((r, i) => {
@@ -107,7 +108,7 @@ function CampoAuto({
       aria-label={rotulo}
       title={`${rotulo} em ${unidade} (vazio = automático)`}
       placeholder="Auto"
-      className="w-14 rounded border px-1 text-right text-xs"
+      className="w-14 rounded-md border px-1 text-right text-xs"
       value={mostrado}
       onFocus={() => {
         setTexto(atual);
@@ -162,9 +163,9 @@ export function EditorPlanejado({
 
   if (!construcao)
     return (
-      <section className="border-b border-stone-200 p-3">
-        <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-500">Montar por dentro</h3>
-        <p className="mb-2 text-sm text-stone-500">
+      <section className="border-b border-linha p-3">
+        <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-tinta-suave">Montar por dentro</h3>
+        <p className="mb-2 text-sm text-tinta-suave">
           Divida em vãos e empilhe gavetas, nichos e cabideiros, com ou sem porta. Começa com uma sugestão para o tipo
           do móvel.
         </p>
@@ -183,7 +184,7 @@ export function EditorPlanejado({
         >
           Montar por dentro
         </button>
-        {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}
+        {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
       </section>
     );
 
@@ -191,23 +192,23 @@ export function EditorPlanejado({
   const v = vista.data;
   const comPorta = (i: number) => c.vaos[i].porta !== false;
   return (
-    <section className="border-b border-stone-200 p-3">
+    <section className="border-b border-linha p-3">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">Montar por dentro</h3>
-        <label className="flex items-center gap-1 text-xs text-stone-500">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-tinta-suave">Montar por dentro</h3>
+        <label className="flex items-center gap-1 text-xs text-tinta-suave">
           <input type="checkbox" checked={verPortas} onChange={(e) => setVerPortas(e.target.checked)} />
           Ver portas
         </label>
       </div>
-      {v ? <Frente vista={v} portas={verPortas} /> : <p className="text-sm text-stone-500">Calculando…</p>}
-      {vista.error && <p className="mt-1 text-sm text-red-700">{vista.error.message}</p>}
+      {v ? <Frente vista={v} portas={verPortas} /> : <p className="text-sm text-tinta-suave">Calculando…</p>}
+      {vista.error && <p className="mt-1 text-sm text-erro">{vista.error.message}</p>}
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-stone-500">Portas</span>
+        <span className="text-tinta-suave">Portas</span>
         {([null, "abrir", "correr"] as const).map((t) => (
           <button
             key={t ?? "sem"}
-            className={`rounded px-2 py-0.5 text-xs ${(portas ?? null) === t ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+            className={`rounded-md px-2 py-0.5 text-xs ${opcao((portas ?? null) === t)}`}
             disabled={editar.isPending || (portas ?? null) === t}
             onClick={() =>
               editar.mutate((versao) =>
@@ -227,19 +228,19 @@ export function EditorPlanejado({
 
       <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
         {c.vaos.map((vao, i) => (
-          <div key={i} className="min-w-[9.5rem] shrink-0 rounded border border-stone-300 bg-white p-1.5">
+          <div key={i} className="min-w-[9.5rem] shrink-0 rounded-md border border-linha-forte bg-superficie p-1.5">
             <div className="mb-1 flex items-center justify-between gap-1">
               <span className="text-xs font-medium">Vão {i + 1}</span>
               <button className={mini} title="Tirar este vão" disabled={c.vaos.length <= 1 || editar.isPending} onClick={() => gravar(removerVao(c, i))}>
                 ✕
               </button>
             </div>
-            <div className="mb-1 flex items-center justify-between gap-1 text-xs text-stone-500">
+            <div className="mb-1 flex items-center justify-between gap-1 text-xs text-tinta-suave">
               Largura
               <CampoAuto mm={vao.largura?.valor} unidade={unidade} rotulo={`largura do vão ${i + 1}`} aoMudar={(mm) => gravar(larguraVao(c, i, mm))} />
             </div>
             {v?.larguras_vaos[i] !== undefined && !vao.largura && (
-              <p className="-mt-1 mb-1 text-right text-[10px] text-stone-400">= {formatar(v.larguras_vaos[i], unidade)}</p>
+              <p className="-mt-1 mb-1 text-right text-[10px] text-tinta-suave">= {formatar(v.larguras_vaos[i], unidade)}</p>
             )}
             {portas === "abrir" && (
               <label className="mb-1 flex items-center gap-1 text-xs">
@@ -250,11 +251,11 @@ export function EditorPlanejado({
             {/* de cima para baixo na tela, como no móvel */}
             <ol className="flex flex-col-reverse gap-1">
               {vao.espacos.map((esp, j) => (
-                <li key={j} className="rounded bg-stone-50 p-1">
+                <li key={j} className="rounded-md bg-papel p-1">
                   <div className="flex items-center gap-1">
                     <select
                       aria-label={`espaço ${j + 1} do vão ${i + 1}`}
-                      className="min-w-0 flex-1 rounded border text-xs"
+                      className="min-w-0 flex-1 rounded-md border text-xs"
                       value={esp.tipo}
                       disabled={editar.isPending}
                       onChange={(e) => gravar(tipoEspaco(c, i, j, e.target.value as TipoEspaco))}
@@ -269,7 +270,7 @@ export function EditorPlanejado({
                       ✕
                     </button>
                   </div>
-                  <div className="mt-0.5 flex items-center justify-between gap-1 text-[11px] text-stone-500">
+                  <div className="mt-0.5 flex items-center justify-between gap-1 text-[11px] text-tinta-suave">
                     <span className="flex">
                       <button className={mini} title="Subir" disabled={j === vao.espacos.length - 1 || editar.isPending} onClick={() => gravar(moverEspaco(c, i, j, 1))}>
                         ↑
@@ -284,7 +285,7 @@ export function EditorPlanejado({
                     </span>
                   </div>
                   {!esp.altura && v?.alturas[i]?.[j] !== undefined && (
-                    <p className="text-right text-[10px] text-stone-400">= {formatar(v.alturas[i][j], unidade)}</p>
+                    <p className="text-right text-[10px] text-tinta-suave">= {formatar(v.alturas[i][j], unidade)}</p>
                   )}
                 </li>
               ))}
@@ -304,7 +305,7 @@ export function EditorPlanejado({
       </div>
 
       {v && (
-        <div className="mt-2 text-xs text-stone-500">
+        <div className="mt-2 text-xs text-tinta-suave">
           <p>
             {v.pecas} peças de chapa ·{" "}
             {v.chapas.map((ch) => `${ch.chapas} chapa${ch.chapas > 1 ? "s" : ""} de ${ch.material} ${ch.espessura} mm`).join(" · ")}
@@ -313,15 +314,15 @@ export function EditorPlanejado({
         </div>
       )}
       <div className="mt-2 flex items-center justify-between">
-        <p className="text-xs text-stone-400">
+        <p className="text-xs text-tinta-suave">
           Medidas vazias dividem o que sobra. Porta de abrir é por vão (cobre gavetas e nichos dele); de correr cobre
           o móvel todo. Desfazer volta cada passo.
         </p>
-        <button className="text-xs text-red-700 hover:underline" disabled={editar.isPending} onClick={() => gravar(null)}>
+        <button className="text-xs text-erro hover:underline" disabled={editar.isPending} onClick={() => gravar(null)}>
           Desmontar
         </button>
       </div>
-      {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}
+      {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
     </section>
   );
 }

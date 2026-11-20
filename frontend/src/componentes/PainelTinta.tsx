@@ -33,31 +33,31 @@ export function PainelTinta({
     perda: number;
   };
   return (
-    <section className="border-b border-stone-200 p-3">
-      <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-500">Tinta do pavimento</h2>
-      <p className="mb-2 text-xs text-stone-500">Com a variação escolhida em cada cômodo; paredes de destaque contam à parte.</p>
-      {tinta.error && <p className="text-sm text-red-700">{tinta.error.message}</p>}
+    <section className="border-b border-linha p-3">
+      <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-tinta-suave">Tinta do pavimento</h2>
+      <p className="mb-2 text-xs text-tinta-suave">Com a variação escolhida em cada cômodo; paredes de destaque contam à parte.</p>
+      {tinta.error && <p className="text-sm text-erro">{tinta.error.message}</p>}
       {t && (
         <>
           {t.preliminar && (
-            <p className="mb-2 rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
+            <p className="mb-2 rounded-md bg-aviso-fundo px-2 py-1 text-xs text-aviso">
               Há medidas "chute": confira antes de comprar.
             </p>
           )}
           <table className="w-full text-sm">
             <tbody>
               {t.grupos.map((g) => (
-                <tr key={`${g.tinta}-${g.cor}`} className="border-t border-stone-100 align-top">
+                <tr key={`${g.tinta}-${g.cor}`} className="border-t border-linha align-top">
                   <td className="py-1 pr-2">
                     <span
-                      className="inline-block h-4 w-6 rounded border border-stone-300 align-middle"
+                      className="inline-block h-4 w-6 rounded-md border border-linha-forte align-middle"
                       style={{ background: g.cor ?? "repeating-linear-gradient(45deg,#f5f5f4,#f5f5f4 3px,#e7e5e4 3px,#e7e5e4 6px)" }}
                       title={g.cor ?? "Cor padrão"}
                     />
                   </td>
                   <td className="py-1">
-                    <b>{NOME[g.tinta]}</b> <span className="text-xs text-stone-500">{ONDE[g.tinta]}</span>
-                    <div className="text-xs text-stone-500">
+                    <b>{NOME[g.tinta]}</b> <span className="text-xs text-tinta-suave">{ONDE[g.tinta]}</span>
+                    <div className="text-xs text-tinta-suave">
                       {g.cor?.toUpperCase() ?? "Cor padrão"} · {g.area_m2.toLocaleString("pt-BR")} m² · {litros(g.litros)}
                     </div>
                   </td>
@@ -72,11 +72,11 @@ export function PainelTinta({
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-xs text-stone-400">
+          <p className="mt-2 text-xs text-tinta-suave">
             {par.demaos_latex} demãos de látex a {par.rendimento_latex} m²/L, {par.demaos_esmalte} de esmalte a{" "}
             {par.rendimento_esmalte} m²/L, {Math.round(par.perda * 100)}% de perda (ajustável em [tinta] do regras.toml).
           </p>
-          <a href={planilha} className="mt-1 inline-block text-sm text-sky-700 hover:underline">
+          <a href={planilha} className="mt-1 inline-block text-sm link">
             Baixar planilha (.xlsx)
           </a>
         </>

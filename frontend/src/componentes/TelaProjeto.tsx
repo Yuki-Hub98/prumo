@@ -1,3 +1,6 @@
+import { Box, PencilRuler } from "lucide-react";
+import { Marca } from "./Logo";
+import { alternar } from "../estilo";
 import { useCallback, useRef, useState } from "react";
 import { api, ou, type Cores, type Medida, type MovelTela, type Problema } from "../api/cliente";
 import { proximoId, type Pt } from "../editor/geometria";
@@ -127,15 +130,20 @@ export function TelaProjeto({
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex items-center gap-4 border-b border-stone-200 bg-white px-4 py-2">
-        <button className="text-sm text-sky-700 hover:underline" onClick={aoVoltar}>
+      <header className="flex items-center gap-4 border-b border-linha bg-superficie px-4 py-2">
+        <button
+          className="flex items-center gap-1.5 rounded-md px-1 text-sm text-tinta-suave hover:text-tinta"
+          onClick={aoVoltar}
+          title="Voltar para a lista de projetos"
+        >
+          <Marca altura={22} />
           ← Projetos
         </button>
-        <h1 className="font-semibold">{codigo}</h1>
-        {projeto.data && <span className="text-xs text-stone-500">Versão {projeto.data.versao}</span>}
+        <h1 className="font-cond text-lg font-semibold">{codigo}</h1>
+        {projeto.data && <span className="text-xs text-tinta-suave">Versão {projeto.data.versao}</span>}
         <div className="flex items-center gap-1">
           <select
-            className="rounded border text-sm"
+            className="rounded-md border text-sm"
             value={pavimento}
             onChange={(e) => {
               setPav(e.target.value);
@@ -164,11 +172,11 @@ export function TelaProjeto({
             }}
           />
         </div>
-        <div className="ml-4 flex overflow-hidden rounded border border-stone-300 text-sm">
+        <div className="ml-4 flex overflow-hidden rounded-md border border-linha-forte text-sm">
           {(["moveis", "planta"] as const).map((m) => (
             <button
               key={m}
-              className={`px-3 py-0.5 ${modo === m ? "bg-stone-800 text-white" : "hover:bg-stone-100"}`}
+              className={`px-3 py-0.5 ${alternar(modo === m)}`}
               onClick={() => {
                 setModo(m);
                 setItem(null);
@@ -181,20 +189,23 @@ export function TelaProjeto({
             </button>
           ))}
         </div>
-        <div className="flex overflow-hidden rounded border border-stone-300 text-sm">
+        <div className="flex overflow-hidden rounded-md border border-linha-forte text-sm">
           {([false, true] as const).map((v) => (
             <button
               key={String(v)}
-              className={`px-3 py-0.5 ${ver3d === v ? "bg-stone-800 text-white" : "hover:bg-stone-100"}`}
+              className={`px-3 py-0.5 ${alternar(ver3d === v)}`}
               onClick={() => setVer3d(v)}
             >
-              {v ? "3D" : "Planta"}
+              <span className="inline-flex items-center gap-1">
+                {v ? <Box size={14} /> : <PencilRuler size={14} />}
+                {v ? "3D" : "Planta"}
+              </span>
             </button>
           ))}
         </div>
         <BotoesDesfazer codigo={codigo} aoProblemas={setNovos} aoHistorico={() => setHistorico((h) => !h)} />
-        {editar.isPending && <span className="text-xs text-stone-500">Gravando…</span>}
-        {editar.error && <span className="text-sm text-red-700">{editar.error.message}</span>}
+        {editar.isPending && <span className="text-xs text-tinta-suave">Gravando…</span>}
+        {editar.error && <span className="text-sm text-erro">{editar.error.message}</span>}
       </header>
       <div className="flex min-h-0 flex-1">
         <main className="min-w-0 flex-1">
@@ -236,12 +247,12 @@ export function TelaProjeto({
               }
             />
           ) : (
-            <p className="p-4 text-stone-500">{geometria.error?.message ?? "carregando…"}</p>
+            <p className="p-4 text-tinta-suave">{geometria.error?.message ?? "carregando…"}</p>
           )}
         </main>
         <ColunaLateral titulo={modo === "planta" ? "Editar planta" : "Painel de edição"}>
           {historico && (
-            <div className="max-h-[50%] shrink-0 overflow-y-auto border-b border-stone-200">
+            <div className="max-h-[50%] shrink-0 overflow-y-auto border-b border-linha">
               <PainelHistorico codigo={codigo} aoFechar={() => setHistorico(false)} />
             </div>
           )}
@@ -293,7 +304,7 @@ export function TelaProjeto({
                         aoRemovido={() => setSelecionado(null)}
                       />
                     ) : (
-                      <p className="border-b border-stone-200 p-3 text-sm text-stone-500">
+                      <p className="border-b border-linha p-3 text-sm text-tinta-suave">
                         Clique num móvel na planta para editar medidas, girar ou encostar na parede.
                       </p>
                     )}
@@ -316,7 +327,7 @@ export function TelaProjeto({
                       aoSelecionarMovel={selecionar}
                     />
                   ) : (
-                    <p className="p-3 text-sm text-stone-500">Clique num cômodo para pintar paredes, piso e móveis.</p>
+                    <p className="p-3 text-sm text-tinta-suave">Clique num cômodo para pintar paredes, piso e móveis.</p>
                   ))}
                 {aba === "cores" && (
                   <PainelTinta
@@ -331,7 +342,7 @@ export function TelaProjeto({
                   (comodo ? (
                     <PainelImagens key={`img-${comodo}`} codigo={codigo} comodo={comodo} variacao={ativa[comodo] ?? "base"} />
                   ) : (
-                    <p className="p-3 text-sm text-stone-500">Clique num cômodo para pedir as imagens 3D dele.</p>
+                    <p className="p-3 text-sm text-tinta-suave">Clique num cômodo para pedir as imagens 3D dele.</p>
                   ))}
                 {aba === "problemas" && (
                   <>

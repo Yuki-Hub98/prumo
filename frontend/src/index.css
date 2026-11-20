@@ -1,4 +1,175 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
 @import "tailwindcss";
+
+/* Identidade visual do PRUMO (docs: identidade visual). Cor sempre quer dizer alguma coisa:
+   verde/azul/laranja = origem da medida; vermelho/âmbar = problema; amarelo = ação ou seleção. */
+
+@custom-variant dark (&:where([data-tema="escuro"], [data-tema="escuro"] *));
+
+:root,
+[data-tema="claro"] {
+  --papel: #f6f4ee;
+  --superficie: #ffffff;
+  --superficie-2: #ece9e1;
+  --malha: #e4e0d5;
+  --linha: #d6d1c4;
+  --linha-forte: #8c8676;
+  --tinta: #1e2124;
+  --tinta-suave: #5b6066;
+  --trena: #f2b200;
+  --trena-forte: #d99e00;
+  --sobre-trena: #1e2124;
+  --foco: #1f5fa8;
+  --medido: #1f7a55;
+  --medido-fundo: #e2f2ea;
+  --projeto: #1f5fa8;
+  --projeto-fundo: #e3ecf8;
+  --chute: #b04e0a;
+  --chute-fundo: #fcebdd;
+  --erro: #c02b22;
+  --erro-fundo: #fbe6e3;
+  --sobre-erro: #ffffff;
+  --aviso: #8a5a00;
+  --aviso-fundo: #fff3cc;
+  --info: #5b6066;
+  --info-fundo: #ece9e1;
+  --sombra-flutuante: 0 4px 16px rgba(30, 33, 36, 0.12);
+}
+
+[data-tema="escuro"] {
+  --papel: #121416;
+  --superficie: #1a1d20;
+  --superficie-2: #22262a;
+  --malha: #24282c;
+  --linha: #33383d;
+  --linha-forte: #6e757c;
+  --tinta: #eceae4;
+  --tinta-suave: #a3a8ae;
+  --trena: #f5ba14;
+  --trena-forte: #ffc93d;
+  --sobre-trena: #1e2124;
+  --foco: #f5ba14;
+  --medido: #4cc38a;
+  --medido-fundo: #12301f;
+  --projeto: #6aa6ee;
+  --projeto-fundo: #142a44;
+  --chute: #f08a3c;
+  --chute-fundo: #3a2210;
+  --erro: #f06a5f;
+  --erro-fundo: #3b1714;
+  --sobre-erro: #1e2124;
+  --aviso: #f2c14e;
+  --aviso-fundo: #3a2e0c;
+  --info: #a3a8ae;
+  --info-fundo: #22262a;
+  --sombra-flutuante: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* tokens viram classes do Tailwind: bg-papel, text-tinta-suave, border-linha-forte, bg-trena... */
+@theme inline {
+  --color-papel: var(--papel);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-malha: var(--malha);
+  --color-linha: var(--linha);
+  --color-linha-forte: var(--linha-forte);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-trena: var(--trena);
+  --color-trena-forte: var(--trena-forte);
+  --color-trena-sobre: var(--sobre-trena);
+  --color-foco: var(--foco);
+  --color-medido: var(--medido);
+  --color-medido-fundo: var(--medido-fundo);
+  --color-projeto: var(--projeto);
+  --color-projeto-fundo: var(--projeto-fundo);
+  --color-chute: var(--chute);
+  --color-chute-fundo: var(--chute-fundo);
+  --color-erro: var(--erro);
+  --color-erro-fundo: var(--erro-fundo);
+  --color-erro-sobre: var(--sobre-erro);
+  --color-aviso: var(--aviso);
+  --color-aviso-fundo: var(--aviso-fundo);
+  --color-info: var(--info);
+  --color-info-fundo: var(--info-fundo);
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-cond: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  --shadow-flutuante: var(--sombra-flutuante);
+}
+
+@layer base {
+  body {
+    background: var(--papel);
+    color: var(--tinta);
+    font-family: var(--font-sans);
+  }
+  /* campos sem classe de borda própria seguem a borda dos controles */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    border-color: var(--linha-forte);
+    background-color: var(--superficie);
+  }
+  :focus-visible {
+    outline-color: var(--foco);
+  }
+  /* tudo que é clicável mostra a mãozinha (o Tailwind 4 deixa a seta nos botões);
+     desabilitado mostra o "proibido". Arrastar na planta e no 3D segue com o cursor próprio. */
+  button,
+  a[href],
+  select,
+  summary,
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]),
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"],
+  input[type="color"],
+  [role="button"],
+  [role="tab"],
+  [role="option"] {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+  ::placeholder {
+    color: var(--tinta-suave);
+  }
+}
+
+@layer components {
+  /* link de texto (ações discretas em painéis: Editar, Ver lista, Voltar para esta) */
+  .link {
+    color: var(--tinta);
+    text-decoration: underline;
+    text-decoration-color: var(--linha-forte);
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  .link:hover {
+    text-decoration-color: var(--tinta);
+  }
+  .link:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  /* toda medida e cota em Mono, com números alinhados */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
 
 /* seletor de cor (react-colorful) dentro da janelinha */
 .seletor-cor .react-colorful {

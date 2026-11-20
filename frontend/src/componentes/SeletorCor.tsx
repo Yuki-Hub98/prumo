@@ -31,7 +31,7 @@ function CampoCanal({ valor, rotulo, aoMudar }: { valor: number; rotulo: string;
       value={texto}
       inputMode="numeric"
       aria-label={rotulo}
-      className="w-full rounded border border-stone-300 px-1 text-center font-mono text-xs"
+      className="w-full rounded-md border border-linha-forte px-1 text-center font-mono text-xs"
       onFocus={() => setFocado(true)}
       onBlur={() => setFocado(false)}
       onChange={(e) => {
@@ -115,7 +115,7 @@ export function SeletorCor({
         type="button"
         aria-label={`Cor de ${rotulo}`}
         aria-expanded={aberto}
-        className="h-6 w-8 cursor-pointer rounded border border-stone-300"
+        className="h-6 w-8 cursor-pointer rounded-md border border-linha-forte"
         style={{ background: hex }}
         onClick={() => setAberto((a) => !a)}
       />
@@ -125,14 +125,14 @@ export function SeletorCor({
             ref={janela}
             role="dialog"
             aria-label={`Escolher a cor de ${rotulo}`}
-            className="seletor-cor fixed z-50 grid gap-2 rounded-md border border-stone-300 bg-white p-2.5 shadow-lg"
+            className="seletor-cor fixed z-50 grid gap-2 rounded-md border border-linha-forte bg-superficie p-2.5 shadow-lg"
             style={{ width: LARGURA, left: pos?.left ?? -9999, top: pos?.top ?? 0 }}
           >
-            <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">{rotulo}</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-tinta-suave">{rotulo}</span>
             <HexColorPicker color={hex} onChange={aoMudar} />
             <div className="grid grid-cols-3 gap-1">
               {["R", "G", "B"].map((nome, i) => (
-                <label key={nome} className="grid text-center text-[10px] text-stone-500">
+                <label key={nome} className="grid text-center text-[10px] text-tinta-suave">
                   <CampoCanal valor={canais(hex)[i]} rotulo={`${rotulo}: ${nome}`} aoMudar={(t) => mudarCanal(i, t)} />
                   {nome}
                 </label>
@@ -140,7 +140,7 @@ export function SeletorCor({
             </div>
             {usadas.length > 0 && (
               <>
-                <span className="text-[10px] uppercase tracking-wide text-stone-500">Usadas neste cômodo</span>
+                <span className="text-[10px] uppercase tracking-wide text-tinta-suave">Usadas neste cômodo</span>
                 <div className="flex flex-wrap gap-1">
                   {usadas.map((c) => (
                     <button
@@ -148,7 +148,7 @@ export function SeletorCor({
                       type="button"
                       aria-label={`Usar ${c}`}
                       title={c}
-                      className={`h-5 w-5 rounded border ${c === hex ? "border-stone-800 ring-1 ring-stone-800" : "border-stone-300"}`}
+                      className={`h-5 w-5 rounded-md border ${c === hex ? "border-tinta ring-1 ring-tinta" : "border-linha-forte"}`}
                       style={{ background: c }}
                       onClick={() => aoMudar(c)}
                     />

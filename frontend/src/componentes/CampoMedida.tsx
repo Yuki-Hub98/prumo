@@ -1,17 +1,18 @@
+import { btn } from "../estilo";
 import { useState } from "react";
 import type { Medida } from "../api/cliente";
 import { formatar, ORIGENS, paraMm, type Origem, type Unidade } from "../unidades";
 
 const COR: Record<Origem, string> = {
-  trena: "bg-emerald-100 text-emerald-800",
-  projeto: "bg-sky-100 text-sky-800",
-  estimada: "bg-amber-100 text-amber-800",
+  trena: "bg-medido-fundo text-medido",
+  projeto: "bg-projeto-fundo text-projeto",
+  estimada: "border border-dashed border-chute bg-chute-fundo text-chute",
 };
 
 export function SeloOrigem({ origem }: { origem: Origem }) {
   const o = ORIGENS.find((x) => x.valor === origem)!;
   return (
-    <span title={o.dica} className={`rounded px-1.5 py-0.5 text-xs font-medium ${COR[origem]}`}>
+    <span title={o.dica} className={`rounded-md px-1.5 py-0.5 text-xs font-medium ${COR[origem]}`}>
       {o.rotulo}
     </span>
   );
@@ -42,12 +43,12 @@ export function CampoMedida({
   if (!editando)
     return (
       <div className="flex items-center justify-between gap-2 py-1 text-sm">
-        <span className="text-stone-500">{rotulo}</span>
+        <span className="text-tinta-suave">{rotulo}</span>
         <span className="flex items-center gap-2">
           {medida ? formatar(medida.valor, unidade) : "—"}
           {medida && <SeloOrigem origem={medida.origem as Origem} />}
           <button
-            className="text-xs text-sky-700 hover:underline"
+            className="link text-xs"
             onClick={() => {
               setTexto(medida ? formatar(medida.valor, unidade, false) : "");
               setOrigem(null);
@@ -62,7 +63,7 @@ export function CampoMedida({
 
   return (
     <form
-      className="my-1 rounded border border-stone-300 bg-white p-2 text-sm"
+      className="my-1 rounded-md border border-linha-forte bg-superficie p-2 text-sm"
       onSubmit={(e) => {
         e.preventDefault();
         if (mm === null || origem === null) return;
@@ -71,18 +72,18 @@ export function CampoMedida({
       }}
     >
       <label className="flex items-center gap-2">
-        <span className="w-24 text-stone-500">{rotulo}</span>
+        <span className="w-24 text-tinta-suave">{rotulo}</span>
         <input
           autoFocus
-          className="w-24 rounded border px-1"
+          className="w-24 rounded-md border px-1"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
         />
         <span>{unidade}</span>
       </label>
-      {texto && mm === null && <p className="text-xs text-red-700">Número inválido</p>}
+      {texto && mm === null && <p className="text-xs text-erro">Número inválido</p>}
       <fieldset className="mt-2 flex flex-wrap gap-3">
-        <legend className="mb-1 text-xs text-stone-500">De onde veio esse valor?</legend>
+        <legend className="mb-1 text-xs text-tinta-suave">De onde veio esse valor?</legend>
         {ORIGENS.map((o) => (
           <label key={o.valor} title={o.dica} className="flex items-center gap-1">
             <input
@@ -99,11 +100,11 @@ export function CampoMedida({
         <button
           type="submit"
           disabled={mm === null || origem === null || ocupado}
-          className="rounded bg-stone-800 px-2 py-0.5 text-white disabled:opacity-40"
+          className={btn("primario", "xs")}
         >
           Salvar
         </button>
-        <button type="button" onClick={() => setEditando(false)} className="text-stone-600">
+        <button type="button" onClick={() => setEditando(false)} className="text-tinta-suave">
           Cancelar
         </button>
       </div>

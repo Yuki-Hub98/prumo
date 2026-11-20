@@ -1,3 +1,4 @@
+import { btn, opcao } from "../estilo";
 import { useEffect, useRef, useState } from "react";
 import { api, ou, type Cores, type PavimentoTela } from "../api/cliente";
 import { lerCor, rgbTexto } from "../cores";
@@ -48,7 +49,7 @@ function CampoCodigo({
   const valido = lerCor(texto) !== null;
   return (
     <input
-      className={`w-28 rounded border px-1 font-mono text-xs ${valido ? "" : "border-red-400 bg-red-50"}`}
+      className={`w-28 rounded-md border px-1 font-mono text-xs ${valido ? "" : "border-erro bg-erro-fundo"}`}
       value={texto}
       title={formato === "rgb" ? "R, G, B de 0 a 255 (também aceita #hex)" : "#rrggbb (também aceita R, G, B)"}
       placeholder={formato === "rgb" ? "R, G, B" : "#rrggbb"}
@@ -92,14 +93,14 @@ function Cor({
 }) {
   return (
     <div
-      className={`flex items-center justify-between gap-2 py-0.5 text-sm ${destacar ? "-mx-1 rounded bg-sky-50 px-1 ring-1 ring-sky-300" : ""}`}
+      className={`flex items-center justify-between gap-2 py-0.5 text-sm ${destacar ? "-mx-1 rounded-sm bg-trena/15 px-1 ring-1 ring-trena" : ""}`}
     >
       <label className="flex min-w-0 items-center gap-1.5">
-        <input type="checkbox" checked={marcado} onChange={aoMarcar} aria-label={`marcar ${rotulo}`} className="accent-stone-800" />
+        <input type="checkbox" checked={marcado} onChange={aoMarcar} aria-label={`marcar ${rotulo}`} className="accent-tinta" />
         {aoRotulo ? (
           <button
             type="button"
-            className={`truncate text-left hover:underline ${valor ? "" : "text-stone-500"}`}
+            className={`truncate text-left hover:underline ${valor ? "" : "text-tinta-suave"}`}
             title="Selecionar este móvel"
             onClick={(e) => {
               e.preventDefault();
@@ -109,19 +110,19 @@ function Cor({
             {rotulo}
           </button>
         ) : (
-          <span className={`truncate ${valor ? "" : "text-stone-500"}`}>{rotulo}</span>
+          <span className={`truncate ${valor ? "" : "text-tinta-suave"}`}>{rotulo}</span>
         )}
-        {destacar && <span className="text-xs text-sky-700">Selecionado</span>}
+        {destacar && <span className="text-xs text-tinta-suave">Selecionado</span>}
       </label>
       <span className="flex shrink-0 items-center gap-1">
         <CampoCodigo hex={valor ?? padrao} formato={formato} aoMudar={aoMudar} />
         <SeletorCor valor={valor ?? padrao} rotulo={rotulo} usadas={usadas} aoMudar={aoMudar} />
         {valor ? (
-          <button type="button" className="w-10 text-left text-xs text-stone-500 hover:underline" onClick={() => aoMudar(null)}>
+          <button type="button" className="w-10 text-left text-xs text-tinta-suave hover:underline" onClick={() => aoMudar(null)}>
             Limpar
           </button>
         ) : (
-          <span className="w-10 text-xs text-stone-400">Padrão</span>
+          <span className="w-10 text-xs text-tinta-suave">Padrão</span>
         )}
       </span>
     </div>
@@ -296,8 +297,8 @@ export function PainelCores({
   const primeiro = [...marcados][0];
 
   return (
-    <section className="border-b border-stone-200 p-3">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
+    <section className="border-b border-linha p-3">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-tinta-suave">
         Cores · {c?.nome ?? comodo}
       </h2>
       <div className="mb-2 flex flex-wrap gap-1">
@@ -305,7 +306,7 @@ export function PainelCores({
           <button
             key={n}
             onClick={() => aoAtivar(n)}
-            className={`rounded px-2 py-0.5 text-sm ${n === ativa ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+            className={`rounded-md px-2 py-0.5 text-sm ${opcao(n === ativa)}`}
           >
             {n === "base" ? "base" : (variacoes[n]?.nome ?? n)}
           </button>
@@ -321,20 +322,20 @@ export function PainelCores({
         }}
       >
         <input
-          className="min-w-0 flex-1 rounded border px-1"
+          className="min-w-0 flex-1 rounded-md border px-1"
           placeholder={ativa === "base" ? "nova variação (ex.: Escura)" : "Duplicar como…"}
           value={novoNome}
           onChange={(e) => setNovoNome(e.target.value)}
         />
-        <button className="rounded border border-stone-300 px-2" disabled={!novoNome.trim() || editar.isPending}>
+        <button className="rounded-md border border-linha-forte px-2" disabled={!novoNome.trim() || editar.isPending}>
           Criar
         </button>
       </form>
 
       {ativa === "base" ? (
-        <div className="text-sm text-stone-500">
+        <div className="text-sm text-tinta-suave">
           <button
-            className="mb-1 rounded bg-stone-800 px-3 py-1 text-sm text-white disabled:opacity-40"
+            className={`mb-1 ${btn("primario", "sm")}`}
             disabled={editar.isPending}
             onClick={() => gravar(nomeLivre(Object.keys(variacoes)), vazio(), "Minhas cores")}
           >
@@ -347,14 +348,14 @@ export function PainelCores({
         </div>
       ) : (
         <>
-          <div className="mb-2 flex items-center gap-2 text-xs text-stone-500">
+          <div className="mb-2 flex items-center gap-2 text-xs text-tinta-suave">
             Código da cor
             {(["rgb", "hex"] as const).map((f) => (
               <button
                 key={f}
                 type="button"
                 onClick={() => trocarFormato(f)}
-                className={`rounded px-1.5 py-0.5 uppercase ${f === formato ? "bg-stone-800 text-white" : "border border-stone-300"}`}
+                className={`rounded-md px-1.5 py-0.5 uppercase ${opcao(f === formato)}`}
               >
                 {f}
               </button>
@@ -364,7 +365,7 @@ export function PainelCores({
             </span>
           </div>
           {marcados.size > 0 ? (
-            <div className="sticky top-0 z-10 -mx-1 mb-2 flex items-center gap-2 rounded border border-stone-300 bg-white px-2 py-1 text-sm shadow-sm">
+            <div className="sticky top-0 z-10 -mx-1 mb-2 flex items-center gap-2 rounded-md border border-linha-forte bg-superficie px-2 py-1 text-sm shadow-sm">
               <span className="font-medium">{marcados.size} marcados</span>
               <SeletorCor
                 valor={valorDe(rascunho, primeiro, tipos) ?? "#d6d3d1"}
@@ -372,23 +373,23 @@ export function PainelCores({
                 usadas={usadas}
                 aoMudar={(v) => mudar(marcados, v)}
               />
-              <button type="button" className="text-xs text-stone-500 hover:underline" onClick={() => mudar(marcados, null)}>
+              <button type="button" className="text-xs text-tinta-suave hover:underline" onClick={() => mudar(marcados, null)}>
                 Padrão
               </button>
-              <button type="button" className="ml-auto text-xs text-stone-500 hover:underline" onClick={() => setMarcados(new Set())}>
+              <button type="button" className="ml-auto text-xs text-tinta-suave hover:underline" onClick={() => setMarcados(new Set())}>
                 Desmarcar
               </button>
             </div>
           ) : (
-            <p className="mb-1 text-xs text-stone-500">Marque várias linhas para pintar todas com a mesma cor.</p>
+            <p className="mb-1 text-xs text-tinta-suave">Marque várias linhas para pintar todas com a mesma cor.</p>
           )}
           {linha("parede", "paredes (geral)", PADRAO.parede)}
           {linha("piso", "piso", PADRAO.piso)}
           {linha("teto", "teto", PADRAO.teto)}
           {linha("rodape", "rodapé", PADRAO.rodape)}
-          <h3 className="mt-2 text-xs text-stone-500">Cada parede (face deste cômodo)</h3>
+          <h3 className="mt-2 text-xs text-tinta-suave">Cada parede (face deste cômodo)</h3>
           {paredes.map((p) => linha(`p:${p}`, p, rascunho.parede ?? PADRAO.parede))}
-          {moveis.length > 0 && <h3 className="mt-2 text-xs text-stone-500">Móveis (clique no nome para selecionar)</h3>}
+          {moveis.length > 0 && <h3 className="mt-2 text-xs text-tinta-suave">Móveis (clique no nome para selecionar)</h3>}
           {moveis.map((m) => {
             const partes = m.partes ?? [];
             const aberto = abertos.has(m.id);
@@ -404,7 +405,7 @@ export function PainelCores({
                   <button
                     type="button"
                     aria-expanded={aberto}
-                    className="ml-6 text-xs text-stone-500 hover:underline"
+                    className="ml-6 text-xs text-tinta-suave hover:underline"
                     onClick={() =>
                       setAbertos((a) => {
                         const n = new Set(a);
@@ -419,7 +420,7 @@ export function PainelCores({
                   </button>
                 )}
                 {aberto && (
-                  <div className="ml-6 border-l border-stone-200 pl-2">
+                  <div className="ml-6 border-l border-linha pl-2">
                     {partes.map((pt) => linha(`q:${m.id}:${pt.id}`, pt.nome, corpo))}
                   </div>
                 )}
@@ -428,7 +429,7 @@ export function PainelCores({
           })}
           <div className="mt-3">
             <button
-              className="text-sm text-red-700 hover:underline"
+              className="text-sm text-erro hover:underline"
               disabled={editar.isPending}
               onClick={() => {
                 if (timer.current) clearTimeout(timer.current);
@@ -450,7 +451,7 @@ export function PainelCores({
           </div>
         </>
       )}
-      {editar.error && <p className="mt-1 text-sm text-red-700">{editar.error.message}</p>}
+      {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
     </section>
   );
 }

@@ -63,7 +63,7 @@ export function ColunaLateral({ titulo, children }: { titulo: string; children: 
       aria-controls="coluna-lateral"
       aria-label={fechada ? `Abrir ${titulo.toLowerCase()}` : `Fechar ${titulo.toLowerCase()}`}
       title={fechada ? "Abrir o painel" : "Fechar o painel"}
-      className="rounded p-1 text-stone-600 hover:bg-stone-200 hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-sky-500"
+      className="rounded-md p-1 text-tinta-suave hover:bg-superficie-2 hover:text-tinta focus-visible:outline-2 focus-visible:outline-foco"
     >
       <Hamburguer />
     </button>
@@ -93,7 +93,7 @@ export function ColunaLateral({ titulo, children }: { titulo: string; children: 
 
   if (fechada) {
     return (
-      <aside className="flex shrink-0 flex-col items-center border-l border-stone-200 bg-stone-50 py-1.5">
+      <aside className="flex shrink-0 flex-col items-center border-l border-linha bg-papel py-1.5">
         {botaoMenu}
       </aside>
     );
@@ -105,7 +105,7 @@ export function ColunaLateral({ titulo, children }: { titulo: string; children: 
         type="button"
         aria-label="Ajustar a largura da coluna (arraste ou use as setas)"
         title="Arraste para ajustar a largura"
-        className="w-1.5 shrink-0 cursor-col-resize bg-stone-200 hover:bg-stone-300 focus-visible:bg-sky-300 focus-visible:outline-none"
+        className="w-1.5 shrink-0 cursor-col-resize bg-superficie-2 hover:bg-superficie-2 focus-visible:bg-foco focus-visible:outline-none"
         onPointerDown={arrastar}
         onDoubleClick={() => setLargura(limitarLargura(LARGURA_PADRAO, window.innerWidth))}
         onKeyDown={(e) => {
@@ -113,10 +113,10 @@ export function ColunaLateral({ titulo, children }: { titulo: string; children: 
           if (e.key === "ArrowRight") setLargura((l) => limitarLargura(l - 24, window.innerWidth));
         }}
       />
-      <aside id="coluna-lateral" ref={coluna} style={{ width: largura }} className="flex shrink-0 flex-col bg-stone-50">
-        <div className="flex shrink-0 items-center gap-2 border-b border-stone-200 bg-white px-2 py-1.5">
+      <aside id="coluna-lateral" ref={coluna} style={{ width: largura }} className="flex shrink-0 flex-col bg-papel">
+        <div className="flex shrink-0 items-center gap-2 border-b border-linha bg-superficie px-2 py-1.5">
           {botaoMenu}
-          <h2 className="text-sm font-semibold text-stone-800">{titulo}</h2>
+          <h2 className="text-sm font-semibold text-tinta">{titulo}</h2>
         </div>
         {children}
       </aside>
@@ -137,20 +137,20 @@ export function Abas<T extends string>({
   aoTrocar: (id: T) => void;
 }) {
   return (
-    <div role="tablist" aria-label="Painéis" className="flex shrink-0 border-b border-stone-200 bg-white">
+    <div role="tablist" aria-label="Painéis" className="flex shrink-0 border-b border-linha bg-superficie">
       {abas.map((a) => (
         <button
           key={a.id}
           role="tab"
           aria-selected={a.id === ativa}
           className={`flex-1 border-b-2 px-2 py-2 text-sm ${
-            a.id === ativa ? "border-stone-800 font-semibold text-stone-900" : "border-transparent text-stone-500 hover:text-stone-800"
+            a.id === ativa ? "border-tinta font-semibold text-tinta" : "border-transparent text-tinta-suave hover:text-tinta"
           }`}
           onClick={() => aoTrocar(a.id)}
         >
           {a.titulo}
           {a.marca ? (
-            <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs font-normal text-amber-800">{a.marca}</span>
+            <span className="ml-1 rounded-full bg-aviso-fundo px-1.5 text-xs font-normal text-aviso">{a.marca}</span>
           ) : null}
         </button>
       ))}

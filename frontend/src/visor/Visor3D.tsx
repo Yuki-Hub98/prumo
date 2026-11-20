@@ -1,3 +1,4 @@
+import { opcao } from "../estilo";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Canvas, type ThreeEvent, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -153,13 +154,21 @@ function Modelo({
           aoMovel(id);
         }
       }}
+      // mãozinha em cima de móvel (clicável); fora dele, o cursor de girar/arrastar de sempre
+      onPointerMove={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation(); // só o objeto mais perto (o que o clique pegaria)
+        gl.domElement.style.cursor = aoMovel && movelDe(e.object, moveis) ? "pointer" : "";
+      }}
+      onPointerOut={() => {
+        gl.domElement.style.cursor = "";
+      }}
     />
     </>
   );
 }
 
 const botao = (ativo: boolean) =>
-  `rounded border px-2 py-0.5 text-sm ${ativo ? "border-stone-800 bg-stone-800 text-white" : "border-stone-300 bg-white hover:bg-stone-100"}`;
+  `px-2 py-0.5 text-sm ${opcao(ativo)}`;
 
 /** Visor 3D ao vivo do cômodo ou do pavimento (montado da cena do core): girar (arrastar),
  * zoom (roda), mover (botão direito), vistas prontas com corte da parede do lado da câmera,
@@ -186,19 +195,19 @@ export default function Visor3D({
   const [vista, setVista] = useState<Vista3D>("cima");
   const [teto, setTeto] = useState(false);
   return (
-    <div className="relative h-full w-full bg-stone-100">
+    <div className="relative h-full w-full bg-superficie-2">
       <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1">
         {VISTAS_3D.map((v) => (
           <button key={v.nome} className={botao(vista === v.nome)} onClick={() => setVista(v.nome)}>
             {v.titulo}
           </button>
         ))}
-        <label className="ml-2 flex items-center gap-1 rounded border border-stone-300 bg-white px-2 py-0.5 text-sm">
+        <label className="ml-2 flex items-center gap-1 rounded-md border border-linha-forte bg-superficie px-2 py-0.5 text-sm">
           <input type="checkbox" checked={teto} onChange={(e) => setTeto(e.target.checked)} />
           Teto
         </label>
       </div>
-      <p className="absolute bottom-3 left-3 z-10 text-xs text-stone-500">
+      <p className="absolute bottom-3 left-3 z-10 text-xs text-tinta-suave">
         Clique num móvel para selecionar · arraste para girar · roda para zoom · botão direito para mover
         {vista !== "cima" && vista !== "perspectiva" && " · parede da frente cortada"}
       </p>
