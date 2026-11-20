@@ -383,6 +383,27 @@ class _Planta:
             linhas.append(((-w, d - 30), (w, d - 30)))
             linhas.append(((-w, -d), (w, d - 30)))
             seta()
+        elif simbolo is Simbolo.PIA:
+            # cuba (retângulo de cantos cortados) e a torneira atrás dela
+            cw, cd = min(250.0, w * 0.4), min(200.0, d * 0.4)
+            k = min(40.0, cw / 4)
+            pts = [(-cw + k, -cd), (cw - k, -cd), (cw, -cd + k), (cw, cd - k),
+                   (cw - k, cd), (-cw + k, cd), (-cw, cd - k), (-cw, -cd + k)]  # fmt: skip
+            linhas.extend(zip(pts, pts[1:] + pts[:1], strict=True))
+            linhas.append(((0.0, -cd), (0.0, -cd - min(80.0, d - cd - 20))))
+        elif simbolo is Simbolo.FOGAO:
+            # bocas: círculos (polígonos de 12 lados) em grade 2 × n
+            n = 3 if w >= 700 else 2
+            r = min(w / (2 * n) - 30, d / 4 - 20, 110.0)
+            for i in range(n):
+                for j in (-1, 1):
+                    cx, cy = -w + (2 * i + 1) * w / n, j * d / 2.2
+                    circ = [(cx + r * math.cos(t * math.pi / 6), cy + r * math.sin(t * math.pi / 6))
+                            for t in range(12)]  # fmt: skip
+                    linhas.extend(zip(circ, circ[1:] + circ[:1], strict=True))
+        elif simbolo is Simbolo.GELADEIRA:
+            linhas.extend([((-w, -d), (w, d)), ((-w, d), (w, -d))])  # X: equipamento alto
+            linhas.append(((-w, d - 40), (w, d - 40)))  # porta
         else:  # gavetas e genérico
             if simbolo is Simbolo.GAVETAS:
                 linhas.append(((-w, d - 30), (w, d - 30)))

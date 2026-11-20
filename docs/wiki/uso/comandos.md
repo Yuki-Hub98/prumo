@@ -265,6 +265,14 @@ gaveta_largura_min = 300
 lateral_cama = 600
 frente_guarda_roupa = 900     # só porta de abrir
 largura_cama_casal = 1200
+
+[cozinha]
+triangulo_min = 3600          # soma pia–fogão–geladeira
+triangulo_max = 6600
+pia_ponto_max = 300           # água fria e esgoto até a pia
+altura_bancada = 900
+altura_bancada_tolerancia = 50
+fogao_janela = 300            # fogão mais perto que isto da janela = "embaixo"
 ```
 
 ---

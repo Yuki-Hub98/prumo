@@ -26,6 +26,11 @@ são padrões configuráveis em `regras.toml`, não norma técnica.
 | TV perto de quem assiste | 1,5 × diagonal | aviso |
 | Quarto: lateral da cama (2 lados no casal, 1 no solteiro) | 600 mm | aviso |
 | Quarto: frente de guarda-roupa de porta de abrir | 900 mm ou folha + 100 | aviso |
+| Cozinha: triângulo pia–fogão–geladeira (soma entre os meios das frentes) | 3600–6600 mm | aviso (falta um dos três: info) |
+| Cozinha: pia sem ponto de água fria ou de esgoto por perto | 300 mm | erro |
+| Cozinha: fogão a gás sem ponto de gás no cômodo ou sem ventilação (janela/porta para fora) | — | erro |
+| Cozinha: fogão embaixo de janela | 300 mm | aviso |
+| Cozinha: altura da bancada da pia | 900 ± 50 mm | aviso |
 | Planejado: construção que não cabe | — | erro |
 | Planejado: prateleira sem apoio · cabideiro baixo · móvel raso · gaveta estreita | 900 · 1000 · 550 · 300 mm | aviso |
 

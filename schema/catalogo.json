@@ -22,7 +22,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "viuva",
@@ -33,7 +34,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "casal",
@@ -44,7 +46,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "queen",
@@ -55,7 +58,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "king",
@@ -66,7 +70,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "casal"
@@ -90,7 +95,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -114,7 +120,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "pequeno",
@@ -125,7 +132,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -149,7 +157,8 @@
           "elevacao": null,
           "portas": "abrir",
           "largura_porta": 450,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "4_portas",
@@ -160,7 +169,8 @@
           "elevacao": null,
           "portas": "abrir",
           "largura_porta": 400,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "correr_2",
@@ -171,7 +181,8 @@
           "elevacao": null,
           "portas": "correr",
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "correr_3",
@@ -182,7 +193,8 @@
           "elevacao": null,
           "portas": "correr",
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "correr_2"
@@ -206,7 +218,8 @@
           "elevacao": null,
           "portas": "abrir",
           "largura_porta": 400,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "alto",
@@ -217,7 +230,8 @@
           "elevacao": null,
           "portas": "abrir",
           "largura_porta": 400,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "aereo",
@@ -228,7 +242,8 @@
           "elevacao": 1500,
           "portas": "abrir",
           "largura_porta": 400,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "alto"
@@ -252,7 +267,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -276,7 +292,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "baixa",
@@ -287,7 +304,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -311,7 +329,8 @@
           "elevacao": null,
           "portas": "abrir",
           "largura_porta": 350,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -335,7 +354,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "3_lugares",
@@ -346,7 +366,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "retratil",
@@ -357,7 +378,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "3_lugares"
@@ -381,7 +403,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -405,7 +428,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "escritorio",
@@ -416,7 +440,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -440,7 +465,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "peseira",
@@ -451,7 +477,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "puff"
@@ -478,7 +505,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "6_lugares",
@@ -489,7 +517,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "centro",
@@ -500,7 +529,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "4_lugares"
@@ -524,7 +554,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "compacta",
@@ -535,7 +566,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -559,7 +591,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
@@ -581,7 +614,8 @@
           "elevacao": 1000,
           "portas": null,
           "largura_porta": null,
-          "polegadas": 32
+          "polegadas": 32,
+          "energia": null
         },
         {
           "id": "43pol",
@@ -592,7 +626,8 @@
           "elevacao": 1000,
           "portas": null,
           "largura_porta": null,
-          "polegadas": 43
+          "polegadas": 43,
+          "energia": null
         },
         {
           "id": "50pol",
@@ -603,7 +638,8 @@
           "elevacao": 1000,
           "portas": null,
           "largura_porta": null,
-          "polegadas": 50
+          "polegadas": 50,
+          "energia": null
         },
         {
           "id": "55pol",
@@ -614,7 +650,8 @@
           "elevacao": 1000,
           "portas": null,
           "largura_porta": null,
-          "polegadas": 55
+          "polegadas": 55,
+          "energia": null
         },
         {
           "id": "65pol",
@@ -625,7 +662,8 @@
           "elevacao": 1000,
           "portas": null,
           "largura_porta": null,
-          "polegadas": 65
+          "polegadas": 65,
+          "energia": null
         }
       ],
       "modelo_padrao": "50pol"
@@ -649,7 +687,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         },
         {
           "id": "pequeno",
@@ -660,10 +699,158 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "pia",
+      "nome": "Pia (gabinete com bancada e cuba)",
+      "categoria": "cozinha",
+      "simbolo": "pia",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "120",
+          "nome": "Gabinete 120 × 55",
+          "largura": 1200,
+          "profundidade": 550,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "150",
+          "nome": "Gabinete 150 × 55",
+          "largura": 1500,
+          "profundidade": 550,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "180",
+          "nome": "Bancada 180 × 60",
+          "largura": 1800,
+          "profundidade": 600,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        }
+      ],
+      "modelo_padrao": "120"
+    },
+    {
+      "tipo": "fogao",
+      "nome": "Fogão / cooktop",
+      "categoria": "cozinha",
+      "simbolo": "fogao",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "4bocas",
+          "nome": "Fogão 4 bocas a gás (55 × 60)",
+          "largura": 550,
+          "profundidade": 600,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": "gas"
+        },
+        {
+          "id": "5bocas",
+          "nome": "Fogão 5 bocas a gás (75 × 60)",
+          "largura": 750,
+          "profundidade": 600,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": "gas"
+        },
+        {
+          "id": "cooktop",
+          "nome": "Cooktop de indução (60 × 52, na bancada)",
+          "largura": 600,
+          "profundidade": 520,
+          "altura": 60,
+          "elevacao": 900,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": "eletrico"
+        }
+      ],
+      "modelo_padrao": "4bocas"
+    },
+    {
+      "tipo": "geladeira",
+      "nome": "Geladeira",
+      "categoria": "cozinha",
+      "simbolo": "geladeira",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "duplex",
+          "nome": "Duplex (70 × 72 × 180)",
+          "largura": 700,
+          "profundidade": 720,
+          "altura": 1800,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "frost",
+          "nome": "Frost free (60 × 68 × 170)",
+          "largura": 600,
+          "profundidade": 680,
+          "altura": 1700,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        },
+        {
+          "id": "inverse",
+          "nome": "Inverse (75 × 75 × 190)",
+          "largura": 750,
+          "profundidade": 750,
+          "altura": 1900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null
+        }
+      ],
+      "modelo_padrao": "duplex"
     },
     {
       "tipo": "sob_medida",
@@ -684,7 +871,8 @@
           "elevacao": null,
           "portas": null,
           "largura_porta": null,
-          "polegadas": null
+          "polegadas": null,
+          "energia": null
         }
       ],
       "modelo_padrao": "padrao"
