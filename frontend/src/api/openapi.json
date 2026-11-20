@@ -5661,6 +5661,62 @@
             ],
             "description": "Largura de cada folha de porta de abrir (para o espaço de giro)."
           },
+          "acabamento": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "madeira_clara",
+                  "madeira_escura",
+                  "amadeirado",
+                  "branco_fosco",
+                  "laca_brilho",
+                  "preto_fosco"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acabamento",
+            "description": "Material da caixa (só visual); sem valor = o padrão do tipo."
+          },
+          "puxador": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "barra",
+                  "botao",
+                  "perfil",
+                  "cava"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Puxador",
+            "description": "Tipo de puxador das portas e gavetas (só visual); sem valor = barra."
+          },
+          "pes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "quadrado",
+                  "palito",
+                  "metalico",
+                  "rodape"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pes",
+            "description": "Tipo de pé (só visual); sem valor = o padrão do tipo."
+          },
           "elevacao": {
             "anyOf": [
               {

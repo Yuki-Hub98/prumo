@@ -311,12 +311,16 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       planta, nas elevações e no 3D
 - [x] **Meus modelos** (2ª parte dos Modelos prontos): salvar um móvel editado (medidas, forma,
       montagem por dentro) como modelo próprio e reaproveitar em qualquer cômodo ou projeto
+- [x] **Acabamento, puxador e pés** (3ª parte dos Modelos prontos, 1º PR): madeira clara/escura,
+      MDF amadeirado, branco fosco, laca com brilho e preto fosco; puxador de barra, botão,
+      perfil ou cava; pés quadrados, palito, metálicos ou rodapé recuado — por móvel, no 3D
 - [ ] Modelos prontos — o que falta (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
       escolher e posicionar, com símbolo na planta e 3D detalhado. **Tudo editável pela
       pessoa**: partir de um modelo pronto e mudar medidas, acabamento/cor, número de
       portas/folhas/gavetas, puxador, sentido de abertura etc., podendo **salvar a versão
       editada como modelo próprio**:
-      - **móveis mais comuns** do mercado, com acabamento, puxadores, pés e portas visíveis;
+      - **mais móveis** no catálogo (beliche, aparador, painel de TV, sapateira, mesa de jantar
+        redonda, cadeira de escritório...) — 3ª parte, 2º PR;
       - portas: correr embutida, pivotante, guarnição; janelas com veneziana
 - [ ] Cotas na planta da tela (pedido do usuário, 2026-11-20, para depois): hoje só o DXF/PDF
       tem cotas. Desenhar as cotas das paredes e dos vãos na planta do frontend, em Mono, na cor
@@ -325,9 +329,14 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [ ] Editor de móveis — o que falta: redimensionar puxando as bordas na planta, mover e girar
       direto no 3D, sofá e bancada planejada em L, lista de corte e desenho do planejado pela tela
 - [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis
-- [ ] Referência por foto (pedido do usuário, 2026-11-19): subir uma foto (Pinterest, um
-      quarto parecido) pela tela; o sistema tira a paleta dela e cria uma variação de cor
-      parecida, para comparar com o render
+- [ ] Referência por foto (pedido do usuário, 2026-11-19 e 2026-11-20): subir uma foto
+      (Pinterest, um quarto parecido) pela tela e **guardar a foto no projeto** como referência
+      do cômodo (`referencias/<cômodo>/`, junto do que já é versionado); o sistema tira a
+      paleta dela e cria uma variação de cor parecida, para comparar com o render. Avaliar
+      **uma IA de visão** (modelo que lê a imagem) para ir além da paleta: reconhecer estilo,
+      materiais e acabamentos (ex.: madeira escura, laca, puxador de perfil) e móveis da foto,
+      e sugerir as escolhas equivalentes no projeto — depende de serviço externo (custo,
+      chave de API, privacidade da foto); decidir com o usuário antes
 - [ ] Perfis e login (pedido do usuário, 2026-11-18): cada pessoa com conta, seus projetos
       (vários por pessoa) e suas preferências (ex.: unidade cm/m/mm); projetos podem ser
       compartilhados. O banco já guarda vários projetos; falta o dono de cada um

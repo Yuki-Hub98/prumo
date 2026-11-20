@@ -47,6 +47,7 @@ export function PainelMovel({
   aoRemovido: () => void;
 }) {
   const projeto = useProjeto(codigo).data;
+  const catalogo = useCatalogo().data as { itens: ItemCatalogo[] } | undefined;
   const editar = useEditar(codigo);
   const [parede, setParede] = useState("");
   const [distancia, setDistancia] = useState("0");
@@ -77,7 +78,7 @@ export function PainelMovel({
   return (
     <Caixa titulo={`Móvel: ${movel.nome ?? movel.tipo}`}>
       <p className="mb-2 text-xs text-tinta-suave">
-        {movel.tipo}
+        {catalogo?.itens.find((i) => i.tipo === movel.tipo)?.nome ?? movel.tipo}
         {movel.modelo ? ` · ${movel.modelo}` : ""} · arraste na planta para mover
       </p>
       <div className="mb-2 flex flex-wrap gap-2">
@@ -134,7 +135,7 @@ export function PainelMovel({
       {(["largura", "profundidade", "altura", "elevacao"] as const).map((campo) => (
         <CampoMedida
           key={campo}
-          rotulo={campo}
+          rotulo={ROTULO_MEDIDA[campo] ?? maiuscula(campo)}
           medida={movel[campo]}
           unidade={unidade}
           ocupado={editar.isPending}
@@ -161,6 +162,21 @@ export function PainelMovel({
           }
         />
       )}
+      <Aparencia
+        movel={movel}
+        partes={(geometria.moveis.find((m) => m.id === id)?.partes ?? []).map((p) => p.id)}
+        ocupado={editar.isPending}
+        aoMudar={(campos) =>
+          editar.mutate((versao) =>
+            ou(
+              api.PATCH("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}", {
+                params: { path: caminho, query: { versao } },
+                body: campos,
+              }),
+            ),
+          )
+        }
+      />
       {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
       {geometria.moveis.find((m) => m.id === id)?.planejavel && (
         <div className="-mx-3 mt-2 border-t border-linha">
@@ -344,6 +360,57 @@ function CriarDoZero({
       </button>
       {editar.error && <p className="text-erro">{editar.error.message}</p>}
     </form>
+  );
+}
+
+const ROTULO_MEDIDA: Record<string, string> = {
+  largura: "Largura",
+  profundidade: "Profundidade",
+  altura: "Altura",
+  elevacao: "Elevação",
+  largura_porta: "Largura da porta",
+};
+
+/** Acabamento, puxador e pés (só visual; aparecem os que o tipo tem). A cor da variação
+ * continua valendo por cima do acabamento. */
+function Aparencia({
+  movel,
+  partes,
+  ocupado,
+  aoMudar,
+}: {
+  movel: { acabamento?: string | null; puxador?: string | null; pes?: string | null };
+  partes: string[];
+  ocupado: boolean;
+  aoMudar: (campos: Record<string, string | null>) => void;
+}) {
+  const cat = useCatalogo().data as { acabamentos?: Record<string, string>; puxadores?: Record<string, string>; pes?: Record<string, string> } | undefined;
+  const linhas: [string, string, Record<string, string> | undefined, string][] = [
+    ["acabamento", "Acabamento", cat?.acabamentos, "Padrão do tipo"],
+    ...(partes.includes("puxadores") ? ([["puxador", "Puxador", cat?.puxadores, "Barra (padrão)"]] as const) : []),
+    ...(partes.includes("pes") || movel.pes === "rodape" ? ([["pes", "Pés", cat?.pes, "Padrão do tipo"]] as const) : []),
+  ] as [string, string, Record<string, string> | undefined, string][];
+  return (
+    <div className="mt-2 space-y-1 text-sm">
+      {linhas.map(([campo, rotulo, opcoes, padrao]) => (
+        <label key={campo} className="flex items-center justify-between gap-2">
+          <span className="text-tinta-suave">{rotulo}</span>
+          <select
+            className="rounded-md border"
+            disabled={ocupado}
+            value={(movel as Record<string, string | null | undefined>)[campo] ?? ""}
+            onChange={(e) => aoMudar({ [campo]: e.target.value || null })}
+          >
+            <option value="">{padrao}</option>
+            {Object.entries(opcoes ?? {}).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+    </div>
   );
 }
 

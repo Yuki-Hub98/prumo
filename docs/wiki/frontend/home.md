@@ -164,6 +164,15 @@ neste navegador; sem escolha, segue o sistema. As cores vêm dos tokens da ident
 (Medi / Quero assim / Chute, este também tracejado), vermelho/âmbar é problema e amarelo é ação
 principal ou o que está selecionado.
 
+## Acabamento, puxador e pés
+
+No painel do móvel (aba **Móvel**): **Acabamento** (madeira clara, madeira escura, MDF
+amadeirado, branco fosco, laca com brilho, preto fosco), **Puxador** (barra, botão, perfil de
+alumínio, cava) e **Pés** (quadrado, palito, metálico fino, sem pé com rodapé recuado). Só
+aparecem as escolhas que o tipo tem (cama não tem puxador; guarda-roupa não tem pés). É só
+visual: medidas e checagens não mudam. A cor da variação continua valendo por cima do
+acabamento; o veio da madeira aparece nas fotos (render), no 3D ao vivo só a cor.
+
 ## Meus modelos
 
 Com um móvel selecionado (aba **Móvel**), **Salvar como modelo** guarda ele como está agora —

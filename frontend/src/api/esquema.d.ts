@@ -1797,6 +1797,21 @@ export interface components {
             portas?: ("abrir" | "correr") | null;
             /** @description Largura de cada folha de porta de abrir (para o espaço de giro). */
             largura_porta?: components["schemas"]["Medida"] | null;
+            /**
+             * Acabamento
+             * @description Material da caixa (só visual); sem valor = o padrão do tipo.
+             */
+            acabamento?: ("madeira_clara" | "madeira_escura" | "amadeirado" | "branco_fosco" | "laca_brilho" | "preto_fosco") | null;
+            /**
+             * Puxador
+             * @description Tipo de puxador das portas e gavetas (só visual); sem valor = barra.
+             */
+            puxador?: ("barra" | "botao" | "perfil" | "cava") | null;
+            /**
+             * Pes
+             * @description Tipo de pé (só visual); sem valor = o padrão do tipo.
+             */
+            pes?: ("quadrado" | "palito" | "metalico" | "rodape") | null;
             /** @description Do piso até a base do móvel (TV na parede, armário aéreo). Móvel elevado não ocupa o piso: não conta para passagem nem para o giro de portas. */
             elevacao?: components["schemas"]["Medida"] | null;
             /**
