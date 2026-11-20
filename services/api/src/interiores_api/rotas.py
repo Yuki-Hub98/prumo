@@ -137,6 +137,18 @@ def refazer(svc: Svc, codigo: str, versao: Versao) -> ResultadoEdicao:
     return svc.voltar(codigo, versao, "refazer")
 
 
+@projetos.post("/{codigo}/rascunho/salvar")
+def salvar_rascunho(svc: Svc, codigo: str, versao: Versao) -> ResultadoEdicao:
+    """Salva o rascunho: cada mudança vira uma versão e ``projetos/<p>`` é reexportado."""
+    return svc.salvar_rascunho(codigo, versao)
+
+
+@projetos.post("/{codigo}/rascunho/descartar")
+def descartar_rascunho(svc: Svc, codigo: str, versao: Versao) -> ResultadoEdicao:
+    """Joga fora as mudanças não salvas: volta para a versão salva."""
+    return svc.descartar_rascunho(codigo, versao)
+
+
 @projetos.post("/{codigo}/versoes/{para}/restaurar")
 def restaurar(svc: Svc, codigo: str, para: int, versao: Versao) -> ResultadoEdicao:
     """Volta o projeto para o conteúdo da versão ``para`` (grava como versão nova)."""

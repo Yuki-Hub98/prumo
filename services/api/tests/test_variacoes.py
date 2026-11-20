@@ -16,6 +16,7 @@ def test_parede_de_destaque(api: TestClient, projetos: Path) -> None:
     assert r.status_code == 200, r.text
     assert r.json()["versao"] == 2
     assert any(a["caminho"].startswith("variacoes.quarto") for a in r.json()["alteracoes"])
+    api.post("/projetos/casa/rascunho/salvar", params={"versao": 2})
     arq = json.loads((projetos / "casa" / "variacoes" / "quarto" / "destaque.json").read_text())
     assert arq["cores"]["paredes"] == {"p2": "#c46b4f"}
     assert api.get(VAR).json()["destaque"]["cores"]["parede"] == "#eeeeee"
@@ -26,6 +27,7 @@ def test_parede_de_destaque(api: TestClient, projetos: Path) -> None:
 
     assert api.delete(f"{VAR}/destaque", params={"versao": 3}).status_code == 200
     assert api.get(VAR).json() == {}
+    api.post("/projetos/casa/rascunho/salvar", params={"versao": 4})
     assert not (projetos / "casa" / "variacoes" / "quarto" / "destaque.json").exists()
 
 

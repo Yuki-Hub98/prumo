@@ -26,6 +26,7 @@ def test_pavimentos(api: TestClient, projetos: Path) -> None:
     assert r.status_code == 200, r.text
     casa = api.get("/projetos/casa").json()
     assert casa["comodos"] == {}  # o mobiliário do térreo foi junto
+    api.post("/projetos/casa/rascunho/salvar", params={"versao": 3})
     assert not (projetos / "casa" / "comodos" / "quarto.json").exists()
 
 
