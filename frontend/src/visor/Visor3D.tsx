@@ -56,7 +56,14 @@ function Contorno({ scene, selecionado }: { scene: Object3D; selecionado: string
     return arestas({ min: caixa.min.toArray(), max: caixa.max.toArray() });
   }, [scene, selecionado]);
   if (!pontos) return null;
-  return <Line points={pontos} segments lineWidth={5} color="#0ea5e9" transparent opacity={0.35} depthWrite={false} />;
+  // amarelo trena (o mesmo da seleção na planta), quase transparente para não esconder a cor
+  return <Line points={pontos} segments lineWidth={5} color={corToken("--trena", "#f2b200")} transparent opacity={0.5} depthWrite={false} />;
+}
+
+/** Cor de um token CSS (para o three.js, que não lê ``var(...)``). */
+function corToken(nome: string, padrao: string): string {
+  if (typeof document === "undefined") return padrao;
+  return getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || padrao;
 }
 
 /** Id do móvel de uma malha clicada, subindo até achar. */
@@ -195,7 +202,7 @@ export default function Visor3D({
   const [vista, setVista] = useState<Vista3D>("cima");
   const [teto, setTeto] = useState(false);
   return (
-    <div className="relative h-full w-full bg-superficie-2">
+    <div className="relative h-full w-full bg-visor">
       <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1">
         {VISTAS_3D.map((v) => (
           <button key={v.nome} className={botao(vista === v.nome)} onClick={() => setVista(v.nome)}>

@@ -225,7 +225,7 @@ function Ferramentas({ pav, unidade, base, fazer, ocupado, desenhando, aoDesenha
           />
         ))}
         <p className="mt-2 text-xs text-tinta-suave">
-          Clique numa parede, porta, janela, tomada ou cômodo para editar. Arraste os cantos (círculos azuis)
+          Clique numa parede, porta, janela, tomada ou cômodo para editar. Arraste os cantos (quadradinhos)
           para mover paredes.
         </p>
         <RemoverAndar pav={pav} sozinho={unicoAndar} base={base} fazer={fazer} ocupado={ocupado} />

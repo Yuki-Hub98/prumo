@@ -34,6 +34,7 @@
   --info: #5b6066;
   --info-fundo: #ece9e1;
   --sombra-flutuante: 0 4px 16px rgba(30, 33, 36, 0.12);
+  --visor: #e9e6de;
 }
 
 [data-tema="escuro"] {
@@ -63,6 +64,7 @@
   --info: #a3a8ae;
   --info-fundo: #22262a;
   --sombra-flutuante: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --visor: #0e1012;
 }
 
 /* tokens viram classes do Tailwind: bg-papel, text-tinta-suave, border-linha-forte, bg-trena... */
@@ -92,6 +94,7 @@
   --color-aviso-fundo: var(--aviso-fundo);
   --color-info: var(--info);
   --color-info-fundo: var(--info-fundo);
+  --color-visor: var(--visor);
 
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-cond: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
