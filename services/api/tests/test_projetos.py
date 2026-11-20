@@ -61,3 +61,24 @@ def test_apagar_pede_confirmacao_e_guarda_a_pasta(api: TestClient, projetos: Pat
     movida = Path(r.json()["pasta_movida_para"])
     assert movida.parent == projetos / "_apagados" and (movida / "projeto.json").is_file()
     assert api.get("/projetos").json() == []
+
+
+def test_andar_novo_vazio_funciona_em_tudo(api: TestClient) -> None:
+    sup = {"pavimento": {"id": "superior", "nome": "Superior",
+                         "cota_piso": {"valor": 2850, "origem": "estimada"},
+                         "pe_direito": {"valor": 2600, "origem": "projeto"}},
+           "depois_de": "terreo"}  # fmt: skip
+    assert api.post("/projetos/casa/pavimentos", params={"versao": 1}, json=sup).status_code == 200
+    base = "/projetos/casa/pavimentos/superior"
+    assert api.get(f"{base}/geometria").json()["comodos"] == []
+    assert api.get(f"{base}/cena").json()["prismas"] == []
+    assert api.get(f"{base}/tinta").json()["grupos"] == []
+    assert api.get("/projetos/casa/problemas").status_code == 200
+    # vazio sai sem cascata; o último andar não sai
+    assert api.delete(base, params={"versao": 2}).status_code == 200
+    assert (
+        api.delete(
+            "/projetos/casa/pavimentos/terreo", params={"versao": 3, "cascata": True}
+        ).status_code
+        == 422
+    )
