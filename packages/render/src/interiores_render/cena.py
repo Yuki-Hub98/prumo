@@ -39,9 +39,9 @@ from interiores_core.modelo import (
     Porta,
     Variacao,
 )
-from interiores_core.partes import CORPO, eh_cooktop, parte_da_peca
+from interiores_core.partes import ALTURA_MIN_CAIXA, CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 14
+VERSAO_CENA = 15
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -67,6 +67,13 @@ CORES_PADRAO = {
 }
 CORES_MOVEIS = {
     "pia": "#F2F0EC",
+    "beliche": "#B08968",
+    "aparador": "#8B6B4F",
+    "painel_tv": "#7A5C44",
+    "cadeira_escritorio": "#3A3A3A",
+    "puff": "#9C8C7A",
+    "maquina_lavar": "#F4F4F2",
+    "tanque": "#F4F4F2",
     "lavatorio": "#F2F0EC",
     "vaso": "#FBFBFA",
     "box": "#D8D4CC",
@@ -102,6 +109,10 @@ TEXTURA_MOVEL = {
     "banco": "madeira",
     "sofa": "tecido",
     "poltrona": "tecido",
+    "beliche": "madeira",
+    "aparador": "madeira",
+    "painel_tv": "madeira",
+    "puff": "tecido",
 }
 """Textura procedural por tipo de móvel (o que não está aqui é MDF liso, ex.: guarda-roupa
 branco). A cor continua vindo da variação/catálogo."""
@@ -752,6 +763,12 @@ class _Cena:
             f.vaso()
         elif simbolo is Simbolo.BOX:
             f.box()
+        elif simbolo is Simbolo.BELICHE:
+            f.beliche()
+        elif simbolo is Simbolo.CADEIRA_GIRATORIA:
+            f.cadeira_giratoria()
+        elif simbolo is Simbolo.MAQUINA:
+            f.maquina()
         else:
             f.p("corpo", -f.w, -f.d, f.base, f.w, f.d, f.topo, chanfro=10)
         return f.pecas
@@ -1207,7 +1224,7 @@ class _Feitio:
     def vaso(self) -> None:
         """Louça: pé, bacia, assento com tampa e caixa acoplada (ou só a bacia, suspenso)."""
         w, d, base, topo = self.w, self.d, self.base, self.topo
-        suspenso = self.h < 500
+        suspenso = self.h < ALTURA_MIN_CAIXA
         caixa = 0.0 if suspenso else min(180.0, d * 0.3)
         bacia = base + (380.0 if not suspenso else self.h - 40)
         if not suspenso:
@@ -1233,6 +1250,64 @@ class _Feitio:
         self.p("perfil1", -w, d - 70, base, w, d - 20, base + 20, self.metal)
         self.p("perfil2", -w, d - 70, base, -w + 20, d - 20, topo, self.metal)
         self.p("perfil3", w - 20, d - 70, base, w, d - 20, topo, self.metal)
+
+    def beliche(self) -> None:
+        """Quatro postes, duas camas (embaixo e em cima, com grade), colchões e escada na
+        frente, do lado direito."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        colchao = self._mat("colchao", rugosidade=0.9, textura="tecido")
+        edredom = self._mat("edredom", rugosidade=0.95, textura="tecido")
+        p = 60.0
+        for i, (x, y) in enumerate(((-w, -d), (w - p, -d), (-w, d - p), (w - p, d - p))):
+            self.p(f"poste{i}", x, y, base, x + p, y + p, topo, chanfro=6)
+        for k, z in enumerate((base + 300, base + 1150)):
+            self.p(f"estrado{k}", -w + p, -d + p, z - 60, w - p, d - p, z, chanfro=4)
+            self.p(f"colchao{k}", -w + p + 10, -d + p + 10, z, w - p - 10, d - p - 10, z + 160,
+                   colchao, 40)  # fmt: skip
+            self.p(f"edredom{k}", -w + p + 5, -d + (d * 0.5), z + 120, w - p - 5, d - p - 5,
+                   z + 175, edredom, 40)  # fmt: skip
+        # grade de proteção em cima (fundo e frente até a escada)
+        self.p("grade0", -w + p, -d, base + 1350, w - p, -d + 30, base + 1450, chanfro=4)
+        self.p("grade1", -w + p, d - 30, base + 1350, w - p - 420, d, base + 1450, chanfro=4)
+        # escada: dois banzos e degraus na frente, junto ao poste da direita
+        ex0, ex1 = w - p - 400, w - p - 20
+        for j, x in enumerate((ex0, ex1)):
+            self.p(f"banzo{j}", x - 20, d, base, x + 20, d + 40, base + 1450, chanfro=4)
+        for k in range(4):
+            z = base + 300 + k * 280
+            self.p(f"degrau{k}", ex0, d + 5, z, ex1, d + 35, z + 30, chanfro=4)
+
+    def cadeira_giratoria(self) -> None:
+        """Base em estrela (cinco patas como cruz + diagonal), coluna, assento e encosto."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        preto = self._mat("sombra", rugosidade=0.6)
+        r = min(w, d) * 0.9
+        self.p("pata0", -r, -30, base + 40, r, 30, base + 80, preto, chanfro=10)
+        self.p("pata1", -30, -r, base + 40, 30, r, base + 80, preto, chanfro=10)
+        for i, (x, y) in enumerate(((-r, 0), (r, 0), (0, -r), (0, r))):
+            self.p(
+                f"rodizio{i}", x - 30, y - 30, base, x + 30, y + 30, base + 50, preto, chanfro=25
+            )
+        self.p("coluna", -30, -30, base + 80, 30, 30, base + 430, self.metal, chanfro=10)
+        self.p("assento", -w * 0.8, -d * 0.75, base + 430, w * 0.8, d * 0.8, base + 510, chanfro=35)
+        self.p("encosto", -w * 0.7, -d * 0.9, base + 560, w * 0.7, -d * 0.72, topo, chanfro=40)
+
+    def maquina(self) -> None:
+        """Máquina de lavar: corpo, painel de comandos em cima e porta redonda na frente
+        (ou tampa em cima, nas de abertura superior)."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        vidro = self.cena.material("vidro", CORES_PADRAO["vidro"], vidro=True)
+        self.p("corpo", -w, -d, base + 20, w, d - 10, topo, chanfro=12)
+        self.p("rodape", -w + 30, -d + 30, base, w - 30, d - 40, base + 20, self.sombra)
+        if self.h > 950:  # abertura em cima: tampa e painel atrás
+            self.p("porta0", -w + 40, -d + 120, topo, w - 40, d - 40, topo + 12, vidro, chanfro=10)
+            self.p("painel", -w, -d, topo, w, -d + 110, topo + 120, chanfro=10)
+            return
+        self.p("painel", -w + 20, d - 10, topo - 140, w - 20, d, topo - 20, self.sombra, chanfro=4)
+        lado = min(2 * w, self.h) * 0.55
+        meio = base + 20 + (self.h - 160) / 2
+        self.p("porta0", -lado / 2, d - 10, meio - lado / 2, lado / 2, d + 25, meio + lado / 2,
+               vidro, chanfro=lado / 2 - 2)  # fmt: skip
 
     def geladeira(self) -> None:
         """Duplex: freezer em cima (1/3) e geladeira embaixo, puxadores verticais."""

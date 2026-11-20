@@ -28,6 +28,7 @@ class Categoria(StrEnum):
     ELETRONICOS = "eletronicos"
     COZINHA = "cozinha"
     BANHEIRO = "banheiro"
+    AREA_SERVICO = "area_servico"
     SOB_MEDIDA = "sob_medida"
 
 
@@ -55,6 +56,12 @@ class Simbolo(StrEnum):
     """Bacia (arredondada na frente) e caixa acoplada atrás."""
     BOX = "box"
     """Área do chuveiro com o vidro na frente."""
+    BELICHE = "beliche"
+    """Duas camas empilhadas com escada."""
+    CADEIRA_GIRATORIA = "cadeira_giratoria"
+    """Cadeira de escritório: assento redondo e base em estrela."""
+    MAQUINA = "maquina"
+    """Máquina de lavar (abertura frontal redonda)."""
 
 
 class _Base(BaseModel):
@@ -75,6 +82,9 @@ class ModeloCatalogo(_Base):
     polegadas: int | None = Field(None, description="Diagonal da tela (TV).")
     energia: Literal["gas", "eletrico"] | None = Field(
         None, description="Fogão: a gás pede ponto de gás e ventilação."
+    )
+    forma: Literal["arredondado", "redondo", "L"] | None = Field(
+        None, description="Forma do móvel (mesa redonda...); sem valor = retângulo."
     )
 
 
@@ -275,7 +285,10 @@ _ITENS = (
         modelos=(
             _m("4_lugares", "Jantar 4 lugares", 1200, 800, 750),
             _m("6_lugares", "Jantar 6 lugares", 1600, 900, 750),
+            _m("redonda_4", "Jantar redonda 4 lugares (Ø 100)", 1000, 1000, 750, forma="redondo"),
+            _m("redonda_6", "Jantar redonda 6 lugares (Ø 120)", 1200, 1200, 750, forma="redondo"),
             _m("centro", "Centro", 1000, 600, 400),
+            _m("lateral", "Lateral (Ø 45)", 450, 450, 550, forma="redondo"),
         ),
         modelo_padrao="4_lugares",
     ),
@@ -327,6 +340,89 @@ _ITENS = (
             _m("pequeno", "Pequeno (120 × 35)", 1200, 350, 500),
         ),
         modelo_padrao="padrao",
+    ),
+    # ------------------------------------------------------------ mais móveis
+    ItemCatalogo(
+        tipo="beliche",
+        nome="Beliche",
+        categoria=Categoria.DORMIR,
+        simbolo=Simbolo.BELICHE,
+        lados_uso=("esquerda", "direita", "frente"),
+        modelos=(
+            _m("solteiro", "Solteiro (colchão 78 × 188)", 900, 1950, 1600),
+            _m("solteiro_88", "Solteiro largo (colchão 88 × 188)", 1000, 1950, 1600),
+        ),
+        modelo_padrao="solteiro",
+    ),
+    ItemCatalogo(
+        tipo="aparador",
+        nome="Aparador",
+        categoria=Categoria.GUARDAR,
+        simbolo=Simbolo.PORTAS,
+        lados_uso=("frente",),
+        modelos=(
+            _m("120", "Aparador 120 × 40", 1200, 400, 800, portas="abrir", largura_porta=400),
+            _m("160", "Buffet 160 × 45", 1600, 450, 800, portas="abrir", largura_porta=400),
+        ),
+        modelo_padrao="120",
+    ),
+    ItemCatalogo(
+        tipo="painel_tv",
+        nome="Painel de TV",
+        categoria=Categoria.ELETRONICOS,
+        simbolo=Simbolo.GENERICO,
+        lados_uso=(),
+        modelos=(
+            _m("180", "Painel 180 × 140", 1800, 30, 1400, elevacao=400),
+            _m("220", "Painel 220 × 160", 2200, 30, 1600, elevacao=300),
+        ),
+        modelo_padrao="180",
+    ),
+    ItemCatalogo(
+        tipo="cadeira_escritorio",
+        nome="Cadeira de escritório",
+        categoria=Categoria.SENTAR,
+        simbolo=Simbolo.CADEIRA_GIRATORIA,
+        lados_uso=("frente",),
+        modelos=(_m("padrao", "Giratória com rodízios", 620, 620, 1050),),
+        modelo_padrao="padrao",
+    ),
+    ItemCatalogo(
+        tipo="puff",
+        nome="Puff",
+        categoria=Categoria.SENTAR,
+        simbolo=Simbolo.GENERICO,
+        lados_uso=(),
+        modelos=(
+            _m("quadrado", "Quadrado 45 × 45", 450, 450, 420),
+            _m("redondo", "Redondo Ø 45", 450, 450, 420, forma="redondo"),
+        ),
+        modelo_padrao="quadrado",
+    ),
+    # ------------------------------------------------------------ área de serviço
+    ItemCatalogo(
+        tipo="maquina_lavar",
+        nome="Máquina de lavar",
+        categoria=Categoria.AREA_SERVICO,
+        simbolo=Simbolo.MAQUINA,
+        lados_uso=("frente",),
+        modelos=(
+            _m("frontal", "Frontal 11 kg (60 × 65)", 600, 650, 850),
+            _m("superior", "Abertura em cima 12 kg (60 × 66)", 600, 660, 1000),
+        ),
+        modelo_padrao="frontal",
+    ),
+    ItemCatalogo(
+        tipo="tanque",
+        nome="Tanque",
+        categoria=Categoria.AREA_SERVICO,
+        simbolo=Simbolo.PIA,
+        lados_uso=("frente",),
+        modelos=(
+            _m("louca", "Tanque de louça com coluna (55 × 45)", 550, 450, 850),
+            _m("gabinete", "Tanque com gabinete (60 × 50)", 600, 500, 900),
+        ),
+        modelo_padrao="louca",
     ),
     # ------------------------------------------------------------ cozinha
     ItemCatalogo(
@@ -504,6 +600,7 @@ def novo_movel(
         "portas": mod.portas,
         "largura_porta": med("largura_porta", mod.largura_porta),
         "polegadas": mod.polegadas,
+        "forma": mod.forma,
     }
     movel.update({k: v for k, v in opcionais.items() if v is not None})
     return movel

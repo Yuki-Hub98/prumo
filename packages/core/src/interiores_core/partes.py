@@ -38,6 +38,9 @@ PARTES: dict[str, str] = {
     "caixa": "Caixa acoplada",
     "vidros": "Vidros",
     "perfis": "Perfis",
+    "estrutura": "Estrutura",
+    "escada": "Escada",
+    "base": "Base",
 }
 """Id → nome para a tela, na ordem em que aparecem."""
 
@@ -56,6 +59,9 @@ POR_SIMBOLO: dict[Simbolo, tuple[str, ...]] = {
     Simbolo.GELADEIRA: ("portas", "puxadores"),
     Simbolo.VASO: ("assento", "caixa"),
     Simbolo.BOX: ("vidros", "perfis"),
+    Simbolo.BELICHE: ("estrutura", "escada", "colchao", "roupa_de_cama"),
+    Simbolo.CADEIRA_GIRATORIA: ("assento", "encosto", "base"),
+    Simbolo.MAQUINA: ("portas",),
 }
 PLANEJADO: tuple[str, ...] = ("portas", "gavetas", "puxadores", "prateleiras")
 """Móvel planejado (com ``construcao``): caixa = corpo; portas, frentes de gaveta,
@@ -69,8 +75,11 @@ _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"^puxador\d+$", "puxadores"),
         (r"^prateleira\d+$", "prateleiras"),
         (r"^cabeceira$", "cabeceira"),
-        (r"^colchao$", "colchao"),
-        (r"^(edredom|dobra)$", "roupa_de_cama"),
+        (r"^colchao\d*$", "colchao"),
+        (r"^(edredom|dobra)\d*$", "roupa_de_cama"),
+        (r"^(poste|grade|estrado)\d*$", "estrutura"),
+        (r"^(degrau|banzo)\d*$", "escada"),
+        (r"^(pata|coluna|rodizio)\d*$", "base"),
         (r"^travesseiro\d*$", "travesseiros"),
         (r"^(almofada|encosto)\d+$", "almofadas"),  # sofá: almofadas do assento e das costas
         (r"^encosto$", "encosto"),
@@ -106,11 +115,16 @@ def partes_do_movel(m: Movel) -> tuple[str, ...]:
     simbolo = item.simbolo if item else Simbolo.GENERICO
     if simbolo is Simbolo.FOGAO and eh_cooktop(m):
         return ("tampo", "bocas")  # sem forno: sem porta nem puxador
+    if simbolo is Simbolo.VASO and m.altura.valor < ALTURA_MIN_CAIXA:
+        return ("assento",)  # suspenso: caixa embutida na parede
     partes = POR_SIMBOLO[simbolo]
     if m.pes == "rodape":  # sem pé: o rodapé recuado é do corpo
         partes = tuple(p for p in partes if p != "pes")
     return partes
 
+
+ALTURA_MIN_CAIXA = 500
+"""Vaso mais baixo que isto (mm) é suspenso: caixa embutida, sem caixa acoplada."""
 
 ALTURA_MAX_COOKTOP = 200
 """Fogão mais baixo que isto (mm) é cooktop: só o tampo com as bocas, na bancada."""
