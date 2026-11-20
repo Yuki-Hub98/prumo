@@ -3,7 +3,9 @@ import { formatar, paraMm } from "./unidades";
 
 describe("unidades", () => {
   it("formata mm na unidade escolhida", () => {
-    expect(formatar(3150, "mm")).toBe("3150 mm");
+    expect(formatar(3150, "mm")).toBe("3\u202f150 mm"); // espaço fino de milhar
+    expect(formatar(3150, "mm", false)).toBe("3150"); // no campo, sem milhar
+    expect(formatar(12345, "cm")).toBe("1\u202f234,5 cm");
     expect(formatar(3150, "cm")).toBe("315 cm");
     expect(formatar(3155, "cm")).toBe("315,5 cm");
     expect(formatar(3150, "m")).toBe("3,15 m");
@@ -20,5 +22,6 @@ describe("unidades", () => {
     expect(paraMm("", "cm")).toBeNull();
     expect(paraMm("-3", "cm")).toBeNull();
     expect(paraMm("abc", "cm")).toBeNull();
+    expect(paraMm("2\u202f450", "mm")).toBe(2450); // colado da tela, com o espaço fino
   });
 });

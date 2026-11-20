@@ -12,20 +12,14 @@ function digitando(alvo: EventTarget | null): boolean {
   return !!el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName));
 }
 
-/** Desfazer / refazer no topo da tela, com Ctrl+Z e Ctrl+Shift+Z (ou Ctrl+Y).
+/** Ações do rascunho (desfazer, refazer, salvar, descartar) com os atalhos Ctrl+Z,
+ * Ctrl+Shift+Z (ou Ctrl+Y) e Ctrl+S. Usado uma vez na tela; os botões do topo e a barra
+ * do rodapé recebem o mesmo objeto.
  *
  * Toda edição da tela entra num **rascunho**: dá para testar à vontade e desfazer passo a
- * passo; **Salvar** (Ctrl+S) grava cada mudança como versão e atualiza ``projetos/``;
+ * passo; **Salvar versão** grava cada mudança como versão e atualiza ``projetos/``;
  * **Descartar** volta para o que estava salvo. */
-export function BotoesDesfazer({
-  codigo,
-  aoProblemas,
-  aoHistorico,
-}: {
-  codigo: string;
-  aoProblemas: (novos: Problema[]) => void;
-  aoHistorico: () => void;
-}) {
+export function useRascunho(codigo: string, aoProblemas: (novos: Problema[]) => void) {
   const versoes = useVersoes(codigo).data;
   const editar = useEditar(codigo);
   const voltar = (tipo: "desfazer" | "refazer") =>
@@ -41,6 +35,7 @@ export function BotoesDesfazer({
   const podeDesfazer = versoes?.desfazer != null && !editar.isPending;
   const podeRefazer = versoes?.refazer != null && !editar.isPending;
   const rascunho = versoes?.rascunho ?? null;
+  const passos = rascunho?.passos ?? 0;
   const [confirmar, setConfirmar] = useState(false);
   const fechar = (como: "salvar" | "descartar") => {
     setConfirmar(false);
@@ -59,7 +54,7 @@ export function BotoesDesfazer({
       const k = e.key.toLowerCase();
       if (k === "z" && !e.shiftKey && podeDesfazer) voltar("desfazer");
       else if (((k === "z" && e.shiftKey) || k === "y") && podeRefazer) voltar("refazer");
-      else if (k === "s" && rascunho && rascunho.passos > 0 && !editar.isPending) fechar("salvar");
+      else if (k === "s" && passos > 0 && !editar.isPending) fechar("salvar");
       else return;
       e.preventDefault();
     };
@@ -67,6 +62,14 @@ export function BotoesDesfazer({
     return () => window.removeEventListener("keydown", tecla);
   });
 
+  return { editar, voltar, podeDesfazer, podeRefazer, passos, confirmar, setConfirmar, fechar };
+}
+
+export type AcoesRascunho = ReturnType<typeof useRascunho>;
+
+/** Desfazer / refazer / histórico no topo da tela (sempre visíveis). */
+export function BotoesDesfazer({ acoes, aoHistorico }: { acoes: AcoesRascunho; aoHistorico: () => void }) {
+  const { voltar, podeDesfazer, podeRefazer, editar } = acoes;
   return (
     <div className="flex items-center gap-1">
       <button className={botao} disabled={!podeDesfazer} onClick={() => voltar("desfazer")} title="Desfazer (Ctrl+Z)">
@@ -78,43 +81,65 @@ export function BotoesDesfazer({
       <button className={botao} onClick={aoHistorico} title="Ver e voltar para uma versão">
         <History size={16} /> Histórico
       </button>
-      {rascunho && rascunho.passos > 0 && (
-        <span className="ml-2 flex items-center gap-1.5 rounded-md border border-linha bg-superficie px-2 py-0.5 text-sm shadow-flutuante">
-          <span className="size-2 rounded-full bg-trena" aria-hidden="true" />
-          {rascunho.passos === 1 ? "1 mudança não salva" : `${rascunho.passos} mudanças não salvas`}
-          {confirmar ? (
-            <>
-              <span className="ml-1">Descartar tudo?</span>
-              <button className={btn("perigo", "xs")} onClick={() => fechar("descartar")}>
-                Sim
-              </button>
-              <button className={btn("secundario", "xs")} onClick={() => setConfirmar(false)}>
-                Não
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                className={`ml-1 ${btn("primario", "xs")}`}
-                disabled={editar.isPending}
-                onClick={() => fechar("salvar")}
-                title="Salvar (Ctrl+S): cada mudança vira uma versão"
-              >
-                Salvar
-              </button>
-              <button
-                className={btn("secundario", "xs")}
-                disabled={editar.isPending}
-                onClick={() => setConfirmar(true)}
-                title="Voltar para o que estava salvo"
-              >
-                Descartar
-              </button>
-            </>
-          )}
-        </span>
-      )}
       {editar.error && <span className="text-sm text-erro">{editar.error.message}</span>}
+    </div>
+  );
+}
+
+/** Barra do rodapé, só quando há edição não salva:
+ * ● Rascunho · N alterações · [Desfazer] [Refazer] ····· [Descartar] [Salvar versão]. */
+export function BarraRascunho({ acoes }: { acoes: AcoesRascunho }) {
+  const { voltar, podeDesfazer, podeRefazer, passos, confirmar, setConfirmar, fechar, editar } = acoes;
+  if (passos <= 0) return null;
+  return (
+    <div
+      role="region"
+      aria-label="Rascunho"
+      className="flex shrink-0 items-center gap-2 border-t border-linha bg-superficie px-4 py-2 text-sm shadow-flutuante"
+    >
+      <span className="size-2 rounded-full bg-trena" aria-hidden="true" />
+      <span>
+        <b className="font-semibold">Rascunho</b>
+        <span className="text-tinta-suave"> · {passos === 1 ? "1 alteração" : `${passos} alterações`}</span>
+      </span>
+      <button className={btn("fantasma", "sm")} disabled={!podeDesfazer} onClick={() => voltar("desfazer")} title="Desfazer (Ctrl+Z)">
+        <Undo2 size={16} /> Desfazer
+      </button>
+      <button className={btn("fantasma", "sm")} disabled={!podeRefazer} onClick={() => voltar("refazer")} title="Refazer (Ctrl+Shift+Z)">
+        <Redo2 size={16} /> Refazer
+      </button>
+      <span className="ml-auto flex items-center gap-2">
+        {confirmar ? (
+          <>
+            <span>Descartar tudo o que não foi salvo?</span>
+            <button className={btn("secundario", "sm")} onClick={() => setConfirmar(false)}>
+              Não
+            </button>
+            <button className={btn("perigo", "sm")} onClick={() => fechar("descartar")}>
+              Sim, descartar
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className={btn("secundario", "sm")}
+              disabled={editar.isPending}
+              onClick={() => setConfirmar(true)}
+              title="Voltar para o que estava salvo"
+            >
+              Descartar
+            </button>
+            <button
+              className={btn("primario", "sm")}
+              disabled={editar.isPending}
+              onClick={() => fechar("salvar")}
+              title="Salvar (Ctrl+S): cada mudança vira uma versão"
+            >
+              Salvar versão
+            </button>
+          </>
+        )}
+      </span>
     </div>
   );
 }

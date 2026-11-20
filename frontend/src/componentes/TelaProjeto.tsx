@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { api, ou, type Cores, type Medida, type MovelTela, type Problema } from "../api/cliente";
 import { proximoId, type Pt } from "../editor/geometria";
 import { PainelPlanta } from "../editor/PainelPlanta";
-import { BotoesDesfazer, PainelHistorico } from "./Desfazer";
+import { BarraRascunho, BotoesDesfazer, PainelHistorico, useRascunho } from "./Desfazer";
 import { PainelCores } from "./PainelCores";
 import { PainelImagens } from "./PainelImagens";
 import { NovoAndar } from "./NovoAndar";
@@ -13,7 +13,7 @@ import { PainelTinta } from "./PainelTinta";
 import { Tela3D } from "./Tela3D";
 import { Abas, ColunaLateral } from "./ColunaLateral";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade, useVariacoes } from "../dados";
-import { AdicionarMovel, FaltaMedir, PainelMovel, PainelProblemas } from "./Paineis";
+import { AdicionarMovel, FaixaPreliminar, FaltaMedir, PainelMovel, PainelProblemas, piorGravidade } from "./Paineis";
 import { Planta, type Item } from "./Planta";
 
 export function TelaProjeto({
@@ -59,6 +59,10 @@ export function TelaProjeto({
     if (m) setComodo(m.comodo);
   };
   const [novos, setNovos] = useState<Problema[]>([]);
+  const acoes = useRascunho(codigo, setNovos);
+  // "Ver na planta" de um problema (pisca na planta) e "Ver o que falta medir" da faixa
+  const [destaque, setDestaque] = useState<{ p: Problema; vez: number } | null>(null);
+  const [pedidoFalta, setPedidoFalta] = useState(0);
   const [comodo, setComodo] = useState<string | null>(comodoInicial ?? null);
   const [ativa, setAtiva] = useState<Record<string, string>>(
     comodoInicial && variacaoInicial ? { [comodoInicial]: variacaoInicial } : {},
@@ -127,6 +131,12 @@ export function TelaProjeto({
       : aba === "cores"
         ? rascunho
         : (variacoesComodo?.[variacaoAtiva]?.cores ?? null);
+
+  function verNaPlanta(p: Problema) {
+    if (p.pavimento && p.pavimento !== pavimento) setPav(p.pavimento);
+    setVer3d(false);
+    setDestaque((d) => ({ p, vez: (d?.vez ?? 0) + 1 }));
+  }
 
   return (
     <div className="flex h-screen flex-col">
@@ -203,10 +213,17 @@ export function TelaProjeto({
             </button>
           ))}
         </div>
-        <BotoesDesfazer codigo={codigo} aoProblemas={setNovos} aoHistorico={() => setHistorico((h) => !h)} />
+        <BotoesDesfazer acoes={acoes} aoHistorico={() => setHistorico((h) => !h)} />
         {editar.isPending && <span className="text-xs text-tinta-suave">Gravando…</span>}
         {editar.error && <span className="text-sm text-erro">{editar.error.message}</span>}
       </header>
+      <FaixaPreliminar
+        codigo={codigo}
+        aoVer={() => {
+          if (modo === "moveis") setAba("problemas");
+          setPedidoFalta((n) => n + 1);
+        }}
+      />
       <div className="flex min-h-0 flex-1">
         <main className="min-w-0 flex-1">
           {ver3d ? (
@@ -233,6 +250,7 @@ export function TelaProjeto({
               aoSelecionarComodo={setComodo}
               cores={coresVistas}
               fundo={abaixo ? (fundo ?? null) : null}
+              destaque={destaque}
               editor={
                 modo === "planta"
                   ? {
@@ -247,7 +265,7 @@ export function TelaProjeto({
               }
             />
           ) : (
-            <p className="p-4 text-tinta-suave">{geometria.error?.message ?? "carregando…"}</p>
+            <p className="p-4 text-tinta-suave">{geometria.error?.message ?? "Carregando…"}</p>
           )}
         </main>
         <ColunaLateral titulo={modo === "planta" ? "Editar planta" : "Painel de edição"}>
@@ -275,8 +293,8 @@ export function TelaProjeto({
                   aoEscolher={setEscolhendo}
                 />
               )}
-              <PainelProblemas problemas={problemas} novos={novos} />
-              <FaltaMedir codigo={codigo} unidade={unidade} />
+              <PainelProblemas problemas={problemas} novos={novos} aoVer={verNaPlanta} />
+              <FaltaMedir codigo={codigo} unidade={unidade} pedido={pedidoFalta} />
             </div>
           ) : (
             <>
@@ -285,7 +303,7 @@ export function TelaProjeto({
                   { id: "movel", titulo: "Móvel" },
                   { id: "cores", titulo: "Cores" },
                   { id: "imagens", titulo: "Imagens" },
-                  { id: "problemas", titulo: "Problemas", marca: problemas.length },
+                  { id: "problemas", titulo: "Problemas", marca: problemas.length, tom: piorGravidade(problemas) },
                 ]}
                 ativa={aba}
                 aoTrocar={setAba}
@@ -346,8 +364,8 @@ export function TelaProjeto({
                   ))}
                 {aba === "problemas" && (
                   <>
-                    <PainelProblemas problemas={problemas} novos={novos} />
-                    <FaltaMedir codigo={codigo} unidade={unidade} />
+                    <PainelProblemas problemas={problemas} novos={novos} aoVer={verNaPlanta} />
+                    <FaltaMedir codigo={codigo} unidade={unidade} pedido={pedidoFalta} />
                   </>
                 )}
               </div>
@@ -355,6 +373,7 @@ export function TelaProjeto({
           )}
         </ColunaLateral>
       </div>
+      <BarraRascunho acoes={acoes} />
     </div>
   );
 }

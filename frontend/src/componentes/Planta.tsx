@@ -43,6 +43,8 @@ const COR_MOVEL: Record<string, string> = {
   box: "#cfe6f2",
 };
 
+const COR_GRAV: Record<string, string> = { erro: "var(--erro)", aviso: "var(--aviso)", info: "var(--info)" };
+
 const LETRA: Record<string, string> = {
   tomada: "T",
   interruptor: "S",
@@ -66,7 +68,10 @@ export function Planta({
   cores,
   editor,
   fundo = null,
+  destaque = null,
 }: {
+  /** Problema escolhido em "Ver na planta": pisca 2× na cor da gravidade (``vez`` reinicia). */
+  destaque?: { p: Problema; vez: number } | null;
   editor?: ModoEditor;
   /** Andar de baixo, apagado ao fundo: referência para desenhar o de cima (os cantos dele
    * também atraem o ponto ao desenhar). */
@@ -375,12 +380,36 @@ export function Planta({
             cy={-p.posicao![1]}
             r={90}
             fill="none"
-            stroke={p.severidade === "erro" ? "#dc2626" : "#f59e0b"}
+            stroke={p.severidade === "erro" ? "var(--erro)" : "var(--aviso)"}
             strokeWidth={20}
           >
             <title>{maiuscula(p.mensagem)}</title>
           </circle>
         ))}
+
+      {/* "Ver na planta": a área do problema pisca 2× na cor da gravidade */}
+      {destaque && (destaque.p.regiao?.length || destaque.p.posicao) && (
+        <g key={destaque.vez} className="piscar" pointerEvents="none">
+          {destaque.p.regiao?.length ? (
+            <polygon
+              points={pontos(destaque.p.regiao as Pt[])}
+              fill={COR_GRAV[destaque.p.severidade] ?? "var(--info)"}
+              fillOpacity={0.25}
+              stroke={COR_GRAV[destaque.p.severidade] ?? "var(--info)"}
+              strokeWidth={30}
+            />
+          ) : (
+            <circle
+              cx={destaque.p.posicao![0]}
+              cy={-destaque.p.posicao![1]}
+              r={250}
+              fill="none"
+              stroke={COR_GRAV[destaque.p.severidade] ?? "var(--info)"}
+              strokeWidth={40}
+            />
+          )}
+        </g>
+      )}
 
       {/* editor: alças nos cantos (arrastar move o canto e as paredes que se encontram nele) */}
       {editor &&

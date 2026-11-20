@@ -164,10 +164,23 @@
     opacity: 0.45;
     cursor: not-allowed;
   }
+  /* "Ver na planta": pisca 2× e fica marcado */
+  .piscar {
+    animation: piscar 0.45s ease-in-out 4 alternate;
+  }
   /* toda medida e cota em Mono, com números alinhados */
   .num {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes piscar {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.15;
   }
 }
 

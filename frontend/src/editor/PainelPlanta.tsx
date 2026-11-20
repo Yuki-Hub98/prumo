@@ -1,9 +1,10 @@
+import { EscolhaOrigem } from "../componentes/Origem";
 import { btn } from "../estilo";
 import { useState } from "react";
 import { api, ou, type Medida, type PavimentoTela } from "../api/cliente";
 import { CampoMedida } from "../componentes/CampoMedida";
 import { useEditar, useProjeto } from "../dados";
-import { formatar, ORIGENS, paraMm, type Origem, type Unidade } from "../unidades";
+import { formatar, paraMm, type Origem, type Unidade } from "../unidades";
 import type { Item } from "../componentes/Planta";
 import { paraId, proximoId } from "./geometria";
 
@@ -67,20 +68,15 @@ function NovaMedida({
         />
         <span className="text-tinta-suave">{unidade}</span>
       </label>
-      <div className="ml-28 flex gap-2 pl-2 text-xs">
-        {ORIGENS.map((o) => (
-          <label key={o.valor} title={o.dica} className="flex items-center gap-0.5">
-            <input
-              type="radio"
-              checked={origem === o.valor}
-              onChange={() => {
-                setOrigem(o.valor);
-                avisar(texto, o.valor);
-              }}
-            />
-            {o.rotulo}
-          </label>
-        ))}
+      <div className="mt-1 ml-28 pl-2">
+        <EscolhaOrigem
+          rotulo={null}
+          valor={origem}
+          aoEscolher={(o) => {
+            setOrigem(o);
+            avisar(texto, o);
+          }}
+        />
       </div>
     </div>
   );

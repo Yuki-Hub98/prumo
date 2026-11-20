@@ -1,10 +1,11 @@
+import { EscolhaOrigem } from "./Origem";
 import { Layers } from "lucide-react";
-import { btn, opcao } from "../estilo";
+import { btn } from "../estilo";
 import { useEffect, useRef, useState } from "react";
 import { api, ou } from "../api/cliente";
 import { cotaSugerida, idDoAndar, LAJE_MM, nomeSugerido } from "../andares";
 import { useEditar } from "../dados";
-import { formatar, ORIGENS, type Origem, paraMm, type Unidade } from "../unidades";
+import { formatar, type Origem, paraMm, type Unidade } from "../unidades";
 
 type Pav = { id: string; nome?: string | null; cota_piso: { valor: number }; pe_direito: { valor: number } };
 
@@ -125,19 +126,7 @@ export function NovoAndar({
             Cota: altura do piso do andar novo em relação ao térreo; a sugerida soma a laje ({formatar(LAJE_MM, unidade)}) e
             entra como chute se você não mudar.
           </p>
-          <div className="flex flex-wrap items-center gap-1 text-xs">
-            <span className="text-tinta-suave">As medidas são:</span>
-            {ORIGENS.map((o) => (
-              <button
-                key={o.valor}
-                type="button"
-                className={`rounded-md px-1.5 py-0.5 ${opcao(origemPe === o.valor)}`}
-                onClick={() => setOrigemPe(o.valor)}
-              >
-                {o.rotulo}
-              </button>
-            ))}
-          </div>
+          <EscolhaOrigem rotulo="As medidas são:" valor={origemPe} aoEscolher={setOrigemPe} />
           <button className={`w-full ${btn("primario", "sm")}`} disabled={!pronto || editar.isPending}>
             Criar e desenhar as paredes
           </button>
