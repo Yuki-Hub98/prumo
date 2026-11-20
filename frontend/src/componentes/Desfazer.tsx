@@ -82,12 +82,12 @@ export function BotoesDesfazer({
           {rascunho.passos === 1 ? "1 mudança não salva" : `${rascunho.passos} mudanças não salvas`}
           {confirmar ? (
             <>
-              <span className="ml-1">descartar tudo?</span>
+              <span className="ml-1">Descartar tudo?</span>
               <button className="rounded bg-red-700 px-2 text-white" onClick={() => fechar("descartar")}>
-                sim
+                Sim
               </button>
               <button className="rounded border border-amber-300 bg-white px-2" onClick={() => setConfirmar(false)}>
-                não
+                Não
               </button>
             </>
           ) : (
@@ -141,7 +141,7 @@ export function PainelHistorico({ codigo, aoFechar }: { codigo: string; aoFechar
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-stone-500">Histórico</h2>
         <button className="text-sm text-sky-700 hover:underline" onClick={aoFechar}>
-          fechar
+          Fechar
         </button>
       </div>
       <p className="mb-2 text-xs text-stone-500">
@@ -160,7 +160,7 @@ export function PainelHistorico({ codigo, aoFechar }: { codigo: string; aoFechar
                 <span className="flex-1">
                   {nomeOperacao(v.operacao)}
                   {versoes.rascunho && v.versao > versoes.rascunho.desde && (
-                    <span className="ml-1 rounded bg-amber-100 px-1 text-xs text-amber-800">não salva</span>
+                    <span className="ml-1 rounded bg-amber-100 px-1 text-xs text-amber-800">Não salva</span>
                   )}
                 </span>
                 <span className="text-xs text-stone-400">{quando(v.quando)}</span>
@@ -173,21 +173,21 @@ export function PainelHistorico({ codigo, aoFechar }: { codigo: string; aoFechar
               )}
               <div className="ml-10 mt-0.5">
                 {atual ? (
-                  <span className="text-xs font-medium text-stone-600">atual</span>
+                  <span className="text-xs font-medium text-stone-600">Atual</span>
                 ) : confirmar === v.versao ? (
                   <span className="text-xs">
                     Voltar para a v{v.versao}?{" "}
                     <button className="text-sky-700 hover:underline" disabled={editar.isPending} onClick={() => restaurar(v.versao)}>
-                      sim
+                      Sim
                     </button>{" "}
                     ·{" "}
                     <button className="text-stone-500 hover:underline" onClick={() => setConfirmar(null)}>
-                      não
+                      Não
                     </button>
                   </span>
                 ) : versoes.rascunho ? null : (
                   <button className="text-xs text-sky-700 hover:underline" onClick={() => setConfirmar(v.versao)}>
-                    voltar para esta
+                    Voltar para esta
                   </button>
                 )}
               </div>

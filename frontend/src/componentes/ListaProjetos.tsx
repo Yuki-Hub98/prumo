@@ -36,7 +36,7 @@ export function ListaProjetos({ aoAbrir }: { aoAbrir: (codigo: string) => void }
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Projetos</h1>
         <label className="text-sm text-stone-600">
-          unidade{" "}
+          Unidade{" "}
           <select
             className="rounded border"
             value={unidade}
@@ -72,27 +72,27 @@ export function ListaProjetos({ aoAbrir }: { aoAbrir: (codigo: string) => void }
         <h2 className="mb-3 font-medium">Novo projeto</h2>
         <div className="flex flex-wrap items-end gap-3 text-sm">
           <label className="flex flex-col">
-            código
+            Código
             <input
               className="rounded border px-1"
-              placeholder="ex.: ape-centro"
+              placeholder="Ex.: ape-centro"
               value={codigo}
               onChange={(e) => setCodigo(e.target.value.toLowerCase())}
             />
           </label>
           <label className="flex flex-col">
-            imóvel
+            Imóvel
             <select className="rounded border" value={imovel} onChange={(e) => setImovel(e.target.value as "casa")}>
-              <option value="casa">casa</option>
-              <option value="apartamento">apartamento</option>
+              <option value="casa">Casa</option>
+              <option value="apartamento">Apartamento</option>
             </select>
           </label>
           <label className="flex flex-col">
-            pé-direito ({unidade}, chute)
+            Pé-direito ({unidade}, chute)
             <input className="w-24 rounded border px-1" value={peDireito} onChange={(e) => setPeDireito(e.target.value)} />
           </label>
           <button className="rounded bg-stone-800 px-3 py-1 text-white disabled:opacity-40" disabled={!codigo || !peDireito}>
-            criar
+            Criar
           </button>
         </div>
         {erro && <p className="mt-2 text-sm text-red-700">{erro}</p>}

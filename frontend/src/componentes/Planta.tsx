@@ -1,3 +1,4 @@
+import { maiuscula } from "../texto";
 import { useEffect, useRef, useState } from "react";
 import type { Cores, MovelTela, PavimentoTela, Problema } from "../api/cliente";
 import { PADRAO } from "./PainelCores";
@@ -377,7 +378,7 @@ export function Planta({
             stroke={p.severidade === "erro" ? "#dc2626" : "#f59e0b"}
             strokeWidth={20}
           >
-            <title>{p.mensagem}</title>
+            <title>{maiuscula(p.mensagem)}</title>
           </circle>
         ))}
 

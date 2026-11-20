@@ -100,7 +100,7 @@ function Cor({
           <button
             type="button"
             className={`truncate text-left hover:underline ${valor ? "" : "text-stone-500"}`}
-            title="selecionar este móvel"
+            title="Selecionar este móvel"
             onClick={(e) => {
               e.preventDefault();
               aoRotulo();
@@ -111,17 +111,17 @@ function Cor({
         ) : (
           <span className={`truncate ${valor ? "" : "text-stone-500"}`}>{rotulo}</span>
         )}
-        {destacar && <span className="text-xs text-sky-700">selecionado</span>}
+        {destacar && <span className="text-xs text-sky-700">Selecionado</span>}
       </label>
       <span className="flex shrink-0 items-center gap-1">
         <CampoCodigo hex={valor ?? padrao} formato={formato} aoMudar={aoMudar} />
         <SeletorCor valor={valor ?? padrao} rotulo={rotulo} usadas={usadas} aoMudar={aoMudar} />
         {valor ? (
           <button type="button" className="w-10 text-left text-xs text-stone-500 hover:underline" onClick={() => aoMudar(null)}>
-            limpar
+            Limpar
           </button>
         ) : (
-          <span className="w-10 text-xs text-stone-400">padrão</span>
+          <span className="w-10 text-xs text-stone-400">Padrão</span>
         )}
       </span>
     </div>
@@ -322,12 +322,12 @@ export function PainelCores({
       >
         <input
           className="min-w-0 flex-1 rounded border px-1"
-          placeholder={ativa === "base" ? "nova variação (ex.: Escura)" : "duplicar como…"}
+          placeholder={ativa === "base" ? "nova variação (ex.: Escura)" : "Duplicar como…"}
           value={novoNome}
           onChange={(e) => setNovoNome(e.target.value)}
         />
         <button className="rounded border border-stone-300 px-2" disabled={!novoNome.trim() || editar.isPending}>
-          criar
+          Criar
         </button>
       </form>
 
@@ -338,7 +338,7 @@ export function PainelCores({
             disabled={editar.isPending}
             onClick={() => gravar(nomeLivre(Object.keys(variacoes)), vazio(), "Minhas cores")}
           >
-            pintar este cômodo
+            Pintar este cômodo
           </button>
           <p>
             "base" são as cores padrão. Pintar cria uma variação ("Minhas cores"): o projeto base não muda e
@@ -348,7 +348,7 @@ export function PainelCores({
       ) : (
         <>
           <div className="mb-2 flex items-center gap-2 text-xs text-stone-500">
-            código da cor
+            Código da cor
             {(["rgb", "hex"] as const).map((f) => (
               <button
                 key={f}
@@ -360,7 +360,7 @@ export function PainelCores({
               </button>
             ))}
             <span className="ml-auto" aria-live="polite">
-              {estado === "salvo" ? "" : "aplicando…"}
+              {estado === "salvo" ? "" : "Aplicando…"}
             </span>
           </div>
           {marcados.size > 0 ? (
@@ -373,10 +373,10 @@ export function PainelCores({
                 aoMudar={(v) => mudar(marcados, v)}
               />
               <button type="button" className="text-xs text-stone-500 hover:underline" onClick={() => mudar(marcados, null)}>
-                padrão
+                Padrão
               </button>
               <button type="button" className="ml-auto text-xs text-stone-500 hover:underline" onClick={() => setMarcados(new Set())}>
-                desmarcar
+                Desmarcar
               </button>
             </div>
           ) : (
@@ -445,7 +445,7 @@ export function PainelCores({
                 );
               }}
             >
-              apagar variação
+              Apagar variação
             </button>
           </div>
         </>

@@ -1,3 +1,4 @@
+import { maiuscula } from "../texto";
 import { useEffect, useState } from "react";
 import { URL_API, type InfoRender } from "../api/cliente";
 import { ultimasImagens } from "../comparar";
@@ -7,10 +8,10 @@ import { formatarTempo } from "../tempo";
 import { alternar, guardar, lembrar, vistaDaImagem, vistasValidas } from "../vistas";
 
 const ROTULO: Record<string, string> = {
-  na_fila: "na fila",
-  rodando: "renderizando",
-  pronto: "pronto",
-  erro: "erro",
+  na_fila: "Na fila",
+  rodando: "Renderizando",
+  pronto: "Pronto",
+  erro: "Erro",
 };
 
 function Item({ r, titulos }: { r: InfoRender; titulos: Record<string, string> }) {
@@ -19,12 +20,12 @@ function Item({ r, titulos }: { r: InfoRender; titulos: Record<string, string> }
     <li className="rounded border border-stone-200 bg-white p-2 text-sm">
       <div className="flex justify-between">
         <span>
-          <b>{r.variacao}</b> · {r.qualidade} · {r.vistas.length} {r.vistas.length === 1 ? "vista" : "vistas"}
+          <b>{maiuscula(r.variacao)}</b> · {r.qualidade} · {r.vistas.length} {r.vistas.length === 1 ? "vista" : "vistas"}
         </span>
         <span className={r.status === "erro" ? "text-red-700" : "text-stone-500"}>{ROTULO[r.status]}</span>
       </div>
       {r.status === "na_fila" && (
-        <p className="text-xs text-stone-500">estimativa: ~{formatarTempo(r.estimativa_s)}</p>
+        <p className="text-xs text-stone-500">Estimativa: ~{formatarTempo(r.estimativa_s)}</p>
       )}
       {r.status === "rodando" && (
         <>
@@ -32,7 +33,7 @@ function Item({ r, titulos }: { r: InfoRender; titulos: Record<string, string> }
             <div className="h-full bg-sky-600 transition-all" style={{ width: `${pct}%` }} />
           </div>
           <p className="mt-0.5 text-xs text-stone-500">
-            imagem {r.imagem_atual ?? 1} de {r.imagens} · {pct}% · faltam ~{formatarTempo(r.restante_s)}
+            Imagem {r.imagem_atual ?? 1} de {r.imagens} · {pct}% · faltam ~{formatarTempo(r.restante_s)}
           </p>
         </>
       )}
@@ -50,7 +51,7 @@ function Item({ r, titulos }: { r: InfoRender; titulos: Record<string, string> }
             })}
           </div>
           <p className="mt-0.5 text-xs text-stone-500">
-            {r.em_cache ? "já estava pronto (nada mudou)" : `levou ${formatarTempo(r.duracao_s)}`} · versão{" "}
+            {r.em_cache ? "Já estava pronto (nada mudou)" : `Levou ${formatarTempo(r.duracao_s)}`} · versão{" "}
             {r.versao_projeto}
           </p>
         </>
@@ -76,7 +77,7 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
   const semVista = vistas.length === 0;
   const variacoes = useVariacoes(codigo, comodo).data ?? {};
   const nomesVariacoes = Object.fromEntries([
-    ["base", "base (cores padrão)"],
+    ["base", "Base (cores padrão)"],
     ...Object.entries(variacoes).map(([k, v]) => [k, v.nome ?? k]),
   ]);
   const comImagem = Object.keys(ultimasImagens(lista)).length;
@@ -104,15 +105,15 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
             </button>
           );
         })}
-        {disponiveis.length === 0 && <span className="text-xs text-stone-400">carregando vistas…</span>}
+        {disponiveis.length === 0 && <span className="text-xs text-stone-400">Carregando vistas…</span>}
       </div>
       <div className="mb-2 flex gap-2">
         <button className={botao} disabled={pedir.isPending || semVista} onClick={() => pedir.mutate({ variacao, qualidade: "rascunho", vistas })}>
-          rascunho
+          Rascunho
           <span className="block text-xs text-stone-500">~{formatarTempo(est?.rascunho)}</span>
         </button>
         <button className={botao} disabled={pedir.isPending || semVista} onClick={() => pedir.mutate({ variacao, qualidade: "final", vistas })}>
-          final
+          Final
           <span className="block text-xs text-stone-500">~{formatarTempo(est?.final)}</span>
         </button>
       </div>
@@ -120,11 +121,11 @@ export function PainelImagens({ codigo, comodo, variacao }: { codigo: string; co
       <button
         className="mb-2 w-full rounded border border-stone-300 px-2 py-1 text-sm hover:bg-stone-100 disabled:opacity-40"
         disabled={comImagem < 2}
-        title={comImagem < 2 ? "precisa de imagens prontas de pelo menos duas variações" : undefined}
+        title={comImagem < 2 ? "Precisa de imagens prontas de pelo menos duas variações" : undefined}
         onClick={() => setComparando(true)}
       >
-        comparar variações lado a lado
-        {comImagem < 2 && <span className="block text-xs text-stone-500">peça imagens de duas variações ou mais</span>}
+        Comparar variações lado a lado
+        {comImagem < 2 && <span className="block text-xs text-stone-500">Peça imagens de duas variações ou mais</span>}
       </button>
       {comparando && (
         <Comparador renders={lista} nomes={nomesVariacoes} titulos={titulos} aoFechar={() => setComparando(false)} />

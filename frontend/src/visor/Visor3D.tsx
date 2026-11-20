@@ -195,11 +195,11 @@ export default function Visor3D({
         ))}
         <label className="ml-2 flex items-center gap-1 rounded border border-stone-300 bg-white px-2 py-0.5 text-sm">
           <input type="checkbox" checked={teto} onChange={(e) => setTeto(e.target.checked)} />
-          teto
+          Teto
         </label>
       </div>
       <p className="absolute bottom-3 left-3 z-10 text-xs text-stone-500">
-        clique num móvel para selecionar · arraste para girar · roda para zoom · botão direito para mover
+        Clique num móvel para selecionar · arraste para girar · roda para zoom · botão direito para mover
         {vista !== "cima" && vista !== "perspectiva" && " · parede da frente cortada"}
       </p>
       <Canvas camera={{ fov: 45, near: 0.05, far: 200 }} gl={{ localClippingEnabled: true, logarithmicDepthBuffer: true }}>

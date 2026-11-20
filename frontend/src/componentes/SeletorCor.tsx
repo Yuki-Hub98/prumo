@@ -113,7 +113,7 @@ export function SeletorCor({
       <button
         ref={botao}
         type="button"
-        aria-label={`cor de ${rotulo}`}
+        aria-label={`Cor de ${rotulo}`}
         aria-expanded={aberto}
         className="h-6 w-8 cursor-pointer rounded border border-stone-300"
         style={{ background: hex }}
@@ -124,7 +124,7 @@ export function SeletorCor({
           <div
             ref={janela}
             role="dialog"
-            aria-label={`escolher a cor de ${rotulo}`}
+            aria-label={`Escolher a cor de ${rotulo}`}
             className="seletor-cor fixed z-50 grid gap-2 rounded-md border border-stone-300 bg-white p-2.5 shadow-lg"
             style={{ width: LARGURA, left: pos?.left ?? -9999, top: pos?.top ?? 0 }}
           >
@@ -140,13 +140,13 @@ export function SeletorCor({
             </div>
             {usadas.length > 0 && (
               <>
-                <span className="text-[10px] uppercase tracking-wide text-stone-500">usadas neste cômodo</span>
+                <span className="text-[10px] uppercase tracking-wide text-stone-500">Usadas neste cômodo</span>
                 <div className="flex flex-wrap gap-1">
                   {usadas.map((c) => (
                     <button
                       key={c}
                       type="button"
-                      aria-label={`usar ${c}`}
+                      aria-label={`Usar ${c}`}
                       title={c}
                       className={`h-5 w-5 rounded border ${c === hex ? "border-stone-800 ring-1 ring-stone-800" : "border-stone-300"}`}
                       style={{ background: c }}
