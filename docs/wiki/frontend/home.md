@@ -156,6 +156,17 @@ próximo render (rascunho ou final). O móvel selecionado ganha um contorno quas
 em volta (a cor dele continua a escolhida). No **Pavimento inteiro** pintam piso, teto, rodapé e móveis
 do cômodo da lista; as paredes não, porque cada parede é uma peça só entre dois cômodos.
 
+## Andares
+
+No topo, a lista mostra o andar aberto; **+ andar** cria um andar novo (sobrado, mezanino):
+nome, pé-direito e cota do piso, com a origem das medidas. A cota vem sugerida em cima do
+andar mais alto (piso + pé-direito + laje de 15 cm, como chute se não mudar) e o pé-direito
+copiado do andar aberto. O andar novo abre no **Editar planta**: as paredes do andar de baixo
+aparecem **apagadas ao fundo** e os cantos delas atraem o ponto ao desenhar, para o de cima
+sair alinhado. **remover este andar** (no editor, com confirmação) leva junto paredes, cômodos e
+móveis; o único andar não sai. Tudo entra no rascunho. Os andares ainda não aparecem
+empilhados no 3D (escadas e lajes ficam para depois).
+
 ## Editar planta
 
 No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagados):

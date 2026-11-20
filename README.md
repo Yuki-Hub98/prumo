@@ -291,6 +291,8 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Formas dos móveis**: cantos arredondados, redondo/oval e em L (mesas e móveis de corpo
       simples), na planta, no DXF, nas checagens e no 3D — #30
 - [x] Planta geral do pavimento e 3D da casa (pavimento inteiro com o teto cortado) — #11, #25, #29
+- [x] **Andares**: criar e remover andares pela tela, com o andar de baixo de referência ao
+      desenhar o de cima
 - [x] **Comparador e tinta**: variações lado a lado (`make compare` e na tela) e planilha de
       tinta (`make tinta` e na tela): látex de paredes e teto e esmalte de portas e rodapé, por
       cor, com litros e latas
