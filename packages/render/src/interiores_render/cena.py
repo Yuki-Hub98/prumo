@@ -38,9 +38,9 @@ from interiores_core.modelo import (
     Porta,
     Variacao,
 )
-from interiores_core.partes import CORPO, parte_da_peca
+from interiores_core.partes import CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 9
+VERSAO_CENA = 10
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -61,8 +61,13 @@ CORES_PADRAO = {
     "pedra": "#E3DDD2",
     "luminaria": "#FFF6E8",
     "piso_frio": "#D6D1C8",
+    "inox": "#B9BCC0",
+    "vidro_preto": "#1C1D20",
 }
 CORES_MOVEIS = {
+    "pia": "#F2F0EC",
+    "fogao": "#D9DBDE",
+    "geladeira": "#E9EAEC",
     "cama": "#8B6B4F",
     "guarda_roupa": "#F2F0EC",
     "armario": "#F2F0EC",
@@ -542,6 +547,12 @@ class _Cena:
             f.gavetas()
         elif simbolo is Simbolo.PRATELEIRAS:
             f.prateleiras()
+        elif simbolo is Simbolo.PIA:
+            f.pia()
+        elif simbolo is Simbolo.FOGAO:
+            f.fogao()
+        elif simbolo is Simbolo.GELADEIRA:
+            f.geladeira()
         else:
             f.p("corpo", -f.w, -f.d, f.base, f.w, f.d, f.topo, chanfro=10)
         return f.pecas
@@ -910,6 +921,65 @@ class _Feitio:
             self.p(
                 f"puxador{i}", -60, d, z0 + alt / 2 - 8, 60, d + 22, z0 + alt / 2 + 8, self.metal
             )
+
+    def pia(self) -> None:
+        """Gabinete com portas, bancada de pedra, cuba embutida e torneira atrás dela."""
+        w, d, base, topo, r, fr = self.w, self.d, self.base, self.topo, self.RODAPE, self.FRESTA
+        tampo = 30.0
+        self.p("rodape", -w + 40, -d, base, w - 40, d - 60, base + r, self.sombra)
+        self.p("corpo", -w, -d, base + r, w, d - 40, topo - tampo, chanfro=4)
+        n = max(1, round(2 * w / 450))
+        larg = 2 * w / n
+        alto, baixo = topo - tampo - fr, base + r + fr
+        for i in range(n):
+            x0 = -w + i * larg
+            self.p(f"folha{i}", x0 + fr / 2, d - 40, baixo, x0 + larg - fr / 2, d - 20, alto,
+                   chanfro=3)  # fmt: skip
+            x = x0 + larg - 50 if i % 2 == 0 else x0 + 35
+            self.p(f"puxador{i}", x, d - 20, alto - 200, x + 15, d + 5, alto - 50, self.metal)
+        pedra = self._mat("pedra", rugosidade=0.25)
+        self.p("bancada", -w, -d, topo - tampo, w, d + 20, topo, pedra, chanfro=3)
+        cw, cd = min(250.0, w * 0.4), min(200.0, d * 0.4)
+        inox = self._mat("inox", rugosidade=0.25, metal=True)
+        self.p("cuba", -cw, -cd, topo - 2, cw, cd, topo + 1, inox, chanfro=8)
+        ty = -cd - min(70.0, d - cd - 15)
+        self.p("torneira0", -18, ty - 18, topo, 18, ty + 18, topo + 260, inox, chanfro=8)
+        self.p("torneira1", -12, ty, topo + 220, 12, ty + 170, topo + 250, inox, chanfro=6)
+
+    def fogao(self) -> None:
+        """Fogão de piso (forno com porta de vidro) ou cooktop na bancada; bocas em cima."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        inox, preto = self._mat("inox", rugosidade=0.25, metal=True), self._mat("vidro_preto")
+        cooktop = eh_cooktop(self.m)
+        if cooktop:
+            self.p("tampo", -w, -d, base, w, d, topo, preto, chanfro=6)
+        else:
+            self.p("corpo", -w, -d, base + 20, w, d - 20, topo - 30, inox, chanfro=6)
+            self.p("tampo", -w, -d, topo - 30, w, d, topo, preto, chanfro=4)
+            forno_alto = base + min(self.h - 200, 650.0)
+            self.p("folha0", -w + 40, d - 20, base + 120, w - 40, d, forno_alto, preto, chanfro=6)
+            self.p("puxador0", -w + 80, d, forno_alto - 60, w - 80, d + 30, forno_alto - 40,
+                   self.metal)  # fmt: skip
+        n = 3 if w >= 350 else 2
+        lado = min(2 * w / n - 80, d - 60, 200.0)
+        for i in range(n):
+            for j, y in enumerate((-d / 2, d / 2)):
+                cx = -w + (2 * i + 1) * w / n
+                self.p(f"boca{2 * i + j}", cx - lado / 2, y - lado / 2, topo, cx + lado / 2,
+                       y + lado / 2, topo + 25, self.sombra, chanfro=lado / 2 - 1)  # fmt: skip
+
+    def geladeira(self) -> None:
+        """Duplex: freezer em cima (1/3) e geladeira embaixo, puxadores verticais."""
+        w, d, base, topo, fr = self.w, self.d, self.base, self.topo, self.FRESTA
+        self.p("rodape", -w + 30, -d, base, w - 30, d - 40, base + 40, self.sombra)
+        self.p("corpo", -w, -d, base + 40, w, d - 40, topo, chanfro=20)
+        corte = topo - (topo - base) / 3
+        for i, (z0, z1) in enumerate(((base + 40 + fr, corte - fr), (corte + fr, topo - fr))):
+            self.p(f"folha{i}", -w + fr, d - 40, z0, w - fr, d, z1, chanfro=12)
+            meio = (z0 + z1) / 2
+            alto = min(300.0, (z1 - z0) / 2 - 40)
+            self.p(f"puxador{i}", w - 70, d, meio - alto / 2, w - 50, d + 35, meio + alto / 2,
+                   self.metal)  # fmt: skip
 
     def prateleiras(self) -> None:
         w, d, base, topo = self.w, self.d, self.base, self.topo
