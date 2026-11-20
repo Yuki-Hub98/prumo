@@ -363,7 +363,27 @@ class _Planta:
             s = min(self.mm(1.5), w / 2, d / 2)
             linhas.extend([((-s, d - 2 * s), (0, d - s)), ((0, d - s), (s, d - 2 * s))])
 
-        if simbolo is Simbolo.CAMA:
+        def circulo(cx: float, cy: float, r: float, lados: int = 16) -> None:
+            passo = 2 * math.pi / lados
+            pts = [
+                (cx + r * math.cos(t * passo), cy + r * math.sin(t * passo)) for t in range(lados)
+            ]
+            linhas.extend(zip(pts, pts[1:] + pts[:1], strict=True))
+
+        if simbolo is Simbolo.BELICHE:  # cama + a escada na frente, junto ao lado direito
+            linhas.append(((-w, -d + 60), (w, -d + 60)))
+            ret(-w + 80, -d + 120, w - 80, -d + 120 + min(320.0, d))
+            for x in (w - 440, w - 60):
+                linhas.append(((x, d), (x, d + 40)))
+            for degrau in range(3):
+                x = w - 440 + (degrau + 1) * 95
+                linhas.append(((x, d), (x, d + 40)))
+        elif simbolo is Simbolo.CADEIRA_GIRATORIA:  # assento redondo e encosto atrás
+            circulo(0.0, 0.0, min(w, d) * 0.75)
+            linhas.append(((-w * 0.6, -d * 0.85), (w * 0.6, -d * 0.85)))
+        elif simbolo is Simbolo.MAQUINA:  # porta (ou tampa) redonda
+            circulo(0.0, 0.0, min(w, d) * 0.6)
+        elif simbolo is Simbolo.CAMA:
             linhas.append(((-w, -d + 60), (w, -d + 60)))  # cabeceira
             n = 2 if m.largura.valor >= 1200 else 1
             folga = 80.0
