@@ -9,6 +9,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
+    <script>
+      // tema antes do primeiro desenho (sem piscar claro → escuro)
+      try {
+        var t = localStorage.getItem("prumo-tema");
+        if (t !== "claro" && t !== "escuro") t = matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro";
+        document.documentElement.dataset.tema = t;
+      } catch (e) {}
+    </script>
     <div id="raiz"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

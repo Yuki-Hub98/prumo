@@ -156,6 +156,14 @@ próximo render (rascunho ou final). O móvel selecionado ganha um contorno quas
 em volta (a cor dele continua a escolhida). No **Pavimento inteiro** pintam piso, teto, rodapé e móveis
 do cômodo da lista; as paredes não, porque cada parede é uma peça só entre dois cômodos.
 
+## Tema claro e escuro
+
+O botão de sol/lua no topo (e na lista de projetos) troca entre claro e escuro. A escolha fica
+neste navegador; sem escolha, segue o sistema. As cores vêm dos tokens da identidade visual
+(`index.css`): cor sempre quer dizer alguma coisa — verde/azul/laranja é a origem da medida
+(Medi / Quero assim / Chute, este também tracejado), vermelho/âmbar é problema e amarelo é ação
+principal ou o que está selecionado.
+
 ## Andares
 
 No topo, a lista mostra o andar aberto; **+ Andar** cria um andar novo (sobrado, mezanino):

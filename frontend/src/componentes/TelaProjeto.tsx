@@ -1,3 +1,4 @@
+import { BotaoTema } from "./BotaoTema";
 import { Box, PencilRuler } from "lucide-react";
 import { Marca } from "./Logo";
 import { alternar } from "../estilo";
@@ -216,6 +217,9 @@ export function TelaProjeto({
         <BotoesDesfazer acoes={acoes} aoHistorico={() => setHistorico((h) => !h)} />
         {editar.isPending && <span className="text-xs text-tinta-suave">Gravando…</span>}
         {editar.error && <span className="text-sm text-erro">{editar.error.message}</span>}
+        <span className="ml-auto">
+          <BotaoTema />
+        </span>
       </header>
       <FaixaPreliminar
         codigo={codigo}

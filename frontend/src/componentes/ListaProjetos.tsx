@@ -1,3 +1,4 @@
+import { BotaoTema } from "./BotaoTema";
 import { Logo } from "./Logo";
 import { btn } from "../estilo";
 import { useState } from "react";
@@ -40,6 +41,8 @@ export function ListaProjetos({ aoAbrir }: { aoAbrir: (codigo: string) => void }
           <Logo altura={36} />
           <h1 className="text-2xl font-semibold">Projetos</h1>
         </div>
+        <div className="flex items-center gap-2">
+        <BotaoTema />
         <label className="text-sm text-tinta-suave">
           Unidade{" "}
           <select
@@ -52,6 +55,7 @@ export function ListaProjetos({ aoAbrir }: { aoAbrir: (codigo: string) => void }
             <option value="m">m</option>
           </select>
         </label>
+        </div>
       </div>
       {projetos.error && (
         <p className="mb-4 rounded-md bg-erro-fundo p-3 text-erro">
