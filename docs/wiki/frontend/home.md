@@ -114,6 +114,14 @@ e profundidade continuam sendo a caixa em volta. A forma vale na planta (e no DX
 checagens (passagem, colisão) e no 3D: a mesa ganha tampo na forma e pés por dentro dela.
 Cama, sofá, guarda-roupa e móveis planejados ficam retangulares.
 
+## Tinta e comparador
+
+No fim da aba **Cores**, **Tinta do pavimento** mostra o que comprar com a variação escolhida em
+cada cômodo: látex de paredes e teto e esmalte de portas e rodapé, por cor (amostra, m², litros
+e latas). Parede de destaque conta à parte. **baixar planilha (.xlsx)** traz a mesma planilha do
+`make tinta`. Na aba **Imagens**, **comparar variações lado a lado** abre em tela cheia a imagem
+pronta mais recente de cada variação, na vista escolhida (marque quais comparar; Esc fecha).
+
 ## Imagens 3D
 
 Com um cômodo selecionado, o painel "Imagens 3D" mostra as **vistas** que fazem sentido no

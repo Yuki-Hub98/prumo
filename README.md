@@ -57,7 +57,7 @@ Reformar sem projeto costuma terminar em guarda-roupa que não abre por causa da
 |---|---|---|
 | Modelo 3D e imagens realistas, com variações | Blender headless | `.png`, `.glb`, `.blend` |
 | Planta, cortes e elevações em escala, com cotas | ezdxf | `.dxf`, `.pdf` |
-| Comparações lado a lado | ImageMagick | `.png` |
+| Comparações lado a lado | Pillow | `.png` |
 | Cálculo de tinta e materiais | openpyxl | `.xlsx` |
 | Relatório de problemas | regras do `core` | terminal / API |
 
@@ -291,11 +291,12 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Formas dos móveis**: cantos arredondados, redondo/oval e em L (mesas e móveis de corpo
       simples), na planta, no DXF, nas checagens e no 3D — #30
 - [x] Planta geral do pavimento e 3D da casa (pavimento inteiro com o teto cortado) — #11, #25, #29
+- [x] **Comparador e tinta**: variações lado a lado (`make compare` e na tela) e planilha de
+      tinta (`make tinta` e na tela): látex de paredes e teto e esmalte de portas e rodapé, por
+      cor, com litros e latas
 
 ### Próximos
 
-- [ ] **Comparador lado a lado e cálculo de tinta**: montagem das variações (`make compare`) e
-      planilha de tinta por cômodo e total (`make tinta`), também na tela
 - [ ] Cozinha (hidráulica, gás, triângulo de trabalho), com pia/cuba, torneira, fogão e
       geladeira; depois banheiro (vaso, box/chuveiro, ralo)
 - [ ] Modelos prontos (pedido do usuário, 2026-11-18): biblioteca de modelos pré-feitos para
