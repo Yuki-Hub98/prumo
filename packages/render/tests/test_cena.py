@@ -311,3 +311,35 @@ def test_planejado_no_3d_igual_ao_desenho() -> None:
     assert all(n["centro"][0] < 1500 for n in nichos)
     assert any(n.startswith("gab-prateleira") for n in pecas)
     assert sum(n.startswith("gab-puxador") for n in pecas) == 2  # um por gaveta
+
+
+def test_mesa_redonda_e_puff_em_l() -> None:
+    """Forma vira sólido extrudado; a mesa ganha tampo na forma e pés por dentro dela."""
+    from interiores_core.carregar import ProjetoCarregado
+    from interiores_core.modelo import DadosComodo
+
+    c = carregar(DADOS)
+    med = {"origem": "projeto"}
+
+    def m(id_: str, tipo: str, **extra: object) -> dict[str, object]:
+        return {"id": id_, "tipo": tipo, "centro": [1500, 1500], "rotacao": 0,
+                "largura": {"valor": 1000, **med}, "profundidade": {"valor": 1000, **med},
+                "altura": {"valor": 750, **med}, **extra}  # fmt: skip
+
+    dados = c.dados_comodos["quarto"].model_dump(mode="json", exclude_none=True)
+    dados["moveis"] = [m("mesa", "mesa", forma="redondo"), m("puff", "banco", forma="L")]
+    novo = ProjetoCarregado(
+        pasta=c.pasta, projeto=c.projeto,
+        dados_comodos={**c.dados_comodos, "quarto": DadosComodo.model_validate(dados)},
+        variacoes={},
+    )  # fmt: skip
+    cena = montar_cena(novo, "quarto")
+    prismas = {p["nome"]: p for p in cena["prismas"]}
+    tampo = prismas["mesa-tampo"]
+    assert len(tampo["contorno"]) > 30 and tampo["extras"] == {"movel": "mesa", "parte": "tampo"}
+    assert (tampo["z0"], tampo["z1"]) == (720, 750)
+    pes = [cx for cx in cena["caixas"] if cx["nome"].startswith("mesa-pe")]
+    assert len(pes) == 4
+    assert all(Polygon(tampo["contorno"]).contains(Point(cx["centro"][:2])) for cx in pes)
+    puff = prismas["puff-corpo"]
+    assert len(puff["contorno"]) == 6 and (puff["z0"], puff["z1"]) == (0, 750)

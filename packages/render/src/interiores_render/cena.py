@@ -40,7 +40,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import CORPO, parte_da_peca
 
-VERSAO_CENA = 8
+VERSAO_CENA = 9
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -462,6 +462,9 @@ class _Cena:
         for m in self.moveis:
             textura = {"textura": TEXTURA_MOVEL[m.tipo]} if m.tipo in TEXTURA_MOVEL else {}
             mat = self.material(f"movel-{m.id}", self.cor_movel(m), rugosidade=0.55, **textura)
+            if m.forma is not None and len(geometria.formas_possiveis(m)) > 1:
+                self.movel_com_forma(m, mat)
+                continue
             for peca in self.pecas_movel(m, mat):
                 x0, y0, z0, x1, y1, z1 = peca.caixa
                 cx, cy = geometria.girar_movel(m, (x0 + x1) / 2, (y0 + y1) / 2)
@@ -475,6 +478,27 @@ class _Cena:
                     peca.chanfro,
                     extras={"movel": m.id, "parte": parte},
                 )
+
+    def movel_com_forma(self, m: Movel, mat: str) -> None:
+        """Móvel arredondado, redondo ou em L: o corpo (ou o tampo, na mesa) é a forma
+        extrudada; a mesa ganha pés distribuídos por dentro da forma."""
+        base = float(m.elevacao.valor) if m.elevacao else 0.0
+        topo = base + m.altura.valor
+        forma = geometria.poligono_movel(m)
+        item = catalogo.item_do_tipo(m.tipo)
+        if item is None or item.simbolo is not Simbolo.MESA:
+            self.prisma(self._n(f"{m.id}-corpo"), forma, base, topo, mat,
+                        extras={"movel": m.id, "parte": CORPO})  # fmt: skip
+            return
+        tampo = self.material_da_parte(m, "tampo", mat)
+        self.prisma(self._n(f"{m.id}-tampo"), forma, topo - 30, topo, tampo,
+                    extras={"movel": m.id, "parte": "tampo"})  # fmt: skip
+        pe = self.material_da_parte(m, "pes", mat)
+        for i, (x, y) in enumerate(_pes_da_forma(m)):
+            cx, cy = geometria.girar_movel(m, x, y)
+            self.caixa(self._n(f"{m.id}-pe{i}"), (cx, cy, (base + topo - 30) / 2),
+                       (50, 50, topo - 30 - base), float(m.rotacao), pe, 4,
+                       extras={"movel": m.id, "parte": "pes"})  # fmt: skip
 
     def material_da_parte(self, m: Movel, parte: str, base: str) -> str:
         """Material da peça: o dela, ou uma cópia com a cor da parte na variação (o id do
@@ -688,6 +712,24 @@ class _Cena:
                     round(-math.sin(alt), 3),
                 ]
         return [0.45, 0.35, -0.82]
+
+
+def _pes_da_forma(m: Movel) -> list[tuple[float, float]]:
+    """Onde vão os pés de uma mesa com forma (referencial do móvel): redonda, nos quatro
+    "cantos" da elipse; arredondada e em L, nos cantos da forma recuados para dentro."""
+    w, d = m.largura.valor / 2, m.profundidade.valor / 2
+    if m.forma == "redondo":
+        return [(0.62 * w * math.cos(a), 0.62 * d * math.sin(a))
+                for a in (math.pi / 4 * k for k in (1, 3, 5, 7))]  # fmt: skip
+    recuo = 70.0
+    if m.forma == "arredondado":
+        r = min(float(m.raio.valor) if m.raio else geometria.RAIO_PADRAO, w, d)
+        recuo = max(recuo, r * 0.6 + 40)
+        return [(sx * (w - recuo), sy * (d - recuo)) for sx in (-1, 1) for sy in (-1, 1)]
+    dentro = geometria.contorno_local(m).buffer(-recuo, join_style="mitre")
+    if dentro.is_empty or not isinstance(dentro, Polygon):
+        return [(0.0, 0.0)]
+    return [(float(x), float(y)) for x, y in list(dentro.exterior.coords)[:-1]]
 
 
 @dataclass(frozen=True)

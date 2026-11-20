@@ -297,7 +297,7 @@ def main():
     for obj, oculto_em in objetos:
         if oculto_em:  # vai para o .glb (extras): o visor 3D esconde o teto na vista de cima
             obj["oculto_em"] = ",".join(oculto_em)
-    for (obj, _), c in zip(objetos[len(cena["prismas"]) :], cena["caixas"], strict=True):
+    for (obj, _), c in zip(objetos, cena["prismas"] + cena["caixas"], strict=True):
         for chave, valor in c.get("extras", {}).items():  # móvel e parte: o visor pinta
             obj[chave] = valor
     cameras = [camera(c) for c in cena["cameras"]]
