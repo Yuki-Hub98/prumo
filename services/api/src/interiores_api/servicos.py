@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import tomllib
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
 
 import structlog
@@ -22,9 +23,11 @@ from sqlalchemy.orm import Session
 from interiores_api.config import Config
 from interiores_api.esquemas import (
     Cena3D,
+    GrupoTinta,
     InfoRascunho,
     InfoRender,
     ItemHistorico,
+    Lata,
     MedidaEstimada,
     Mudanca,
     NovoProjeto,
@@ -35,6 +38,8 @@ from interiores_api.esquemas import (
     ResultadoEdicao,
     ResumoProjeto,
     ResumoVersao,
+    SuperficieTinta,
+    Tinta,
     Versoes,
     Vista,
 )
@@ -43,6 +48,7 @@ from interiores_banco import arquivos, rascunho, renders, repositorio
 from interiores_banco import tabelas as t
 from interiores_banco import versoes as volta
 from interiores_banco.mapear import Conteudo
+from interiores_core import tinta as calculo_tinta
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.edicao import Alteracao, Edicao, diferencas, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
@@ -56,6 +62,8 @@ from interiores_core.tela import (
     planejado_para_tela,
 )
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
+from interiores_relatorios.tinta import cores_das_variacoes
+from interiores_relatorios.tinta import montar_planilha as planilha_tinta
 from interiores_render.cena import (
     VISTAS_PAVIMENTO,
     montar_cena,
@@ -484,6 +492,59 @@ class Servico:
             cena = montar_cena(carregado, comodo, vistas=())
         campos = ("prismas", "caixas", "materiais", "aviso")
         return Cena3D.model_validate({"versao": versao, **{k: cena[k] for k in campos}})
+
+    def _carregado(self, codigo: str) -> tuple[ProjetoCarregado, int]:
+        c, versao = repositorio.ler(self.sessao, codigo)
+        return ProjetoCarregado(
+            pasta=Path(),
+            projeto=c.projeto,
+            dados_comodos=c.comodos,
+            variacoes=c.variacoes,
+            regras=tomllib.loads(c.regras_toml) if c.regras_toml else {},
+            hash_entrada=c.hash,
+        ), versao
+
+    def tinta(self, codigo: str, pavimento: str, variacoes: dict[str, str]) -> Tinta:
+        """Tinta do pavimento (versão atual, rascunho incluído) com as cores da variação
+        escolhida em cada cômodo (os outros: cor padrão)."""
+        carregado, versao = self._carregado(codigo)
+        pav = next((p for p in carregado.projeto.pavimentos if p.id == pavimento), None)
+        if pav is None:
+            raise KeyError(f"pavimento '{pavimento}' não existe")
+        r = calculo_tinta.calcular(pav, cores_das_variacoes(carregado, variacoes), carregado.regras)
+        return Tinta(
+            versao=versao,
+            preliminar=bool(carregado.estimadas_pavimento(pavimento)),
+            grupos=[
+                GrupoTinta(
+                    tinta=g.tinta,
+                    cor=g.cor,
+                    area_m2=g.area_m2,
+                    litros=g.litros,
+                    latas=[Lata(litros=t, quantidade=n) for t, n in g.latas.items()],
+                )
+                for g in r.grupos
+            ],
+            superficies=[
+                SuperficieTinta(
+                    comodo=s.comodo,
+                    nome=s.nome,
+                    tinta=s.tinta,
+                    cor=s.cor,
+                    area_m2=round(s.area_m2, 2),
+                    litros=litros,
+                )
+                for s, litros in zip(r.superficies, r.litros_por_superficie, strict=True)
+            ],
+            parametros=asdict(r.parametros),
+        )
+
+    def tinta_xlsx(self, codigo: str, pavimento: str, variacoes: dict[str, str]) -> bytes:
+        """A planilha de tinta (mesma do ``make tinta``), em memória, para baixar."""
+        carregado, _ = self._carregado(codigo)
+        buffer = BytesIO()
+        planilha_tinta(carregado, pavimento, variacoes).save(buffer)
+        return buffer.getvalue()
 
     @staticmethod
     def _vistas(c: Conteudo, comodo: str) -> list[Vista]:

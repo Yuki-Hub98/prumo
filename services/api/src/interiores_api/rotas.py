@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 from interiores_api.esquemas import (
     AdicionarPavimento,
@@ -40,6 +40,7 @@ from interiores_api.esquemas import (
     Renomear,
     ResultadoEdicao,
     ResumoProjeto,
+    Tinta,
     Versoes,
     Vista,
 )
@@ -532,6 +533,40 @@ def cena_comodo(svc: Svc, codigo: str, comodo: str) -> Cena3D:
 def cena_pavimento(svc: Svc, codigo: str, pavimento: str) -> Cena3D:
     """Cena 3D ao vivo do pavimento inteiro (todos os cômodos, cada parede uma vez)."""
     return svc.cena(codigo, pavimento=pavimento)
+
+
+def _variacoes(variacao: list[str]) -> dict[str, str]:
+    """``["quarto:escura"]`` → ``{"quarto": "escura"}``."""
+    saida = {}
+    for par in variacao:
+        comodo, sep, nome = par.partition(":")
+        if not sep or not comodo or not nome:
+            raise ValueError(f"variação '{par}': use cômodo:variação")
+        saida[comodo] = nome
+    return saida
+
+
+Escolhas = Annotated[
+    list[str],
+    Query(description="Cores de cada cômodo: cômodo:variação (repita; sem = cor padrão)."),
+]
+
+
+@render.get("/projetos/{codigo}/pavimentos/{pavimento}/tinta")
+def tinta(svc: Svc, codigo: str, pavimento: str, variacao: Escolhas = []) -> Tinta:  # noqa: B006
+    """Tinta do pavimento: látex de paredes e teto, esmalte de portas e rodapé, por cor."""
+    return svc.tinta(codigo, pavimento, _variacoes(variacao))
+
+
+@render.get("/projetos/{codigo}/pavimentos/{pavimento}/tinta.xlsx")
+def tinta_xlsx(svc: Svc, codigo: str, pavimento: str, variacao: Escolhas = []) -> Response:  # noqa: B006
+    """A mesma planilha do ``make tinta``, para baixar."""
+    dados = svc.tinta_xlsx(codigo, pavimento, _variacoes(variacao))
+    return Response(
+        dados,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="tinta-{codigo}-{pavimento}.xlsx"'},
+    )
 
 
 @render.get("/projetos/{codigo}/comodos/{comodo}/vistas")

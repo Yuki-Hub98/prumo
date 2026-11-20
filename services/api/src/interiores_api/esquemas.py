@@ -147,6 +147,42 @@ class Cena3D(_Esquema):
     aviso: str | None = None
 
 
+class SuperficieTinta(_Esquema):
+    comodo: str
+    nome: str
+    tinta: Literal["latex", "esmalte"]
+    cor: str | None = Field(description="Hex da variação; null = cor padrão.")
+    area_m2: float
+    litros: float
+
+
+class Lata(_Esquema):
+    litros: float
+    quantidade: int
+
+
+class GrupoTinta(_Esquema):
+    """Uma tinta numa cor: o que comprar."""
+
+    tinta: Literal["latex", "esmalte"]
+    cor: str | None
+    area_m2: float
+    litros: float
+    latas: list[Lata]
+
+
+class Tinta(_Esquema):
+    """Cálculo de tinta do pavimento com as variações escolhidas em cada cômodo."""
+
+    versao: int
+    preliminar: bool = Field(
+        description="Há medida estimada no pavimento: confira antes de comprar."
+    )
+    grupos: list[GrupoTinta]
+    superficies: list[SuperficieTinta]
+    parametros: dict[str, Any] = Field(description="Rendimento, demãos, perda e latas usados.")
+
+
 class PedidoRenderPavimento(_Esquema):
     qualidade: Literal["rascunho", "final"] = Field(
         "rascunho", description="rascunho: segundos, para conferir; final: alguns minutos."
