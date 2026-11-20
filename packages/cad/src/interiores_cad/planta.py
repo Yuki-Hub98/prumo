@@ -93,6 +93,15 @@ def _camada_instalacao(tipo: TipoInstalacao) -> str | None:
 Vetor = tuple[float, float]
 
 
+NOME_JANELA = {
+    "correr": "correr",
+    "basculante": "basculante",
+    "maxim_ar": "maxim-ar",
+    "abrir": "de abrir",
+    "fixa": "fixa",
+}
+
+
 @dataclass
 class Desenho:
     """DXF pronto e o que o PDF e o carimbo precisam saber dele."""
@@ -245,7 +254,9 @@ class _Planta:
                         _som(a0, n, off), _som(a1, n, off), dxfattribs={"layer": "ABERTURA"}
                     )
                 lado_etiqueta = -self.lado_do_comodo(parede)
-                etiqueta = f"{ab.id} {larg}×{ab.altura.valor} peit. {ab.peitoril.valor}"
+                # tipo só se informado (janela antiga sem tipo continua como era)
+                tipo = f" {NOME_JANELA[ab.abertura]}" if ab.abertura else ""
+                etiqueta = f"{ab.id}{tipo} {larg}×{ab.altura.valor} peit. {ab.peitoril.valor}"
             else:
                 lado_etiqueta = self.porta(ab, parede, a0, a1, u, n, meia)
                 etiqueta = f"{ab.id} {larg}×{ab.altura.valor}"
@@ -268,14 +279,26 @@ class _Planta:
         s = 1 if porta.abre_para == parede.lado_a else -1
         dobradica, outro = (a0, a1) if porta.dobradica != "fim" else (a1, a0)
         centro = _som(dobradica, n, s * meia)
-        ponta = _som(centro, n, s * larg)
-        self.msp.add_line(centro, ponta, dxfattribs={"layer": "ABERTURA"})
+        if porta.folha == "camarao":
+            # duas folhas dobradas em "V" junto da dobradiça; arco de meia largura
+            v = (outro[0] - dobradica[0], outro[1] - dobradica[1])
+            tam = math.hypot(*v) or 1.0
+            v = (v[0] / tam, v[1] / tam)
+            meia_f = larg / 2
+            dobra = _som(_som(centro, v, meia_f * 0.5), n, s * meia_f * 0.866)
+            volta = _som(centro, v, meia_f)
+            self.msp.add_line(centro, dobra, dxfattribs={"layer": "ABERTURA"})
+            self.msp.add_line(dobra, volta, dxfattribs={"layer": "ABERTURA"})
+            raio = meia_f
+        else:
+            raio = larg
+            self.msp.add_line(centro, _som(centro, n, s * larg), dxfattribs={"layer": "ABERTURA"})
         ang_folha = _angulo((n[0] * s, n[1] * s))
         ang_fecha = _angulo((outro[0] - dobradica[0], outro[1] - dobradica[1]))
         ini, fim = (ang_fecha, ang_folha)
         if round((ang_folha - ang_fecha) % 360) != 90:
             ini, fim = fim, ini
-        self.msp.add_arc(centro, larg, ini, fim, dxfattribs={"layer": "ABERTURA"})
+        self.msp.add_arc(centro, raio, ini, fim, dxfattribs={"layer": "ABERTURA"})
         giro = geometria.giro_porta(self.recorte, porta)
         if giro is not None:
             self.giros.append(giro)

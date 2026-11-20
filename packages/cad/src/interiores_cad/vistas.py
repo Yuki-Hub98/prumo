@@ -350,14 +350,20 @@ class _Desenhista:
                 z0, z1 = float(ab.peitoril.valor), float(ab.peitoril.valor + ab.altura.valor)
                 self.ret(s0, z0, s1, z1, "ABERTURA")
                 self.ret(s0 + 40, z0 + 40, s1 - 40, z1 - 40, "ABERTURA")
+                self.tipo_janela(ab, s0 + 40, z0 + 40, s1 - 40, z1 - 40)
                 self.cota((s1, 0), (s1, z0), (s1 + self.mm(4), 0))
                 self.cota((s1, z0), (s1, z1), (s1 + self.mm(4), z0))
             else:
                 z0, z1 = 0.0, float(ab.altura.valor)
                 self.ret(s0, z0, s1, z1, "ABERTURA")
+                self.estilo_porta(ab, s0, z0, s1, z1)
                 self.cota((s1, z0), (s1, z1), (s1 + self.mm(4), z0))
                 # folha: diagonal indicando o lado da dobradiça (convenção de elevação)
-                if ab.folha == "giro":
+                if ab.folha == "camarao":
+                    self.msp.add_line(
+                        ((s0 + s1) / 2, z0), ((s0 + s1) / 2, z1), dxfattribs={"layer": "ABERTURA"}
+                    )
+                if ab.folha in ("giro", "camarao"):
                     na_dobradica = (ab.dobradica != "fim") == (self.vista.s(*a) < self.vista.s(*b))
                     xd = s0 if na_dobradica else s1
                     xo = s1 if na_dobradica else s0
@@ -373,6 +379,49 @@ class _Desenhista:
                     )
             self.texto(ab.id, ((s0 + s1) / 2, z1 + self.mm(2)), Texto.ABERTURA, "ABERTURA")
             self.cota((s0, z1), (s1, z1), (s0, z1 + self.mm(6)))
+
+    def tipo_janela(self, ab: Janela, x0: float, z0: float, x1: float, z1: float) -> None:
+        """Divisões e o sentido de abertura da janela (convenção de elevação: tracejado aponta
+        para o lado da dobradiça)."""
+        if ab.abertura is None and ab.folhas is None:
+            return  # sem tipo informado: só o caixilho, como sempre foi
+        tipo, n = ab.abertura or "correr", ab.folhas or 2
+        cam = {"layer": "ABERTURA"}
+        tracejado = {"layer": "ABERTURA", "linetype": TRACEJADO}
+        if tipo in ("correr", "abrir") and n > 1:
+            for i in range(1, n):
+                x = x0 + (x1 - x0) * i / n
+                self.msp.add_line((x, z0), (x, z1), dxfattribs=cam)
+        if tipo == "abrir":  # cada folha: "<" para o lado da dobradiça (bordas externas)
+            for i in range(n):
+                a, b = x0 + (x1 - x0) * i / n, x0 + (x1 - x0) * (i + 1) / n
+                dobra, livre = (a, b) if i < n / 2 else (b, a)
+                self.msp.add_line((livre, z0), (dobra, (z0 + z1) / 2), dxfattribs=tracejado)
+                self.msp.add_line((dobra, (z0 + z1) / 2), (livre, z1), dxfattribs=tracejado)
+        elif tipo == "basculante":  # gira no meio: palhetas horizontais
+            for k in (1, 2):
+                z = z0 + (z1 - z0) * k / 3
+                self.msp.add_line((x0, z), (x1, z), dxfattribs=cam)
+        elif tipo == "maxim_ar":  # dobradiça em cima: "Λ"
+            self.msp.add_line((x0, z0), ((x0 + x1) / 2, z1), dxfattribs=tracejado)
+            self.msp.add_line(((x0 + x1) / 2, z1), (x1, z0), dxfattribs=tracejado)
+
+    def estilo_porta(self, ab: Porta, x0: float, z0: float, x1: float, z1: float) -> None:
+        """Almofadas, visor de vidro ou palhetas de veneziana na folha."""
+        estilo = ab.estilo or "lisa"
+        cam = "ABERTURA"
+        m = min(120.0, (x1 - x0) * 0.15)
+        if estilo == "almofadada":
+            meio = z0 + (z1 - z0) * 0.48
+            self.ret(x0 + m, z0 + m * 1.5, x1 - m, meio - m / 2, cam)
+            self.ret(x0 + m, meio + m / 2, x1 - m, z1 - m * 1.5, cam)
+        elif estilo == "vidro":
+            self.ret(x0 + m, z0 + (z1 - z0) * 0.45, x1 - m, z1 - m * 1.5, cam)
+        elif estilo == "veneziana":
+            z = z0 + m * 1.5
+            while z < z0 + (z1 - z0) * 0.45:
+                self.msp.add_line((x0 + m, z), (x1 - m, z), dxfattribs={"layer": cam})
+                z += 60.0
 
     def instalacoes_na_face(self, parede: Parede) -> None:
         r = self.mm(1.4)
