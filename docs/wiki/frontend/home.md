@@ -78,6 +78,32 @@ do móvel. No 3D as partes pintam ao vivo em modelos gerados a partir desta vers
 rascunho em "Imagens" se o modelo for antigo). Clicar no **nome de um móvel** no painel, ou **no móvel no 3D**, seleciona o
 móvel: em Cores a linha dele fica marcada; nas outras abas abre Móvel.
 
+## Móvel do zero e planejado
+
+Na aba **Móvel**, em "Adicionar móvel", **Criar do zero** pede nome, largura, profundidade e
+altura (e de onde vêm as medidas: "Medi", "Quero assim" ou "Chute") e põe uma caixa com essas
+medidas no centro do cômodo (tipo `sob_medida`), já selecionada.
+
+Guarda-roupa, armário, cômoda, criado-mudo, estante, rack, sapateira, penteadeira e o móvel
+sob medida podem ser **montados por dentro**: o botão começa com uma sugestão para o tipo e
+abre o editor:
+
+- **vista de frente** em escala (gavetas em amarelo, nichos, cabideiros; **ver portas** mostra
+  as folhas tracejadas por cima);
+- **portas**: sem portas, de abrir (uma ou duas folhas por vão; **com porta** liga/desliga em
+  cada vão) ou de correr (no móvel todo);
+- **vãos** da esquerda para a direita (de quem olha de frente): largura (vazio = divide o que
+  sobra), tirar, **+ vão**;
+- **espaços** de cada vão, de baixo para cima: gaveta, nicho/prateleira ou cabideiro, altura
+  (vazio = automático), ↑↓ para trocar de lugar, ✕ para tirar, **+ gaveta / + nicho /
+  + cabideiro** põe em cima;
+- resumo: peças de chapa, chapas necessárias e ferragens; **desmontar** volta a ser uma caixa.
+
+O que não cabe (vãos mais largos que o móvel, gavetas que não entram) é recusado com a
+mensagem do cálculo. Tudo entra no rascunho (Desfazer volta cada passo). No 3D aparecem as
+portas, as frentes de gaveta com puxador e, nos vãos sem porta, os nichos e as prateleiras.
+Pia, cuba, torneira, fogão e geladeira chegam com a cozinha e o banheiro.
+
 ## Imagens 3D
 
 Com um cômodo selecionado, o painel "Imagens 3D" mostra as **vistas** que fazem sentido no
