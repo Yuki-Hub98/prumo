@@ -105,3 +105,24 @@ def test_criar_do_zero_e_montar_por_dentro(api: TestClient) -> None:
     r = api.put(f"{MOVEIS}/sob-medida/construcao", params={"versao": 4}, json={"construcao": None})
     assert r.status_code == 200
     assert api.post(f"{MOVEIS}/cama/construcao/sugerir", params={"versao": 5}).status_code == 422
+
+
+def test_mudar_forma(api: TestClient) -> None:
+    med = {k: {"valor": v, "origem": "projeto"} for k, v in
+           (("largura", 1200), ("profundidade", 800), ("altura", 750))}  # fmt: skip
+    pedido = {"tipo": "mesa", "centro": [1500, 1500], "medidas": med}
+    assert api.post(MOVEIS, params={"versao": 1}, json=pedido).status_code == 200
+    forma = {"forma": "arredondado", "raio": {"valor": 200, "origem": "projeto"}}
+    r = api.patch(f"{MOVEIS}/mesa", params={"versao": 2}, json=forma)
+    assert r.status_code == 200, r.text
+    geo = api.get("/projetos/casa/pavimentos/terreo/geometria").json()
+    mesa = next(m for m in geo["moveis"] if m["id"] == "mesa")
+    assert mesa["forma"] == "arredondado" and len(mesa["contorno"]) > 4
+    assert set(mesa["formas"]) == {"retangular", "arredondado", "redondo", "L"}
+    ruim = {"raio": {"valor": 700, "origem": "projeto"}}
+    assert api.patch(f"{MOVEIS}/mesa", params={"versao": 3}, json=ruim).status_code == 422
+    assert (
+        api.patch(f"{MOVEIS}/mesa", params={"versao": 3}, json={"forma": None}).status_code == 200
+    )
+    cama = next(m for m in geo["moveis"] if m["id"] == "cama")
+    assert cama["formas"] == ["retangular"]

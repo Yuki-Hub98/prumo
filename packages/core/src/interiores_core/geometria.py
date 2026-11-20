@@ -205,9 +205,58 @@ def cantos_movel(movel: Movel) -> list[tuple[float, float]]:
     return [girar_movel(movel, x, y) for x, y in ((-w, -d), (w, -d), (w, d), (-w, d))]
 
 
+RAIO_PADRAO = 100
+"""mm: raio dos cantos quando a forma é arredondada e o raio ainda não foi dado."""
+
+
+def braco_l(movel: Movel) -> float:
+    """Largura dos braços do L (dada, ou 40 % do lado menor)."""
+    menor = min(movel.largura.valor, movel.profundidade.valor)
+    return float(movel.braco.valor) if movel.braco else round(menor * 0.4)
+
+
+def contorno_local(movel: Movel) -> Polygon:
+    """Forma vista de cima no referencial do móvel (centro na origem, costas em -y, frente
+    em +y). Retângulo, cantos arredondados, redondo/oval ou L (braço do lado ``lado_l`` de
+    quem olha de frente: a esquerda dele é +x)."""
+    w, d = movel.largura.valor / 2, movel.profundidade.valor / 2
+    if movel.forma == "arredondado":
+        r = min(float(movel.raio.valor) if movel.raio else RAIO_PADRAO, w, d)
+        if r <= 0:
+            return Polygon([(-w, -d), (w, -d), (w, d), (-w, d)])
+        miolo = Polygon([(-w + r, -d + r), (w - r, -d + r), (w - r, d - r), (-w + r, d - r)])
+        return miolo.buffer(r, quad_segs=8) if w > r and d > r else Point(0, 0).buffer(r, 8)
+    if movel.forma == "redondo":
+        pts = [(w * math.cos(a), d * math.sin(a)) for a in (i * math.pi / 32 for i in range(64))]
+        return Polygon(pts)
+    if movel.forma == "L":
+        b = braco_l(movel)
+        s = 1 if (movel.lado_l or "esquerda") == "esquerda" else -1
+        # costas inteiras + braço que vem para a frente no lado escolhido
+        pts = [(-w, -d), (w, -d), (w, d), (w - b, d), (w - b, -d + b), (-w, -d + b)]
+        return Polygon([(x * s, y) for x, y in pts])
+    return Polygon([(-w, -d), (w, -d), (w, d), (-w, d)])
+
+
 def poligono_movel(movel: Movel) -> Polygon:
-    """Projeção do móvel no piso."""
-    return Polygon(cantos_movel(movel))
+    """Projeção do móvel no piso (na forma dele: retângulo, arredondado, redondo, L)."""
+    if movel.forma is None:
+        return Polygon(cantos_movel(movel))
+    return Polygon(
+        [girar_movel(movel, x, y) for x, y in contorno_local(movel).exterior.coords[:-1]]
+    )
+
+
+def formas_possiveis(movel: Movel) -> tuple[str, ...]:
+    """Formas que este móvel aceita: corpo simples (sob medida, banco, berço) e mesas; os
+    outros (cama, sofá, guarda-roupa) e os planejados ficam retangulares."""
+    from interiores_core.catalogo import Simbolo, item_do_tipo
+
+    item = item_do_tipo(movel.tipo)
+    simbolo = item.simbolo if item else Simbolo.GENERICO
+    if movel.construcao is not None or simbolo not in (Simbolo.GENERICO, Simbolo.MESA):
+        return ("retangular",)
+    return ("retangular", "arredondado", "redondo", "L")
 
 
 def paredes_da_face(

@@ -294,7 +294,7 @@ export function Planta({
             }}
           >
             <polygon
-              points={pontos(m.cantos)}
+              points={pontos(m.contorno?.length ? m.contorno : m.cantos)}
               fill={
                 (m.comodo === comodoSelecionado && (cores?.moveis?.[m.id] ?? cores?.moveis?.[m.tipo])) ||
                 COR_MOVEL[m.tipo] ||

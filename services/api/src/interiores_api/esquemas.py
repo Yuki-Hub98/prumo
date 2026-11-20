@@ -111,6 +111,7 @@ class Prisma3D(_Esquema):
     z1: float
     material: str
     oculto_em: list[str] = Field(default_factory=list)
+    extras: dict[str, str] = Field(default_factory=dict, description="movel e parte (pintura).")
 
 
 class Caixa3D(_Esquema):

@@ -95,6 +95,11 @@ class MovelTela(_Tela):
     """Partes com cor própria (portas, gavetas...), além do corpo."""
     planejavel: bool = False
     """Dá para montar por dentro (vãos, gavetas, portas, prateleiras)."""
+    contorno: list[Pt] = []
+    """Forma vista de cima (retângulo, arredondado, redondo, L), para desenhar na planta."""
+    forma: str = "retangular"
+    formas: list[str] = []
+    """Formas que este móvel aceita (só "retangular": não muda de forma)."""
     planejado: bool = False
     """Já tem construção (é planejado)."""
 
@@ -253,6 +258,9 @@ def pavimento_para_tela(
             elevado=not m.ocupa_piso,
             partes=[ParteTela(id=p, nome=PARTES[p]) for p in partes_do_movel(m)],
             planejavel=m.tipo in planejado.TIPOS_PLANEJAVEIS,
+            contorno=_pts(list(geometria.poligono_movel(m).exterior.coords)[:-1]),
+            forma=m.forma or "retangular",
+            formas=list(geometria.formas_possiveis(m)),
             planejado=m.construcao is not None,
         )
         for c in pav.comodos

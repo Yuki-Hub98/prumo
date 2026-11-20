@@ -281,6 +281,65 @@
           ],
           "default": null,
           "description": "Móvel planejado: estrutura interna para desenho e lista de corte."
+        },
+        "forma": {
+          "anyOf": [
+            {
+              "enum": [
+                "arredondado",
+                "redondo",
+                "L"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Forma vista de cima (vazio = retangular): cantos arredondados (``raio``), redondo ou oval (círculo se largura = profundidade) ou em L (``braco``, ``lado_l``). Largura e profundidade continuam sendo a caixa em volta.",
+          "title": "Forma"
+        },
+        "raio": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Raio dos cantos (forma arredondado)."
+        },
+        "braco": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Largura dos braços do L (forma L): a faixa das costas e a do lado."
+        },
+        "lado_l": {
+          "anyOf": [
+            {
+              "enum": [
+                "esquerda",
+                "direita"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Lado do braço que vem para a frente, olhando de frente (padrão: esquerda).",
+          "title": "Lado L"
         }
       },
       "required": [
