@@ -33,6 +33,11 @@ const pontos = (lista: (Pt | readonly number[])[]) => lista.map(xy).join(" ");
 const PASSO = 10; // arrastar anda de 1 em 1 cm
 
 
+export type LadoMovel = "esquerda" | "direita" | "frente" | "costas";
+/** Cantos de cada lado (cantos: costas-esq., costas-dir., frente-dir., frente-esq.). */
+const LADOS: Record<LadoMovel, [number, number]> = { costas: [0, 1], direita: [1, 2], frente: [2, 3], esquerda: [3, 0] };
+const TAMANHO_MIN = 100;
+
 const COR_GRAV: Record<string, string> = { erro: "var(--erro)", aviso: "var(--aviso)", info: "var(--info)" };
 
 /** Cor de cada instalação (identidade visual). */
@@ -65,6 +70,7 @@ export function Planta({
   selecionado,
   aoSelecionar,
   aoMover,
+  aoRedimensionar,
   comodoSelecionado,
   aoSelecionarComodo,
   cores,
@@ -88,6 +94,8 @@ export function Planta({
   selecionado: string | null;
   aoSelecionar: (id: string | null) => void;
   aoMover: (movel: MovelTela, centro: [number, number]) => void;
+  /** Puxar um lado do móvel selecionado: o lado oposto fica parado. */
+  aoRedimensionar?: (movel: MovelTela, lado: LadoMovel, tamanho: number) => void;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   // ``tela``: onde o clique começou (px); ``solto``: já passou da folga e está arrastando
@@ -127,6 +135,8 @@ export function Planta({
   }
 
   const arredonda = (v: number) => Math.round(v / PASSO) * PASSO;
+  // puxando um lado do móvel selecionado (alças no meio de cada lado)
+  const [puxando, setPuxando] = useState<{ id: string; lado: LadoMovel; ini: Pt; normal: Pt; t0: number; t: number } | null>(null);
 
   return (
     <svg
@@ -161,6 +171,12 @@ export function Planta({
           setCanto({ ...canto, para: encaixar(emMm(e), ima, null, canto.de) });
           return;
         }
+        if (puxando) {
+          const [x, y] = emMm(e);
+          const delta = (x - puxando.ini[0]) * puxando.normal[0] + (y - puxando.ini[1]) * puxando.normal[1];
+          setPuxando({ ...puxando, t: Math.max(TAMANHO_MIN, arredonda(puxando.t0 + delta)) });
+          return;
+        }
         if (!arrasto) return;
         // clicar para selecionar treme a mão: só vira arrasto depois de 4 px na tela
         const solto = arrasto.solto || Math.hypot(e.clientX - arrasto.tela[0], e.clientY - arrasto.tela[1]) >= FOLGA_PX;
@@ -173,6 +189,12 @@ export function Planta({
           if (canto.para[0] !== canto.de[0] || canto.para[1] !== canto.de[1])
             editor?.aoMoverVertice(canto.de, canto.para);
           setCanto(null);
+          return;
+        }
+        if (puxando) {
+          const m = geometria.moveis.find((x) => x.id === puxando.id);
+          if (m && puxando.t !== puxando.t0) aoRedimensionar?.(m, puxando.lado, puxando.t);
+          setPuxando(null);
           return;
         }
         if (!arrasto) return;
@@ -389,6 +411,65 @@ export function Planta({
           </g>
         );
       })}
+
+      {/* lados do móvel selecionado: puxar a alça muda a largura/profundidade (o lado oposto fica) */}
+      {!editor &&
+        aoRedimensionar &&
+        geometria.moveis
+          .filter((m) => m.id === selecionado && !arrasto?.solto)
+          .map((m) => {
+            const c = m.cantos as Pt[];
+            const prev = puxando?.id === m.id ? puxando : null;
+            const desloca = prev ? prev.t - prev.t0 : 0;
+            const fantasma = c.map((p, i) =>
+              prev && LADOS[prev.lado].includes(i) ? ([p[0] + prev.normal[0] * desloca, p[1] + prev.normal[1] * desloca] as Pt) : p,
+            );
+            return (
+              <g key={`alcas-${m.id}`}>
+                {prev && <polygon points={pontos(fantasma)} fill="var(--trena)" fillOpacity={0.12} stroke={SEL} strokeWidth={2} strokeDasharray="6 4" vectorEffect="non-scaling-stroke" pointerEvents="none" />}
+                {(Object.keys(LADOS) as LadoMovel[]).map((lado) => {
+                  const [i, j] = LADOS[lado];
+                  const a = prev?.lado === lado ? fantasma : c;
+                  const meio: Pt = [(a[i][0] + a[j][0]) / 2, (a[i][1] + a[j][1]) / 2];
+                  const nx = meio[0] - m.centro[0] - (prev?.lado === lado ? prev.normal[0] * desloca / 2 : 0);
+                  const ny = meio[1] - m.centro[1] - (prev?.lado === lado ? prev.normal[1] * desloca / 2 : 0);
+                  const n = Math.hypot(nx, ny) || 1;
+                  const normal: Pt = [nx / n, ny / n];
+                  // largura = costas-esq. → costas-dir.; profundidade = costas-dir. → frente-dir.
+                  const medida = Math.round(
+                    lado === "esquerda" || lado === "direita" ? Math.hypot(c[1][0] - c[0][0], c[1][1] - c[0][1]) : Math.hypot(c[2][0] - c[1][0], c[2][1] - c[1][1]),
+                  );
+                  return (
+                    <g key={lado}>
+                      <rect
+                        x={meio[0] - 45}
+                        y={-meio[1] - 45}
+                        width={90}
+                        height={90}
+                        fill="var(--superficie)"
+                        stroke={SEL}
+                        strokeWidth={2}
+                        vectorEffect="non-scaling-stroke"
+                        className={Math.abs(normal[0]) > Math.abs(normal[1]) ? "cursor-ew-resize" : "cursor-ns-resize"}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          (e.target as Element).setPointerCapture?.(e.pointerId);
+                          setPuxando({ id: m.id, lado, ini: emMm(e), normal, t0: medida, t: medida });
+                        }}
+                      >
+                        <title>Puxe para mudar a {lado === "esquerda" || lado === "direita" ? "largura" : "profundidade"}</title>
+                      </rect>
+                      {prev?.lado === lado && (
+                        <text className="num" x={meio[0] + normal[0] * 260} y={-(meio[1] + normal[1] * 260)} fontSize={110} textAnchor="middle" dy={35} fill="var(--tinta)" stroke="var(--papel)" strokeWidth={14} paintOrder="stroke">
+                          {formatar(prev.t, unidade)}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })}
 
       {/* rótulos dos cômodos por cima de tudo */}
       {geometria.comodos.map(

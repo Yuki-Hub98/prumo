@@ -15,7 +15,7 @@ import { Tela3D } from "./Tela3D";
 import { Abas, ColunaLateral } from "./ColunaLateral";
 import { useEditar, useGeometria, useProblemas, useProjeto, useUnidade, useVariacoes } from "../dados";
 import { AdicionarMovel, FaixaPreliminar, FaltaMedir, PainelMovel, PainelProblemas, piorGravidade } from "./Paineis";
-import { Planta, type Item } from "./Planta";
+import { Planta, type Item, type LadoMovel } from "./Planta";
 
 export function TelaProjeto({
   codigo,
@@ -118,6 +118,18 @@ export function TelaProjeto({
           api.POST("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover", {
             params: { path: { codigo, comodo: m.comodo, id_: m.id }, query: { versao } },
             body: { centro },
+          }),
+        ),
+      { onSuccess: (r) => setNovos(r.novos) },
+    );
+
+  const redimensionar = (m: MovelTela, lado: LadoMovel, tamanho: number) =>
+    editar.mutate(
+      (versao) =>
+        ou(
+          api.POST("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/redimensionar", {
+            params: { path: { codigo, comodo: m.comodo, id_: m.id }, query: { versao } },
+            body: { lado, tamanho },
           }),
         ),
       { onSuccess: (r) => setNovos(r.novos) },
@@ -250,6 +262,7 @@ export function TelaProjeto({
               selecionado={selecionado}
               aoSelecionar={selecionar}
               aoMover={mover}
+              aoRedimensionar={redimensionar}
               comodoSelecionado={comodo}
               aoSelecionarComodo={setComodo}
               cores={coresVistas}

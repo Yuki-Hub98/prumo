@@ -2257,6 +2257,89 @@
         }
       }
     },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/redimensionar": {
+      "post": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Redimensionar Movel",
+        "description": "Puxar um lado do móvel na planta (o oposto fica parado).",
+        "operationId": "redimensionar_movel_projetos__codigo__comodos__comodo__moveis__id___redimensionar_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedimensionarMovel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover": {
       "post": {
         "tags": [
@@ -7443,6 +7526,34 @@
           "variacoes"
         ],
         "title": "ProjetoCompleto"
+      },
+      "RedimensionarMovel": {
+        "properties": {
+          "lado": {
+            "type": "string",
+            "enum": [
+              "esquerda",
+              "direita",
+              "frente",
+              "costas"
+            ],
+            "title": "Lado"
+          },
+          "tamanho": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Tamanho",
+            "description": "mm: largura (esquerda/direita) ou profundidade"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "lado",
+          "tamanho"
+        ],
+        "title": "RedimensionarMovel",
+        "description": "Arrastar um lado do móvel: o lado oposto fica parado; a medida vira \"Quero assim\"."
       },
       "Renomear": {
         "properties": {

@@ -327,8 +327,16 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       tem cotas. Desenhar as cotas das paredes e dos vãos na planta do frontend, em Mono, na cor
       da origem da medida (Medi verde, Quero assim azul, Chute laranja tracejado), como pede a
       identidade visual
-- [ ] Editor de móveis — o que falta: redimensionar puxando as bordas na planta, mover e girar
-      direto no 3D, sofá e bancada planejada em L, lista de corte e desenho do planejado pela tela
+- [x] **Redimensionar pelas bordas**: alças no meio de cada lado do móvel selecionado; o lado
+      oposto fica parado e a medida vira "Quero assim"
+- [ ] Editor de móveis — o que falta (ordem combinada): mover e girar direto no 3D, sofá e
+      bancada planejada em L, lista de corte e desenho do planejado pela tela
+- [ ] **Editar em detalhe** (pedido do usuário, 2026-11-20): botão "Editar em detalhe" no painel
+      do que estiver selecionado (móvel; depois porta e janela) que abre uma janela (modal) com
+      **só aquele objeto em 3D, no centro**, girável, com **alças para puxar** largura,
+      profundidade e **altura**; as medidas em cm mudam ao vivo enquanto puxa (mesma regra das
+      bordas: medida arrastada = "Quero assim", passo de 1 cm, Desfazer volta). Base para editar
+      partes também (prateleira, gaveta, porta do planejado) no mesmo modal
 - [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis
 - [ ] Referência por foto (pedido do usuário, 2026-11-19 e 2026-11-20): subir uma foto
       (Pinterest, um quarto parecido) pela tela e **guardar a foto no projeto** como referência
