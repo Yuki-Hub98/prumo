@@ -619,8 +619,8 @@
     },
     {
       "tipo": "escrivaninha",
-      "nome": "Escrivaninha",
-      "categoria": "mesas",
+      "nome": "Escrivaninha / mesa de escritório",
+      "categoria": "escritorio",
       "simbolo": "mesa",
       "lados_uso": [
         "frente"
@@ -652,6 +652,45 @@
           "polegadas": null,
           "energia": null,
           "forma": null
+        },
+        {
+          "id": "escritorio_140",
+          "nome": "Escritório 140 × 70",
+          "largura": 1400,
+          "profundidade": 700,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "escritorio_160",
+          "nome": "Escritório 160 × 80",
+          "largura": 1600,
+          "profundidade": 800,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "em_l",
+          "nome": "Em L 150 × 150",
+          "largura": 1500,
+          "profundidade": 1500,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": "L"
         }
       ],
       "modelo_padrao": "padrao"
@@ -917,10 +956,12 @@
     {
       "tipo": "cadeira_escritorio",
       "nome": "Cadeira de escritório",
-      "categoria": "sentar",
+      "categoria": "escritorio",
       "simbolo": "cadeira_giratoria",
       "lados_uso": [
-        "frente"
+        "costas",
+        "esquerda",
+        "direita"
       ],
       "assento": false,
       "modelos": [
@@ -936,9 +977,235 @@
           "polegadas": null,
           "energia": null,
           "forma": null
+        },
+        {
+          "id": "presidente",
+          "nome": "Presidente (encosto alto)",
+          "largura": 700,
+          "profundidade": 700,
+          "altura": 1250,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
         }
       ],
       "modelo_padrao": "padrao"
+    },
+    {
+      "tipo": "monitor",
+      "nome": "Monitor",
+      "categoria": "escritorio",
+      "simbolo": "monitor",
+      "lados_uso": [],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "24pol",
+          "nome": "24\"",
+          "largura": 540,
+          "profundidade": 200,
+          "altura": 420,
+          "elevacao": 750,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 24,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "27pol",
+          "nome": "27\"",
+          "largura": 615,
+          "profundidade": 220,
+          "altura": 460,
+          "elevacao": 750,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 27,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "34pol",
+          "nome": "34\" ultrawide",
+          "largura": 810,
+          "profundidade": 230,
+          "altura": 460,
+          "elevacao": 750,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 34,
+          "energia": null,
+          "forma": null
+        }
+      ],
+      "modelo_padrao": "24pol"
+    },
+    {
+      "tipo": "notebook",
+      "nome": "Notebook",
+      "categoria": "escritorio",
+      "simbolo": "notebook",
+      "lados_uso": [],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "14pol",
+          "nome": "14\" (aberto)",
+          "largura": 325,
+          "profundidade": 225,
+          "altura": 230,
+          "elevacao": 750,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 14,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "15pol",
+          "nome": "15,6\" (aberto)",
+          "largura": 360,
+          "profundidade": 250,
+          "altura": 245,
+          "elevacao": 750,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": 15,
+          "energia": null,
+          "forma": null
+        }
+      ],
+      "modelo_padrao": "15pol"
+    },
+    {
+      "tipo": "computador",
+      "nome": "Computador (gabinete)",
+      "categoria": "escritorio",
+      "simbolo": "gabinete",
+      "lados_uso": [],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "torre",
+          "nome": "Torre média",
+          "largura": 200,
+          "profundidade": 450,
+          "altura": 450,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "mini",
+          "nome": "Mini torre",
+          "largura": 180,
+          "profundidade": 380,
+          "altura": 360,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "gamer",
+          "nome": "Torre grande (gamer)",
+          "largura": 230,
+          "profundidade": 480,
+          "altura": 500,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        }
+      ],
+      "modelo_padrao": "torre"
+    },
+    {
+      "tipo": "teclado",
+      "nome": "Teclado e mouse",
+      "categoria": "escritorio",
+      "simbolo": "teclado",
+      "lados_uso": [],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "completo",
+          "nome": "Teclado completo + mouse",
+          "largura": 580,
+          "profundidade": 160,
+          "altura": 35,
+          "elevacao": 750,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "compacto",
+          "nome": "Teclado compacto + mouse",
+          "largura": 450,
+          "profundidade": 140,
+          "altura": 35,
+          "elevacao": 750,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        }
+      ],
+      "modelo_padrao": "completo"
+    },
+    {
+      "tipo": "impressora",
+      "nome": "Impressora",
+      "categoria": "escritorio",
+      "simbolo": "generico",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "jato",
+          "nome": "Jato de tinta / multifuncional",
+          "largura": 450,
+          "profundidade": 370,
+          "altura": 220,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "laser",
+          "nome": "Laser",
+          "largura": 400,
+          "profundidade": 380,
+          "altura": 280,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        }
+      ],
+      "modelo_padrao": "jato"
     },
     {
       "tipo": "puff",

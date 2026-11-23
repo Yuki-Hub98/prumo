@@ -168,3 +168,13 @@ def test_edicao_erros(copia: Path) -> None:
         editar.mover_movel(copia, "quarto", "cama", rotacao=45)
     assert arq.read_text(encoding="utf-8") == antes
     assert editar.id_livre(copia, "quarto", "Cômoda Grande!") == "c-moda-grande"
+
+
+def test_escritorio() -> None:
+    """Itens de escritório: os de cima da mesa já vêm na altura dela (75 cm)."""
+    tipos = {i.tipo for i in catalogo._ITENS if i.categoria is catalogo.Categoria.ESCRITORIO}
+    assert {"escrivaninha", "cadeira_escritorio", "monitor", "notebook", "computador",
+            "teclado", "impressora"} <= tipos  # fmt: skip
+    for tipo in ("monitor", "notebook", "teclado"):
+        item = catalogo.item_do_tipo(tipo)
+        assert item is not None and all(m.elevacao == 750 for m in item.modelos)
