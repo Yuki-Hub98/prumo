@@ -338,6 +338,32 @@ class _Planta:
                 altura = Texto.MOVEL if i == 0 else Texto.MOVEL * 0.85
                 self.texto(linha, (m.centro[0], y0 - i * passo), altura, "MOVEL")
 
+    @staticmethod
+    def _sofa_em_l(m: Movel) -> list[tuple[Vetor, Vetor]]:
+        """Sofá de canto (como no 3D): encosto nas costas e na lateral de fora do braço do
+        L, braços nas duas pontas e a divisão dos lugares nos dois trechos."""
+        w, d = m.largura.valor / 2, m.profundidade.valor / 2
+        b = geometria.braco_l(m)
+        enc, braco = min(200.0, b / 6), min(150.0, w / 4, d / 4)
+        s = -1.0 if m.lado_l == "direita" else 1.0
+        linhas: list[tuple[Vetor, Vetor]] = [
+            ((-w + braco, -d + enc), (w - enc, -d + enc)),  # encosto das costas
+            ((w - enc, -d + enc), (w - enc, d - braco)),  # encosto da lateral
+            ((-w + braco, -d + enc), (-w + braco, -d + b)),  # braço da ponta das costas
+            ((w - b, d - braco), (w - enc, d - braco)),  # braço da ponta do L
+        ]
+        costas = 2 * w - braco - enc
+        lugares = max(1, round(costas / 650))
+        for i in range(1, lugares):
+            x = -w + braco + costas * i / lugares
+            linhas.append(((x, -d + enc), (x, -d + b)))
+        lado = 2 * d - b - braco
+        lugares = max(1, round(lado / 650))
+        for i in range(lugares):  # i = 0: onde o trecho do braço começa
+            y = -d + b + lado * i / lugares
+            linhas.append(((w - b, y), (w - enc, y)))
+        return [((x0 * s, y0), (x1 * s, y1)) for (x0, y0), (x1, y1) in linhas]
+
     def detalhes_movel(self, m: Movel) -> list[tuple[Vetor, Vetor]]:
         """Linhas do símbolo no referencial do móvel (costas em -y, frente em +y).
 
@@ -405,6 +431,8 @@ class _Planta:
                         x += folha
             if m.tipo == "guarda_roupa":
                 linhas.append(((-w + 60, 0), (w - 60, 0)))  # cabideiro
+        elif simbolo is Simbolo.ASSENTO and m.forma == "L" and m.tipo == "sofa":
+            linhas.extend(self._sofa_em_l(m))
         elif simbolo is Simbolo.ASSENTO:
             encosto, braco = min(200.0, d / 3), min(150.0, w / 4)
             linhas.append(((-w, -d + encosto), (w, -d + encosto)))
