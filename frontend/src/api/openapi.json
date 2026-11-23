@@ -2877,6 +2877,74 @@
         }
       }
     },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/planejado.{formato}": {
+      "get": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Baixar Planejado",
+        "description": "Desenho técnico (``.pdf``, ``.dxf``) ou lista de corte (``.xlsx``) do planejado ou da\nbancada: os mesmos arquivos do ``interiores planejado gerar``.",
+        "operationId": "baixar_planejado_projetos__codigo__comodos__comodo__moveis__id___planejado__formato__get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "formato",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Formato"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/comodos/{comodo}/variacoes": {
       "get": {
         "tags": [
@@ -7138,6 +7206,55 @@
         ],
         "title": "PavimentoTela"
       },
+      "PecaTela": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "material": {
+            "type": "string",
+            "title": "Material"
+          },
+          "espessura": {
+            "type": "integer",
+            "title": "Espessura"
+          },
+          "comprimento": {
+            "type": "number",
+            "title": "Comprimento"
+          },
+          "largura": {
+            "type": "number",
+            "title": "Largura"
+          },
+          "quantidade": {
+            "type": "integer",
+            "title": "Quantidade"
+          },
+          "fita": {
+            "type": "string",
+            "title": "Fita",
+            "default": ""
+          },
+          "obs": {
+            "type": "string",
+            "title": "Obs",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "material",
+          "espessura",
+          "comprimento",
+          "largura",
+          "quantidade"
+        ],
+        "title": "PecaTela",
+        "description": "Uma linha da lista de corte."
+      },
       "PedidoRender": {
         "properties": {
           "variacao": {
@@ -7245,6 +7362,14 @@
       },
       "PlanejadoTela": {
         "properties": {
+          "lista": {
+            "items": {
+              "$ref": "#/components/schemas/PecaTela"
+            },
+            "type": "array",
+            "title": "Lista",
+            "default": []
+          },
           "vistas": {
             "additionalProperties": {
               "items": {

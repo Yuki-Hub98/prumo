@@ -694,6 +694,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/planejado.{formato}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Baixar Planejado
+         * @description Desenho técnico (``.pdf``, ``.dxf``) ou lista de corte (``.xlsx``) do planejado ou da
+         *     bancada: os mesmos arquivos do ``interiores planejado gerar``.
+         */
+        get: operations["baixar_planejado_projetos__codigo__comodos__comodo__moveis__id___planejado__formato__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/comodos/{comodo}/variacoes": {
         parameters: {
             query?: never;
@@ -2305,6 +2326,34 @@ export interface components {
                 ]
             ] | null;
         };
+        /**
+         * PecaTela
+         * @description Uma linha da lista de corte.
+         */
+        PecaTela: {
+            /** Nome */
+            nome: string;
+            /** Material */
+            material: string;
+            /** Espessura */
+            espessura: number;
+            /** Comprimento */
+            comprimento: number;
+            /** Largura */
+            largura: number;
+            /** Quantidade */
+            quantidade: number;
+            /**
+             * Fita
+             * @default
+             */
+            fita?: string;
+            /**
+             * Obs
+             * @default
+             */
+            obs?: string;
+        };
         /** PedidoRender */
         PedidoRender: {
             /**
@@ -2365,6 +2414,11 @@ export interface components {
          * @description Vista de frente de um móvel planejado, já calculada, para o editor desenhar.
          */
         PlanejadoTela: {
+            /**
+             * Lista
+             * @default []
+             */
+            lista?: components["schemas"]["PecaTela"][];
             /**
              * Vistas
              * @default {}
@@ -4414,6 +4468,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanejadoTela"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    baixar_planejado_projetos__codigo__comodos__comodo__moveis__id___planejado__formato__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                id_: string;
+                formato: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

@@ -5,6 +5,7 @@ import { useEditar, usePlanejado } from "../dados";
 import { type Unidade } from "../unidades";
 import { CampoMedida } from "./CampoMedida";
 import { Frente } from "./EditorPlanejado";
+import { ListaDeCorte } from "./ListaDeCorte";
 
 type Bancada = Esquemas["Bancada"];
 type Modulo = Esquemas["ModuloBancada"];
@@ -160,9 +161,6 @@ export function EditorBancada({
               <Frente vista={{ ...v, largura: comprimentos.braco, retangulos: v.vistas.braco }} portas={false} />
             </>
           )}
-          <p className="text-xs text-tinta-suave">
-            {v.pecas} peças · {v.chapas.map((c) => `${c.chapas}× ${c.material} ${c.espessura}`).join(" · ")}
-          </p>
         </div>
       )}
       {vista.error && <p className="mb-2 text-sm text-erro">{vista.error.message}</p>}
@@ -291,6 +289,7 @@ export function EditorBancada({
           )}
         </div>
       </div>
+      {v && <ListaDeCorte codigo={codigo} comodo={comodo} id={id} vista={v} unidade={unidade} />}
       {semLugar && <p className="mt-1 text-sm text-erro">{semLugar}</p>}
       {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
     </section>

@@ -17,6 +17,7 @@ import {
   type TipoEspaco,
 } from "../planejado";
 import { formatar, paraMm, type Unidade } from "../unidades";
+import { ListaDeCorte } from "./ListaDeCorte";
 
 type Vista = Esquemas["PlanejadoTela"];
 
@@ -306,15 +307,7 @@ export function EditorPlanejado({
         </button>
       </div>
 
-      {v && (
-        <div className="mt-2 text-xs text-tinta-suave">
-          <p>
-            {v.pecas} peças de chapa ·{" "}
-            {v.chapas.map((ch) => `${ch.chapas} chapa${ch.chapas > 1 ? "s" : ""} de ${ch.material} ${ch.espessura} mm`).join(" · ")}
-          </p>
-          {v.ferragens.length > 0 && <p>Ferragens: {v.ferragens.join(", ")}</p>}
-        </div>
-      )}
+      {v && <ListaDeCorte codigo={codigo} comodo={comodo} id={id} vista={v} unidade={unidade} />}
       <div className="mt-2 flex items-center justify-between">
         <p className="text-xs text-tinta-suave">
           Medidas vazias dividem o que sobra. Porta de abrir é por vão (cobre gavetas e nichos dele); de correr cobre
