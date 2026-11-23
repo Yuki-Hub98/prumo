@@ -112,7 +112,11 @@ quando largura = profundidade, oval quando diferentes) e **em L** (largura do br
 medida, 40 % do lado menor — e o lado do braço que vem para a frente, olhando de frente). Largura
 e profundidade continuam sendo a caixa em volta. A forma vale na planta (e no DXF), nas
 checagens (passagem, colisão) e no 3D: a mesa ganha tampo na forma e pés por dentro dela.
-Cama, sofá, guarda-roupa e móveis planejados ficam retangulares.
+O **sofá** pode ser retangular ou **em L** (sofá de canto; no catálogo há o modelo "De canto em
+L", 260 × 160): o braço do L é o fundo do assento (sem medida, 90 cm), com encosto nas costas e
+na lateral de fora do braço, braços nas duas pontas e almofadas nos dois trechos. O painel só
+mostra as formas que o móvel aceita. Cama, poltrona, guarda-roupa e móveis planejados ficam
+retangulares.
 
 ## Tinta e comparador
 

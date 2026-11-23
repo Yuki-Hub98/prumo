@@ -290,6 +290,9 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       cor e várias coisas de uma vez — #16, #26
 - [x] **Formas dos móveis**: cantos arredondados, redondo/oval e em L (mesas e móveis de corpo
       simples), na planta, no DXF, nas checagens e no 3D — #30
+- [x] **Sofá em L** (de canto): modelo "De canto em L" no catálogo ou forma "Em L" em qualquer
+      sofá; encosto nas costas e na lateral, braços nas pontas e almofadas nos dois trechos, na
+      planta, no DXF e no 3D
 - [x] Planta geral do pavimento e 3D da casa (pavimento inteiro com o teto cortado) — #11, #25, #29
 - [x] **Andares**: criar e remover andares pela tela, com o andar de baixo de referência ao
       desenhar o de cima
