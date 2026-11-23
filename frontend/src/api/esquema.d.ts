@@ -634,6 +634,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/bancada": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Definir Bancada
+         * @description Monta a bancada/mesa planejada (tampo, pernas, módulos embaixo) ou tira (null).
+         */
+        put: operations["definir_bancada_projetos__codigo__comodos__comodo__moveis__id___bancada_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/construcao/sugerir": {
         parameters: {
             query?: never;
@@ -1151,6 +1171,23 @@ export interface components {
             pasta_movida_para: string | null;
         };
         /**
+         * Bancada
+         * @description Bancada ou mesa planejada: tampo reto ou em L (``Movel.forma``), pernas onde o
+         *     tampo não tem apoio (pontas livres, canto do L, vãos longos) e módulos embaixo.
+         */
+        Bancada: {
+            tampo: components["schemas"]["Chapa"];
+            /**
+             * Pernas
+             * @description ``metal``: tubo 50 × 50 com sapata; ``madeira``: pé pronto; ``painel``: as pontas livres viram painel de chapa (o canto continua com perna de metal).
+             * @default metal
+             * @enum {string}
+             */
+            pernas?: "metal" | "madeira" | "painel";
+            /** Modulos */
+            modulos?: components["schemas"]["ModuloBancada"][];
+        };
+        /**
          * Caixa3D
          * @description Paralelepípedo (peças de móvel, folhas de porta): centro e tamanho em mm, giro em z.
          */
@@ -1379,6 +1416,13 @@ export interface components {
             comodo: string;
             /** Moveis */
             moveis?: components["schemas"]["Movel"][];
+        };
+        /**
+         * DefinirBancada
+         * @description Tampo, pernas e módulos da bancada/mesa planejada; ``null`` tira (fica só a forma).
+         */
+        DefinirBancada: {
+            bancada: components["schemas"]["Bancada"] | null;
         };
         /**
          * DefinirConstrucao
@@ -1767,6 +1811,35 @@ export interface components {
             estimadas: number;
         };
         /**
+         * ModuloBancada
+         * @description Módulo planejado embaixo do tampo da bancada (gaveteiro, nicho, armário).
+         *
+         *     Fica no piso, encostado no fundo do trecho, com a altura livre sob o tampo; por
+         *     dentro é montado como qualquer planejado (``construcao``).
+         */
+        ModuloBancada: {
+            /** Id */
+            id: string;
+            /**
+             * Trecho
+             * @description Trecho do tampo: ``costas`` (o comprido, encostado na parede) ou ``braco`` (o braço do L, que vem para a frente).
+             * @default costas
+             * @enum {string}
+             */
+            trecho?: "costas" | "braco";
+            /** @description Da ponta do trecho até a lateral do módulo: nas costas, da ponta esquerda de quem olha de frente; no braço do L, da ponta do braço. */
+            distancia: components["schemas"]["Medida"];
+            largura: components["schemas"]["Medida"];
+            /** @description Sem valor: a do trecho menos 20 mm de beiral do tampo. */
+            profundidade?: components["schemas"]["Medida"] | null;
+            /**
+             * Portas
+             * @description Portas de abrir por vão.
+             */
+            portas?: "abrir" | null;
+            construcao: components["schemas"]["Construcao"];
+        };
+        /**
          * Movel
          * @description Móvel posicionado pelo centro, com rotação em graus (sentido anti-horário).
          *
@@ -1841,6 +1914,8 @@ export interface components {
             polegadas?: number | null;
             /** @description Móvel planejado: estrutura interna para desenho e lista de corte. */
             construcao?: components["schemas"]["Construcao"] | null;
+            /** @description Bancada/mesa planejada: tampo, pernas e módulos (desenho e lista de corte). */
+            bancada?: components["schemas"]["Bancada"] | null;
             /**
              * Forma
              * @description Forma vista de cima (vazio = retangular): cantos arredondados (``raio``), redondo ou oval (círculo se largura = profundidade) ou em L (``braco``, ``lado_l``). Largura e profundidade continuam sendo a caixa em volta.
@@ -1918,6 +1993,19 @@ export interface components {
              * @default false
              */
             planejado?: boolean;
+            /**
+             * Bancada
+             * @default false
+             */
+            bancada?: boolean;
+            /**
+             * Detalhes
+             * @default []
+             */
+            detalhes?: [
+                number,
+                number
+            ][][];
         };
         /**
          * MoverMovel
@@ -2277,6 +2365,13 @@ export interface components {
          * @description Vista de frente de um móvel planejado, já calculada, para o editor desenhar.
          */
         PlanejadoTela: {
+            /**
+             * Vistas
+             * @default {}
+             */
+            vistas?: {
+                [key: string]: components["schemas"]["RetanguloTela"][];
+            };
             /** Largura */
             largura: number;
             /** Altura */
@@ -4200,6 +4295,46 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DefinirConstrucao"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    definir_bancada_projetos__codigo__comodos__comodo__moveis__id___bancada_put: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                comodo: string;
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DefinirBancada"];
             };
         };
         responses: {

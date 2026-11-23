@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCatalogo, useEditar, useEstimadas, useModelosProprios, useProjeto } from "../dados";
 import { formatar, type Origem, paraMm, type Unidade } from "../unidades";
 import { CampoMedida } from "./CampoMedida";
+import { EditorBancada } from "./EditorBancada";
 import { EditorPlanejado } from "./EditorPlanejado";
 
 type ItemCatalogo = {
@@ -181,6 +182,20 @@ export function PainelMovel({
         }
       />
       {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
+      {movel.bancada && (
+        <div className="-mx-3 mt-2 border-t border-linha">
+          <EditorBancada
+            codigo={codigo}
+            comodo={comodo}
+            id={id}
+            bancada={movel.bancada}
+            emL={movel.forma === "L"}
+            ladoL={movel.lado_l ?? "esquerda"}
+            comprimentos={comprimentosBancada(movel)}
+            unidade={unidade}
+          />
+        </div>
+      )}
       {geometria.moveis.find((m) => m.id === id)?.planejavel && (
         <div className="-mx-3 mt-2 border-t border-linha">
           <EditorPlanejado
@@ -195,6 +210,18 @@ export function PainelMovel({
       )}
     </Caixa>
   );
+}
+
+/** Comprimento dos trechos da bancada (mm): costas = largura; braço do L = profundidade menos
+ * a faixa das costas (sem medida, 60 cm, até 60 % do lado menor — como no core). */
+export function comprimentosBancada(m: {
+  largura: Medida;
+  profundidade: Medida;
+  braco?: Medida | null;
+}): { costas: number; braco: number; faixa: number } {
+  const menor = Math.min(m.largura.valor, m.profundidade.valor);
+  const faixa = m.braco?.valor ?? Math.min(600, Math.round(menor * 0.6));
+  return { costas: m.largura.valor, braco: m.profundidade.valor - faixa, faixa };
 }
 
 const FORMAS: { id: "arredondado" | "redondo" | "L" | null; nome: string }[] = [
