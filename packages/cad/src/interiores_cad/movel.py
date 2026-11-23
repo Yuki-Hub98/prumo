@@ -22,7 +22,7 @@ from interiores_core.modelo import Movel
 from interiores_core.planejado import Planejado, Retangulo, calcular
 from interiores_core.regras import VERSAO_REGRAS, checar
 
-VERSAO_MOVEL = f"interiores-cad {__version__} · planejado v1 · {VERSAO_REGRAS}"
+VERSAO_MOVEL = f"interiores-cad {__version__} · planejado v2 · {VERSAO_REGRAS}"
 """Entra na chave de cache: mudou o desenho do móvel, suba o ``planejado vN``."""
 
 ESTRUTURA = {"lateral", "base", "tampo", "divisoria", "rodape", "prateleira"}
@@ -34,7 +34,7 @@ def achar_movel(carregado: ProjetoCarregado, comodo: str, movel_id: str) -> Move
     movel = next((m for m in dados.moveis if m.id == movel_id), None) if dados else None
     if movel is None:
         raise KeyError(f"móvel '{movel_id}' não existe no cômodo '{comodo}'")
-    if movel.construcao is None:
+    if movel.construcao is None and movel.bancada is None:
         raise ValueError(f"'{movel_id}' não tem construção; crie com `interiores planejado criar`")
     return movel
 
@@ -194,6 +194,10 @@ def desenhar_movel(
     ``ConstrucaoInvalidaError`` (não cabe).
     """
     movel = achar_movel(carregado, comodo, movel_id)
+    if movel.bancada is not None:
+        from interiores_cad.bancada import desenhar_bancada
+
+        return desenhar_bancada(carregado, comodo, movel, data)
     calc = calcular(movel)
     pav = carregado.projeto.pavimento_do_comodo(comodo)
     assert pav is not None

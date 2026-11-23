@@ -466,3 +466,23 @@ def test_simbolos_do_escritorio(copia: Path) -> None:
     arq.write_text(json.dumps(d), encoding="utf-8")
     textos = _textos(desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc)
     assert "Monitor" not in textos and "Notebook" in textos
+
+
+def test_bancada_desenho_tecnico_e_planta(copia: Path) -> None:
+    """Folha da bancada (vista superior + frente de cada trecho) e símbolo na planta."""
+    from interiores_cad.movel import desenhar_movel
+    from interiores_core.catalogo import novo_movel
+
+    arq = copia / "comodos" / "quarto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    d["moveis"] = [novo_movel("bancada", "mesa", (2400, 2300), "l_gaveteiro")]
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    casa = carregar(copia)
+    desenho = desenhar_movel(casa, "quarto", "mesa", DATA)
+    textos = _textos(desenho.doc)
+    assert {"VISTA SUPERIOR", "FRENTE — TRECHO DAS COSTAS", "FRENTE — BRAÇO DO L"} <= set(textos)
+    assert "gaveteiro" in _textos(desenho.doc, "MOVEL")
+    assert desenho.preliminar  # medidas do catálogo são estimadas
+    planta = desenhar_planta(casa, "terreo", "quarto", DATA).doc.modelspace()
+    # módulo (4 lados + diagonal) e 4 pernas (4 lados cada)
+    assert len(planta.query('LINE[layer=="MOVEL"]')) >= 5 + 16
