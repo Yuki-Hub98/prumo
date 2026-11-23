@@ -9,7 +9,15 @@ import typer
 from pydantic import ValidationError
 
 from interiores_cad.gerar import Resultado, Situacao, gerar_movel, gerar_planta, gerar_vistas
-from interiores_core import __version__, catalogo, editar, geometria, planejado, schema
+from interiores_core import (
+    __version__,
+    bancada,
+    catalogo,
+    editar,
+    geometria,
+    planejado,
+    schema,
+)
 from interiores_core.carregar import ProjetoCarregado, carregar
 from interiores_core.medidas import medidas_em
 from interiores_core.regras import checar
@@ -433,7 +441,11 @@ def cmd_planejado_gerar(
     """Desenho técnico (DXF/PDF) e lista de corte (.xlsx) dos móveis planejados."""
     carregado = _carregar(projetos / projeto)
     dados = carregado.dados_comodos.get(comodo)
-    planejados = [m.id for m in (dados.moveis if dados else []) if m.construcao is not None]
+    planejados = [
+        m.id
+        for m in (dados.moveis if dados else [])
+        if m.construcao is not None or m.bancada is not None
+    ]
     alvos = [id_] if id_ else planejados
     if not alvos:
         print(f"nenhum móvel planejado em '{comodo}' (use `interiores planejado criar`)")
@@ -465,7 +477,7 @@ def _resumo_planejado(pasta: Path, comodo: str, id_: str) -> None:
     carregado = _carregar(pasta)
     movel = next(m for m in carregado.dados_comodos[comodo].moveis if m.id == id_)
     try:
-        calc = planejado.calcular(movel)
+        calc = bancada.calcular(movel) if movel.bancada else planejado.calcular(movel)
     except planejado.ConstrucaoInvalidaError as e:
         print(f"erro: {e}")
         raise typer.Exit(1) from e
