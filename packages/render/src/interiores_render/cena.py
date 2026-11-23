@@ -26,7 +26,7 @@ from shapely.geometry.base import BaseGeometry
 from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
-from interiores_core import catalogo, geometria, planejado
+from interiores_core import bancada, catalogo, geometria, planejado
 from interiores_core.acabamentos import ACABAMENTOS
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.catalogo import Simbolo
@@ -41,7 +41,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import ALTURA_MIN_CAIXA, CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 16
+VERSAO_CENA = 17
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -742,6 +742,8 @@ class _Cena:
         f = _Feitio(self, m, mat)
         if m.construcao is not None:
             f.planejado()
+        elif m.bancada is not None:
+            f.bancada()
         elif simbolo is Simbolo.CAMA:
             f.cama()
         elif simbolo is Simbolo.ASSENTO and m.forma == "L" and m.tipo == "sofa":
@@ -961,7 +963,7 @@ class _Cena:
 def _forma_em_bloco(m: Movel) -> bool:
     """Móvel cuja forma sai como bloco extrudado (genérico, mesa); o sofá em L é montado
     peça a peça (:meth:`_Feitio.assento_l`)."""
-    return m.tipo != "sofa" and len(geometria.formas_possiveis(m)) > 1
+    return m.tipo != "sofa" and m.bancada is None and len(geometria.formas_possiveis(m)) > 1
 
 
 def _pes_da_forma(m: Movel) -> list[tuple[float, float]]:
@@ -988,6 +990,9 @@ def _divide(a: float, b: float, folga: float = 20.0) -> list[tuple[float, float]
     n = 1 if livre < 1100 else 2 if livre < 1900 else 3
     larg = (livre - folga * (n - 1)) / n
     return [(a + i * (larg + folga), a + i * (larg + folga) + larg) for i in range(n)]
+
+
+_COS_SEN = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
 
 
 @dataclass(frozen=True)
@@ -1481,6 +1486,66 @@ class _Feitio:
         for i in range(n + 1):
             z = base + i * (self.h - e) / n
             self.p(f"prateleira{i}", -w + e, -d + 6, z, w - e, d, z + e, chanfro=2)
+
+    def bancada(self) -> None:
+        """Bancada planejada: tampo (reto, ou os dois trechos do L), pernas/painéis e os
+        módulos montados como planejados, trazidos para o referencial da bancada."""
+        b = self.m.bancada
+        assert b is not None
+        base, topo = self.base, self.topo
+        e = float(b.tampo.espessura.valor)
+        try:
+            calc = bancada.calcular(self.m)
+        except planejado.ConstrucaoInvalidaError:  # não fecha: só o tampo (a checagem avisa)
+            self.p("tampo", -self.w, -self.d, topo - e, self.w, self.d, topo, chanfro=3)
+            return
+        for t in calc.trechos:
+            # trecho do braço vai só até a frente do trecho das costas (sem sobrepor o canto)
+            x0, y0 = t.ponto(0, 0)
+            x1, y1 = t.ponto(t.comprimento, t.profundidade)
+            nome = "tampo" if t.nome == "costas" else "tampo-l"
+            self.p(nome, min(x0, x1), min(y0, y1), topo - e, max(x0, x1), max(y0, y1), topo,
+                   chanfro=3)  # fmt: skip
+        mat_perna = self.metal if b.pernas == "metal" else self.mat
+        for i, p in enumerate(calc.pernas):
+            t = next(t for t in calc.trechos if t.nome == p.trecho)
+            u, v = t.uv(p.x, p.y)
+            if p.painel:
+                cantos = (t.ponto(u - e / 2, v - p.comprimento / 2),
+                          t.ponto(u + e / 2, v + p.comprimento / 2))  # fmt: skip
+                material, chanfro = self.mat, 2.0
+            else:
+                meia = bancada.PERNA / 2
+                cantos = (t.ponto(u - meia, v - meia), t.ponto(u + meia, v + meia))
+                material, chanfro = mat_perna, (8.0 if b.pernas == "madeira" else 0.0)
+            (xa, ya), (xb, yb) = cantos
+            self.p(f"{'painel' if p.painel else 'perna'}{i}", min(xa, xb), min(ya, yb), base,
+                   max(xa, xb), max(ya, yb), topo - e, material, chanfro)  # fmt: skip
+        contagem: dict[str, int] = {}
+        for mod in calc.modulos:
+            f = _Feitio(self.cena, mod.movel, self.mat)
+            f.base = base
+            f.topo = base + f.h
+            f.planejado()
+            cos, sen = _COS_SEN[mod.rotacao_local]
+            cx, cy = mod.centro_local
+            for peca in f.pecas:
+                ax0, ay0, z0, ax1, ay1, z1 = peca.caixa
+                xs, ys = [], []
+                for x, y in ((ax0, ay0), (ax1, ay1)):
+                    xs.append(cx + x * cos - y * sen)
+                    ys.append(cy + x * sen + y * cos)
+                raiz = peca.nome.rstrip("0123456789")
+                n = contagem.get(raiz, 0)
+                contagem[raiz] = n + 1
+                self.pecas.append(
+                    Peca(
+                        f"{raiz}{n}" if raiz != peca.nome or n else peca.nome,
+                        (min(xs), min(ys), z0, max(xs), max(ys), z1),
+                        peca.material,
+                        peca.chanfro,
+                    )
+                )
 
     def planejado(self) -> None:
         """Móvel montado por dentro: caixa, portas, frentes de gaveta (com puxador) e, nos

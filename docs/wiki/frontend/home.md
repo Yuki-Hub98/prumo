@@ -104,6 +104,22 @@ mensagem do cálculo. Tudo entra no rascunho (Desfazer volta cada passo). No 3D 
 portas, as frentes de gaveta com puxador e, nos vãos sem porta, os nichos e as prateleiras.
 Pia, cuba, torneira, fogão e geladeira chegam com a cozinha e o banheiro.
 
+### Bancada / mesa planejada
+
+No catálogo, **Bancada / mesa planejada**: mesa reta (só pernas ou com gaveteiro), mesa em L
+com gaveteiro e bancada de cozinha reta ou em L. A forma (reta ou em L, e o lado do braço) é
+escolhida em **Forma**. Selecionada, o painel mostra a **vista de frente** de cada trecho (no L,
+também o braço visto de dentro) e permite trocar:
+
+- **Tampo**: material (MDF, granito, quartzo...) e espessura;
+- **Pernas**: metal 50 × 50, madeira ou painel de chapa nas pontas. Entram sozinhas onde o tampo
+  não tem módulo embaixo: pontas, canto do L (à vista) e meio de vão acima de 1,80 m;
+- **Módulos embaixo do tampo**: gaveteiro, nicho ou armário, nas costas ou no braço do L, com a
+  distância da ponta e a largura. O módulo novo vai para um lugar livre, fora do canto do L.
+
+Na planta, módulos e pernas aparecem tracejados dentro do tampo. Desenho técnico e lista de
+corte: `interiores planejado gerar <projeto> <cômodo> <móvel>`.
+
 ### Escritório
 
 Na lista de móveis: **monitor**, **notebook**, **teclado e mouse** (já vêm a 75 cm do piso, a

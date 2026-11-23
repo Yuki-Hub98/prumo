@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict
 from shapely import Polygon
 from shapely.geometry.base import BaseGeometry
 
-from interiores_core import geometria, planejado
+from interiores_core import bancada, geometria, planejado
 from interiores_core.medidas import medidas_estimadas
 from interiores_core.modelo import (
     DadosComodo,
@@ -107,6 +107,10 @@ class MovelTela(_Tela):
     """Formas que este móvel aceita (só "retangular": não muda de forma)."""
     planejado: bool = False
     """Já tem construção (é planejado)."""
+    bancada: bool = False
+    """Bancada/mesa planejada (tampo, pernas e módulos)."""
+    detalhes: list[list[Pt]] = []
+    """Contornos de dentro, para a planta (bancada: pernas, painéis e módulos)."""
 
 
 class RetanguloTela(_Tela):
@@ -131,6 +135,9 @@ class ChapaTela(_Tela):
 
 class PlanejadoTela(_Tela):
     """Vista de frente de um móvel planejado, já calculada, para o editor desenhar."""
+
+    vistas: dict[str, list[RetanguloTela]] = {}
+    """Bancada: vista de frente de cada trecho (``costas`` e, no L, ``braco``)."""
 
     largura: int
     altura: int
@@ -269,6 +276,8 @@ def pavimento_para_tela(
             forma=m.forma or "retangular",
             formas=list(geometria.formas_possiveis(m)),
             planejado=m.construcao is not None,
+            bancada=m.bancada is not None,
+            detalhes=_detalhes_bancada(m),
         )
         for c in pav.comodos
         for m in (dados_comodos[c.id].moveis if c.id in dados_comodos else [])
@@ -298,39 +307,86 @@ def pavimento_para_tela(
     )
 
 
+def _detalhes_bancada(m: Movel) -> list[list[Pt]]:
+    """Pernas, painéis e módulos da bancada, em coordenadas do pavimento (vazio se não for
+    bancada ou se ela não fechar: aí a checagem aponta o erro)."""
+    if m.bancada is None:
+        return []
+    try:
+        calc = bancada.calcular(m)
+    except planejado.ConstrucaoInvalidaError:
+        return []
+    saida = [_pts(geometria.cantos_movel(mod.movel)) for mod in calc.modulos]
+    for p in calc.pernas:
+        t = next(t for t in calc.trechos if t.nome == p.trecho)
+        u, v = t.uv(p.x, p.y)
+        if p.painel:
+            e = m.bancada.tampo.espessura.valor
+            cantos = [(u - e / 2, v - p.comprimento / 2), (u + e / 2, v + p.comprimento / 2)]
+        else:
+            meia = bancada.PERNA / 2
+            cantos = [(u - meia, v - meia), (u + meia, v + meia)]
+        (u0, v0), (u1, v1) = cantos
+        locais = [t.ponto(a, b) for a, b in ((u0, v0), (u1, v0), (u1, v1), (u0, v1))]
+        saida.append(_pts([geometria.girar_movel(m, x, y) for x, y in locais]))
+    return saida
+
+
+def _retangulos(layout: list[planejado.Retangulo]) -> list[RetanguloTela]:
+    return [
+        RetanguloTela(
+            tipo=x.tipo,
+            x=round(x.x, 1),
+            y=round(x.y, 1),
+            largura=round(x.largura, 1),
+            altura=round(x.altura, 1),
+            rotulo=x.rotulo,
+            vao=x.vao,
+        )
+        for x in layout
+    ]
+
+
 def planejado_para_tela(m: Movel) -> PlanejadoTela:
-    """Vista de frente do móvel planejado (levanta ``ConstrucaoInvalidaError``/``ValueError``
-    se a construção não fecha ou o móvel não tem construção)."""
+    """Vista de frente do móvel planejado ou da bancada (levanta ``ConstrucaoInvalidaError``/
+    ``ValueError`` se a construção não fecha ou o móvel não é planejado)."""
+    if m.bancada is not None:
+        b = bancada.calcular(m)
+        costas = b.trechos[0]
+        return PlanejadoTela(
+            largura=round(costas.comprimento),
+            altura=m.altura.valor,
+            retangulos=_retangulos(b.layout),
+            larguras_vaos=[],
+            alturas=[],
+            pecas=sum(p.quantidade for p in b.pecas),
+            chapas=_chapas(b),
+            ferragens=[f"{f.quantidade}× {f.nome}" for f in b.ferragens],
+            vistas={nome: _retangulos(v) for nome, v in b.vistas.items()},
+        )
     if m.construcao is None:
         raise ValueError(f"o móvel '{m.id}' não é planejado (sem construção)")
     r = planejado.calcular(m)
     return PlanejadoTela(
         largura=m.largura.valor,
         altura=m.altura.valor,
-        retangulos=[
-            RetanguloTela(
-                tipo=x.tipo,
-                x=round(x.x, 1),
-                y=round(x.y, 1),
-                largura=round(x.largura, 1),
-                altura=round(x.altura, 1),
-                rotulo=x.rotulo,
-                vao=x.vao,
-            )
-            for x in r.layout
-        ],
+        retangulos=_retangulos(r.layout),
         larguras_vaos=[round(v, 1) for v in r.larguras_vaos],
         alturas=[[round(a, 1) for a in col] for col in r.alturas],
         pecas=sum(p.quantidade for p in r.pecas),
-        chapas=[
-            ChapaTela(
-                material=c.material,
-                espessura=c.espessura,
-                area_m2=c.area_m2,
-                chapas=c.chapas,
-                fita_metros=c.fita_metros,
-            )
-            for c in r.chapas
-        ],
+        chapas=_chapas(r),
         ferragens=[f"{f.quantidade}× {f.nome}" for f in r.ferragens],
     )
+
+
+def _chapas(r: planejado.Planejado) -> list[ChapaTela]:
+    return [
+        ChapaTela(
+            material=c.material,
+            espessura=c.espessura,
+            area_m2=c.area_m2,
+            chapas=c.chapas,
+            fita_metros=c.fita_metros,
+        )
+        for c in r.chapas
+    ]

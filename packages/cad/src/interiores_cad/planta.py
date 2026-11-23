@@ -35,7 +35,7 @@ from interiores_cad.folha import (
     desenhar_folha,
     escolher_folha,
 )
-from interiores_core import catalogo, geometria
+from interiores_core import bancada, catalogo, geometria, planejado
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.catalogo import Simbolo
 from interiores_core.medidas import Medida
@@ -100,6 +100,33 @@ NOME_JANELA = {
     "abrir": "de abrir",
     "fixa": "fixa",
 }
+
+
+def _detalhes_bancada(m: Movel) -> list[tuple[Vetor, Vetor]]:
+    """Contorno dos módulos e das pernas/painéis da bancada (referencial do móvel)."""
+    try:
+        calc = bancada.calcular(m)
+    except planejado.ConstrucaoInvalidaError:
+        return []
+    assert m.bancada is not None
+    linhas: list[tuple[Vetor, Vetor]] = []
+
+    def retangulo(t: bancada.Trecho, u0: float, v0: float, u1: float, v1: float) -> None:
+        pts = [t.ponto(u, v) for u, v in ((u0, v0), (u1, v0), (u1, v1), (u0, v1))]
+        linhas.extend(zip(pts, pts[1:] + pts[:1], strict=True))
+
+    trechos = {t.nome: t for t in calc.trechos}
+    for mod in calc.modulos:
+        retangulo(trechos[mod.trecho], mod.u0, 0, mod.u1, mod.profundidade)
+        t = trechos[mod.trecho]  # diagonal: marca o módulo sob o tampo
+        linhas.append((t.ponto(mod.u0, 0), t.ponto(mod.u1, mod.profundidade)))
+    e = m.bancada.tampo.espessura.valor
+    for p in calc.pernas:
+        t = trechos[p.trecho]
+        u, v = t.uv(p.x, p.y)
+        du, dv = (e / 2, p.comprimento / 2) if p.painel else (bancada.PERNA / 2,) * 2
+        retangulo(t, u - du, v - dv, u + du, v + dv)
+    return linhas
 
 
 def _simbolo(m: Movel) -> Simbolo:
@@ -437,6 +464,8 @@ class _Planta:
             ret(-w + 25, -d + 35, w - 25, -d + 35 + 2 * d * 0.45)
         elif simbolo is Simbolo.GABINETE:  # painel da frente
             linhas.append(((-w, d - 8), (w, d - 8)))
+        elif simbolo is Simbolo.BANCADA:  # módulos tracejados (sob o tampo) e pernas
+            linhas.extend(_detalhes_bancada(m))
         elif simbolo is Simbolo.TECLADO:  # teclado | mouse
             linhas.append(((w - 110, -d), (w - 110, d)))
             ret(-w + 12, -d + 12, w - 122, d - 12)

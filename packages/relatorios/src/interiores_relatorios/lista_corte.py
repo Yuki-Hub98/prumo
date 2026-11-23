@@ -12,6 +12,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
+from interiores_core import bancada
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.medidas import medidas_estimadas
 from interiores_core.planejado import calcular
@@ -54,7 +55,8 @@ def montar_planilha(
     movel = next((m for m in dados.moveis if m.id == movel_id), None) if dados else None
     if movel is None:
         raise KeyError(f"móvel '{movel_id}' não existe no cômodo '{comodo}'")
-    calc = calcular(movel)  # ValueError se não for planejado
+    # ValueError se não for planejado nem bancada
+    calc = bancada.calcular(movel) if movel.bancada is not None else calcular(movel)
     data = data or date.today()
     estimadas = medidas_estimadas(movel, f"comodos/{comodo}.moveis[{movel.id}]")
     problemas = [

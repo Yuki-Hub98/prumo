@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from interiores_core.medidas import Medida, Origem
 from interiores_core.modelo import (
+    Bancada,
     Comodo,
     Construcao,
     CoresVariacao,
@@ -390,6 +391,12 @@ class DefinirConstrucao(_Esquema):
     """Como o móvel é montado por dentro (planejado); ``null`` tira a construção."""
 
     construcao: Construcao | None
+
+
+class DefinirBancada(_Esquema):
+    """Tampo, pernas e módulos da bancada/mesa planejada; ``null`` tira (fica só a forma)."""
+
+    bancada: Bancada | None
 
 
 class RedimensionarMovel(_Esquema):

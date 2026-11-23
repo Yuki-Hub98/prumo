@@ -71,6 +71,8 @@ class Simbolo(StrEnum):
     """Gabinete (torre) do computador, frente para +y."""
     TECLADO = "teclado"
     """Teclado com o mouse à direita."""
+    BANCADA = "bancada"
+    """Bancada/mesa planejada: tampo (reto ou em L), pernas e módulos embaixo."""
 
 
 class _Base(BaseModel):
@@ -592,6 +594,21 @@ _ITENS = (
         modelo_padrao="80x120",
     ),
     ItemCatalogo(
+        tipo="bancada",
+        nome="Bancada / mesa planejada",
+        categoria=Categoria.SOB_MEDIDA,
+        simbolo=Simbolo.BANCADA,
+        lados_uso=("frente",),
+        modelos=(
+            _m("reta", "Mesa reta 120 × 60 (só pernas)", 1200, 600, 750),
+            _m("reta_gaveteiro", "Mesa reta 150 × 60 com gaveteiro", 1500, 600, 750),
+            _m("l_gaveteiro", "Mesa em L 160 × 150 com gaveteiro", 1600, 1500, 750, forma="L"),
+            _m("cozinha_reta", "Bancada de cozinha 200 × 60 com armários", 2000, 600, 900),
+            _m("cozinha_l", "Bancada de cozinha em L 240 × 180", 2400, 1800, 900, forma="L"),
+        ),
+        modelo_padrao="reta_gaveteiro",
+    ),
+    ItemCatalogo(
         tipo="sob_medida",
         nome="Móvel sob medida",
         categoria=Categoria.SOB_MEDIDA,
@@ -682,6 +699,11 @@ def novo_movel(
         "forma": mod.forma,
     }
     movel.update({k: v for k, v in opcionais.items() if v is not None})
+    if item.simbolo is Simbolo.BANCADA:  # já vem montada (tampo, pernas, módulos do modelo)
+        from interiores_core import bancada  # evita ciclo
+        from interiores_core.modelo import Movel
+
+        movel["bancada"] = bancada.bancada_sugerida(Movel.model_validate(movel))
     return movel
 
 

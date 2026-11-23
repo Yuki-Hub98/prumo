@@ -395,6 +395,18 @@ export function Planta({
               strokeDasharray={m.elevado ? "6 4" : undefined}
               vectorEffect="non-scaling-stroke"
             />
+            {(m.detalhes ?? []).map((d, i) => (
+              <polygon
+                key={`d${i}`}
+                points={pontos(d)}
+                fill="none"
+                stroke="var(--tinta-suave)"
+                strokeWidth={1}
+                strokeDasharray="4 3"
+                vectorEffect="non-scaling-stroke"
+                pointerEvents="none"
+              />
+            ))}
             {!fino && <line
               x1={ini[0]}
               y1={-ini[1]}

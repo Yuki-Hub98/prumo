@@ -31,13 +31,15 @@ const PINTURA: Record<string, { fill: string; stroke: string }> = {
   divisoria: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
   prateleira: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
   rodape: { fill: "var(--linha-forte)", stroke: "var(--tinta-suave)" },
+  perna: { fill: "var(--tinta-suave)", stroke: "var(--tinta)" },
+  painel: { fill: "var(--superficie-2)", stroke: "var(--tinta-suave)" },
   gaveta: { fill: "var(--superficie)", stroke: "var(--tinta)" },
   nicho: { fill: "var(--papel)", stroke: "var(--linha)" },
   cabideiro: { fill: "var(--papel)", stroke: "var(--linha)" },
 };
 
 /** Desenho da frente, em escala: estrutura, gavetas, nichos, cabideiros e (opcional) portas. */
-function Frente({ vista, portas }: { vista: Vista; portas: boolean }) {
+export function Frente({ vista, portas }: { vista: Vista; portas: boolean }) {
   const { largura: L, altura: A } = vista;
   const y = (r: { y: number; altura: number }) => A - r.y - r.altura; // SVG: y para baixo
   return (

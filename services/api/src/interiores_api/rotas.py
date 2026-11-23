@@ -20,6 +20,7 @@ from interiores_api.esquemas import (
     Apagado,
     Campos,
     Cena3D,
+    DefinirBancada,
     DefinirConstrucao,
     DividirParede,
     InfoRender,
@@ -473,6 +474,18 @@ def definir_construcao(
     return svc.editar_moveis(
         codigo, versao, comodo, "definir_construcao",
         lambda p, d, r: em.definir_construcao(p, comodo, d, id_, construcao, r),
+    )  # fmt: skip
+
+
+@moveis.put("/{id_}/bancada")
+def definir_bancada(
+    svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao, pedido: DefinirBancada
+) -> ResultadoEdicao:
+    """Monta a bancada/mesa planejada (tampo, pernas, módulos embaixo) ou tira (null)."""
+    dados = pedido.bancada.model_dump(mode="json", exclude_none=True) if pedido.bancada else None
+    return svc.editar_moveis(
+        codigo, versao, comodo, "definir_bancada",
+        lambda p, d, r: em.definir_bancada(p, comodo, d, id_, dados, r),
     )  # fmt: skip
 
 

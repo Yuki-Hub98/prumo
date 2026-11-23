@@ -2660,6 +2660,89 @@
         }
       }
     },
+    "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/bancada": {
+      "put": {
+        "tags": [
+          "móveis"
+        ],
+        "summary": "Definir Bancada",
+        "description": "Monta a bancada/mesa planejada (tampo, pernas, módulos embaixo) ou tira (null).",
+        "operationId": "definir_bancada_projetos__codigo__comodos__comodo__moveis__id___bancada_put",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "comodo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Comodo"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefinirBancada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/construcao/sugerir": {
       "post": {
         "tags": [
@@ -4104,6 +4187,38 @@
         ],
         "title": "Apagado"
       },
+      "Bancada": {
+        "properties": {
+          "tampo": {
+            "$ref": "#/components/schemas/Chapa"
+          },
+          "pernas": {
+            "type": "string",
+            "enum": [
+              "metal",
+              "madeira",
+              "painel"
+            ],
+            "title": "Pernas",
+            "description": "``metal``: tubo 50 × 50 com sapata; ``madeira``: pé pronto; ``painel``: as pontas livres viram painel de chapa (o canto continua com perna de metal).",
+            "default": "metal"
+          },
+          "modulos": {
+            "items": {
+              "$ref": "#/components/schemas/ModuloBancada"
+            },
+            "type": "array",
+            "title": "Modulos"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tampo"
+        ],
+        "title": "Bancada",
+        "description": "Bancada ou mesa planejada: tampo reto ou em L (``Movel.forma``), pernas onde o\ntampo não tem apoio (pontas livres, canto do L, vãos longos) e módulos embaixo."
+      },
       "Caixa3D": {
         "properties": {
           "nome": {
@@ -4660,6 +4775,27 @@
         ],
         "title": "DadosComodo",
         "description": "Raiz de ``comodos/<comodo>.json``: mobiliário e dados específicos."
+      },
+      "DefinirBancada": {
+        "properties": {
+          "bancada": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Bancada"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "bancada"
+        ],
+        "title": "DefinirBancada",
+        "description": "Tampo, pernas e módulos da bancada/mesa planejada; ``null`` tira (fica só a forma)."
       },
       "DefinirConstrucao": {
         "properties": {
@@ -5644,6 +5780,70 @@
         ],
         "title": "ModeloProprioResumo"
       },
+      "ModuloBancada": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "trecho": {
+            "type": "string",
+            "enum": [
+              "costas",
+              "braco"
+            ],
+            "title": "Trecho",
+            "description": "Trecho do tampo: ``costas`` (o comprido, encostado na parede) ou ``braco`` (o braço do L, que vem para a frente).",
+            "default": "costas"
+          },
+          "distancia": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Da ponta do trecho até a lateral do módulo: nas costas, da ponta esquerda de quem olha de frente; no braço do L, da ponta do braço."
+          },
+          "largura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "profundidade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Sem valor: a do trecho menos 20 mm de beiral do tampo."
+          },
+          "portas": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "abrir"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portas",
+            "description": "Portas de abrir por vão."
+          },
+          "construcao": {
+            "$ref": "#/components/schemas/Construcao"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "distancia",
+          "largura",
+          "construcao"
+        ],
+        "title": "ModuloBancada",
+        "description": "Módulo planejado embaixo do tampo da bancada (gaveteiro, nicho, armário).\n\nFica no piso, encostado no fundo do trecho, com a altura livre sob o tampo; por\ndentro é montado como qualquer planejado (``construcao``)."
+      },
       "Movel": {
         "properties": {
           "id": {
@@ -5835,6 +6035,17 @@
               }
             ],
             "description": "Móvel planejado: estrutura interna para desenho e lista de corte."
+          },
+          "bancada": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Bancada"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Bancada/mesa planejada: tampo, pernas e módulos (desenho e lista de corte)."
           },
           "forma": {
             "anyOf": [
@@ -6031,6 +6242,32 @@
             "type": "boolean",
             "title": "Planejado",
             "default": false
+          },
+          "bancada": {
+            "type": "boolean",
+            "title": "Bancada",
+            "default": false
+          },
+          "detalhes": {
+            "items": {
+              "items": {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Detalhes",
+            "default": []
           }
         },
         "type": "object",
@@ -7008,6 +7245,17 @@
       },
       "PlanejadoTela": {
         "properties": {
+          "vistas": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/RetanguloTela"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Vistas",
+            "default": {}
+          },
           "largura": {
             "type": "integer",
             "title": "Largura"

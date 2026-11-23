@@ -217,6 +217,20 @@ ferragens e estimativa de chapas). A construção fica no campo `construcao` do 
 `comodos/<cômodo>.json`; vãos sem largura e espaços sem altura dividem igualmente o que
 sobra.
 
+Bancada/mesa planejada (tampo reto ou em L, pernas onde o tampo não tem apoio e módulos
+embaixo — gaveteiro, nicho, armário — cada um montado como os outros planejados):
+
+```bash
+uv run interiores movel adicionar casa quarto bancada --modelo l_gaveteiro --em 3790,2590
+uv run interiores planejado gerar casa quarto mesa      # vista superior + frentes + lista de corte
+```
+
+Modelos prontos: mesa reta (só pernas ou com gaveteiro), mesa em L com gaveteiro e bancada de
+cozinha reta e em L. As pernas (metal 50 × 50, madeira ou painel nas pontas) entram sozinhas
+nas pontas livres, no canto do L (à vista) e no meio de vãos acima de 1,80 m. Fica no campo
+`bancada` do móvel; cada módulo diz o trecho (`costas` ou `braco` do L), a distância da ponta
+e a largura.
+
 Render 3D (Blender LTS headless; sem Blender instalado, usa a imagem Docker):
 
 ```bash
@@ -337,9 +351,11 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       oposto fica parado e a medida vira "Quero assim"
 - [x] **Mover e girar no 3D**: arrastar o móvel selecionado pelo piso no 3D ao vivo e botão
       "Girar 90°"
-- [ ] Editor de móveis — o que falta (ordem combinada): bancada/mesa planejada (reta e em L, do
-      zero ou de modelo pronto, com as pernas à vista no canto), lista de corte e desenho do
-      planejado pela tela
+- [x] **Bancada/mesa planejada** (reta e em L, do zero ou de modelo pronto): tampo, pernas
+      automáticas (à vista no canto do L), módulos embaixo, desenho técnico, lista de corte, 3D
+      e editor no painel
+- [ ] Editor de móveis — o que falta (ordem combinada): lista de corte e desenho do planejado
+      pela tela; montar o módulo da bancada por dentro (hoje: gaveteiro, nicho ou armário)
 - [ ] **Editar em detalhe** (pedido do usuário, 2026-11-20): botão "Editar em detalhe" no painel
       do que estiver selecionado (móvel; depois porta e janela) que abre uma janela (modal) com
       **só aquele objeto em 3D, no centro**, girável, com **alças para puxar** largura,
