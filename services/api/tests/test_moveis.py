@@ -234,6 +234,7 @@ def test_bancada_em_l(api: TestClient) -> None:
     assert len(mesa["detalhes"]) == 5  # gaveteiro + 4 pernas
     vista = api.get(f"{MOVEIS}/{mesa['id']}/planejado").json()
     assert set(vista["vistas"]) == {"costas", "braco"}
+    assert vista["modulos"]["gaveteiro"]["larguras_vaos"]  # vista do módulo, para montar
     assert {"tampo", "perna", "gaveta"} <= {x["tipo"] for x in vista["retangulos"]}
     projeto = api.get("/projetos/casa").json()
     dados = next(m for m in projeto["comodos"]["quarto"]["moveis"] if m["id"] == mesa["id"])
