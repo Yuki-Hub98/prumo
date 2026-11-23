@@ -18,7 +18,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from interiores_core import catalogo, geometria, planejado
+from interiores_core import bancada, catalogo, geometria, planejado
 from interiores_core.edicao import (
     Alteracao,
     EdicaoInvalidaError,
@@ -326,6 +326,39 @@ def definir_construcao(
             planejado.calcular(Movel.model_validate(movel))
         except ValidationError as e:
             raise EdicaoInvalidaError(f"construção inválida: {e}") from e
+        except planejado.ConstrucaoInvalidaError as e:
+            raise EdicaoInvalidaError(str(e)) from e
+
+    return _aplicar(projeto, comodo, dados, regras, mudar)
+
+
+def definir_bancada(
+    projeto: Projeto,
+    comodo: str,
+    dados: DadosComodo | None,
+    id_: str,
+    dados_bancada: Mapping[str, Any] | None,
+    regras: Mapping[str, object] | None = None,
+) -> EdicaoMoveis:
+    """Monta a bancada (tampo, pernas, módulos) ou tira (``None``: volta a ser só a forma).
+
+    Recusa o que não fecha (módulo fora do tampo, sobreposto, construção que não cabe),
+    com a mensagem do cálculo.
+    """
+
+    def mudar(d: Dados) -> None:
+        movel = d["moveis"][_indice(d, id_)]
+        if dados_bancada is None:
+            movel.pop("bancada", None)
+            return
+        movel["bancada"] = dict(dados_bancada)
+        movel.pop("construcao", None)
+        if movel.get("forma") not in (None, "L"):
+            movel.pop("forma", None)
+        try:
+            bancada.calcular(Movel.model_validate(movel))
+        except ValidationError as e:
+            raise EdicaoInvalidaError(f"bancada inválida: {e}") from e
         except planejado.ConstrucaoInvalidaError as e:
             raise EdicaoInvalidaError(str(e)) from e
 

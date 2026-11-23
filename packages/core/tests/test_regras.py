@@ -354,3 +354,12 @@ def test_tomada_acima_de_movel_baixo_nao_e_obstruida(rodar: Checar, moveis: dict
     )
     p = next(p for p in rodar() if p.codigo == "instalacao_obstruida")
     assert "de 0 a 500 do piso" in p.mensagem
+
+
+def test_bancada_com_modulo_fora_do_tampo(rodar: Checar, moveis: dict[str, Any]) -> None:
+    mesa = catalogo.novo_movel("bancada", "mesa", (1500, 2400), "reta_gaveteiro")
+    moveis["moveis"] = [mesa]
+    assert "construcao_invalida" not in codigos(rodar())
+    mesa["bancada"]["modulos"][0]["distancia"]["valor"] = 1400
+    erro = next(p for p in rodar() if p.codigo == "construcao_invalida")
+    assert erro.elemento == "mesa" and "sai do tampo" in erro.mensagem

@@ -1635,6 +1635,84 @@
       "modelo_padrao": "80x120"
     },
     {
+      "tipo": "bancada",
+      "nome": "Bancada / mesa planejada",
+      "categoria": "sob_medida",
+      "simbolo": "bancada",
+      "lados_uso": [
+        "frente"
+      ],
+      "assento": false,
+      "modelos": [
+        {
+          "id": "reta",
+          "nome": "Mesa reta 120 × 60 (só pernas)",
+          "largura": 1200,
+          "profundidade": 600,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "reta_gaveteiro",
+          "nome": "Mesa reta 150 × 60 com gaveteiro",
+          "largura": 1500,
+          "profundidade": 600,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "l_gaveteiro",
+          "nome": "Mesa em L 160 × 150 com gaveteiro",
+          "largura": 1600,
+          "profundidade": 1500,
+          "altura": 750,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": "L"
+        },
+        {
+          "id": "cozinha_reta",
+          "nome": "Bancada de cozinha 200 × 60 com armários",
+          "largura": 2000,
+          "profundidade": 600,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": null
+        },
+        {
+          "id": "cozinha_l",
+          "nome": "Bancada de cozinha em L 240 × 180",
+          "largura": 2400,
+          "profundidade": 1800,
+          "altura": 900,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": "L"
+        }
+      ],
+      "modelo_padrao": "reta_gaveteiro"
+    },
+    {
       "tipo": "sob_medida",
       "nome": "Móvel sob medida",
       "categoria": "sob_medida",

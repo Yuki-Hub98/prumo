@@ -214,6 +214,8 @@ RAIO_PADRAO = 100
 
 BRACO_SOFA = 900
 """mm: fundo de um assento de sofá, padrão dos dois trechos do sofá em L."""
+BRACO_BANCADA = 600
+"""mm: fundo de bancada/mesa, padrão dos dois trechos da bancada em L."""
 
 
 def braco_l(movel: Movel) -> float:
@@ -224,6 +226,8 @@ def braco_l(movel: Movel) -> float:
     menor = min(movel.largura.valor, movel.profundidade.valor)
     if movel.tipo == "sofa":
         return float(min(BRACO_SOFA, round(menor * 0.6)))
+    if movel.bancada is not None:
+        return float(min(BRACO_BANCADA, round(menor * 0.6)))
     return float(round(menor * 0.4))
 
 
@@ -261,7 +265,7 @@ def poligono_movel(movel: Movel) -> Polygon:
 
 def formas_possiveis(movel: Movel) -> tuple[str, ...]:
     """Formas que este móvel aceita: corpo simples (sob medida, banco, berço) e mesas, todas;
-    sofá, retangular ou em L (de canto); os outros (cama, poltrona, guarda-roupa) e os
+    sofá e bancada planejada, retangular ou em L; os outros (cama, poltrona, guarda-roupa) e os
     planejados ficam retangulares."""
     from interiores_core.catalogo import Simbolo, item_do_tipo
 
@@ -269,7 +273,7 @@ def formas_possiveis(movel: Movel) -> tuple[str, ...]:
     simbolo = item.simbolo if item else Simbolo.GENERICO
     if movel.construcao is not None:
         return ("retangular",)
-    if movel.tipo == "sofa":
+    if movel.tipo == "sofa" or movel.bancada is not None:
         return ("retangular", "L")
     if simbolo not in (Simbolo.GENERICO, Simbolo.MESA):
         return ("retangular",)

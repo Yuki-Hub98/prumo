@@ -7,6 +7,7 @@ cada peça que o render monta (nomes das peças em ``interiores_render.cena``).
 
 from __future__ import annotations
 
+import itertools
 import re
 
 from interiores_core.catalogo import Simbolo, item_do_tipo
@@ -69,6 +70,7 @@ POR_SIMBOLO: dict[Simbolo, tuple[str, ...]] = {
     Simbolo.NOTEBOOK: ("moldura", "teclas"),
     Simbolo.GABINETE: ("frente",),
     Simbolo.TECLADO: ("teclas", "mouse"),
+    Simbolo.BANCADA: ("tampo", "pes"),
 }
 PLANEJADO: tuple[str, ...] = ("portas", "gavetas", "puxadores", "prateleiras")
 """Móvel planejado (com ``construcao``): caixa = corpo; portas, frentes de gaveta,
@@ -92,8 +94,8 @@ _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"^encosto(-l)?$", "encosto"),  # sofá em L: costas e lateral
         (r"^braco-[ed]$", "bracos"),
         (r"^assento$", "assento"),
-        (r"^tampo$", "tampo"),
-        (r"^pe\d+$", "pes"),
+        (r"^tampo(-l)?$", "tampo"),
+        (r"^(pe|perna|painel)\d+$", "pes"),
         (r"^(moldura|tampa)$", "moldura"),
         (r"^teclas\d*$", "teclas"),
         (r"^mouse$", "mouse"),
@@ -121,6 +123,8 @@ def partes_do_movel(m: Movel) -> tuple[str, ...]:
     """Partes com cor própria que este móvel tem (sem o corpo)."""
     if m.construcao is not None:
         return PLANEJADO
+    if m.bancada is not None:  # tampo, pernas/painéis e o que os módulos tiverem
+        return ("tampo", "pes", *_partes_dos_modulos(m))
     item = item_do_tipo(m.tipo)
     simbolo = item.simbolo if item else Simbolo.GENERICO
     if simbolo is Simbolo.FOGAO and eh_cooktop(m):
@@ -142,3 +146,21 @@ ALTURA_MAX_COOKTOP = 200
 
 def eh_cooktop(m: Movel) -> bool:
     return m.altura.valor < ALTURA_MAX_COOKTOP
+
+
+def _partes_dos_modulos(m: Movel) -> tuple[str, ...]:
+    """Partes que aparecem nos módulos da bancada (na ordem de ``PLANEJADO``)."""
+    assert m.bancada is not None
+    tem: set[str] = set()
+    for mod in m.bancada.modulos:
+        for vao in mod.construcao.vaos:
+            tipos = [e.tipo for e in vao.espacos]
+            fechado = mod.portas == "abrir" and vao.porta
+            if fechado:
+                tem |= {"portas", "puxadores"}
+            if "gaveta" in tipos and not fechado:
+                tem |= {"gavetas", "puxadores"}
+            entre = [a != "gaveta" or b != "gaveta" for a, b in itertools.pairwise(tipos)]
+            if not fechado and any(entre):
+                tem.add("prateleiras")
+    return tuple(p for p in PLANEJADO if p in tem)

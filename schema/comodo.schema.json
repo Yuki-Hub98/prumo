@@ -1,5 +1,37 @@
 {
   "$defs": {
+    "Bancada": {
+      "additionalProperties": false,
+      "description": "Bancada ou mesa planejada: tampo reto ou em L (``Movel.forma``), pernas onde o\ntampo não tem apoio (pontas livres, canto do L, vãos longos) e módulos embaixo.",
+      "properties": {
+        "tampo": {
+          "$ref": "#/$defs/Chapa"
+        },
+        "pernas": {
+          "default": "metal",
+          "description": "``metal``: tubo 50 × 50 com sapata; ``madeira``: pé pronto; ``painel``: as pontas livres viram painel de chapa (o canto continua com perna de metal).",
+          "enum": [
+            "metal",
+            "madeira",
+            "painel"
+          ],
+          "title": "Pernas",
+          "type": "string"
+        },
+        "modulos": {
+          "items": {
+            "$ref": "#/$defs/ModuloBancada"
+          },
+          "title": "Modulos",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tampo"
+      ],
+      "title": "Bancada",
+      "type": "object"
+    },
     "Chapa": {
       "additionalProperties": false,
       "description": "Material de chapa (MDF, MDP, HDF...) e sua espessura.",
@@ -135,6 +167,72 @@
         "origem"
       ],
       "title": "Medida",
+      "type": "object"
+    },
+    "ModuloBancada": {
+      "additionalProperties": false,
+      "description": "Módulo planejado embaixo do tampo da bancada (gaveteiro, nicho, armário).\n\nFica no piso, encostado no fundo do trecho, com a altura livre sob o tampo; por\ndentro é montado como qualquer planejado (``construcao``).",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "trecho": {
+          "default": "costas",
+          "description": "Trecho do tampo: ``costas`` (o comprido, encostado na parede) ou ``braco`` (o braço do L, que vem para a frente).",
+          "enum": [
+            "costas",
+            "braco"
+          ],
+          "title": "Trecho",
+          "type": "string"
+        },
+        "distancia": {
+          "$ref": "#/$defs/Medida",
+          "description": "Da ponta do trecho até a lateral do módulo: nas costas, da ponta esquerda de quem olha de frente; no braço do L, da ponta do braço."
+        },
+        "largura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "profundidade": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sem valor: a do trecho menos 20 mm de beiral do tampo."
+        },
+        "portas": {
+          "anyOf": [
+            {
+              "const": "abrir",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Portas de abrir por vão.",
+          "title": "Portas"
+        },
+        "construcao": {
+          "$ref": "#/$defs/Construcao"
+        }
+      },
+      "required": [
+        "id",
+        "distancia",
+        "largura",
+        "construcao"
+      ],
+      "title": "ModuloBancada",
       "type": "object"
     },
     "Movel": {
@@ -340,6 +438,18 @@
           ],
           "default": null,
           "description": "Móvel planejado: estrutura interna para desenho e lista de corte."
+        },
+        "bancada": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bancada"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Bancada/mesa planejada: tampo, pernas e módulos (desenho e lista de corte)."
         },
         "forma": {
           "anyOf": [

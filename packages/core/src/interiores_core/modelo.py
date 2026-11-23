@@ -286,6 +286,50 @@ class Construcao(_Modelo):
     vaos: list[Vao] = Field(min_length=1, description="Da esquerda para a direita (de frente).")
 
 
+class ModuloBancada(_Modelo):
+    """Módulo planejado embaixo do tampo da bancada (gaveteiro, nicho, armário).
+
+    Fica no piso, encostado no fundo do trecho, com a altura livre sob o tampo; por
+    dentro é montado como qualquer planejado (``construcao``).
+    """
+
+    id: Id
+    trecho: Literal["costas", "braco"] = Field(
+        "costas",
+        description=(
+            "Trecho do tampo: ``costas`` (o comprido, encostado na parede) ou ``braco`` (o "
+            "braço do L, que vem para a frente)."
+        ),
+    )
+    distancia: Medida = Field(
+        description=(
+            "Da ponta do trecho até a lateral do módulo: nas costas, da ponta esquerda de "
+            "quem olha de frente; no braço do L, da ponta do braço."
+        )
+    )
+    largura: Medida
+    profundidade: Medida | None = Field(
+        None, description="Sem valor: a do trecho menos 20 mm de beiral do tampo."
+    )
+    portas: Literal["abrir"] | None = Field(None, description="Portas de abrir por vão.")
+    construcao: Construcao
+
+
+class Bancada(_Modelo):
+    """Bancada ou mesa planejada: tampo reto ou em L (``Movel.forma``), pernas onde o
+    tampo não tem apoio (pontas livres, canto do L, vãos longos) e módulos embaixo."""
+
+    tampo: Chapa
+    pernas: Literal["metal", "madeira", "painel"] = Field(
+        "metal",
+        description=(
+            "``metal``: tubo 50 × 50 com sapata; ``madeira``: pé pronto; ``painel``: as "
+            "pontas livres viram painel de chapa (o canto continua com perna de metal)."
+        ),
+    )
+    modulos: list[ModuloBancada] = Field(default_factory=list)
+
+
 AcabamentoMovel = Literal[
     "madeira_clara", "madeira_escura", "amadeirado", "branco_fosco", "laca_brilho", "preto_fosco"
 ]
@@ -352,6 +396,10 @@ class Movel(_Modelo):
     construcao: Construcao | None = Field(
         None, description="Móvel planejado: estrutura interna para desenho e lista de corte."
     )
+    bancada: Bancada | None = Field(
+        None,
+        description="Bancada/mesa planejada: tampo, pernas e módulos (desenho e lista de corte).",
+    )
     forma: Literal["arredondado", "redondo", "L"] | None = Field(
         None,
         description=(
@@ -374,6 +422,10 @@ class Movel(_Modelo):
         menor = min(self.largura.valor, self.profundidade.valor)
         if self.forma is not None and self.construcao is not None:
             raise ValueError("móvel planejado (com construção) só pode ser retangular")
+        if self.bancada is not None and self.construcao is not None:
+            raise ValueError("bancada não tem construção própria: use os módulos dela")
+        if self.bancada is not None and self.forma not in (None, "L"):
+            raise ValueError("bancada planejada é reta ou em L")
         if self.forma == "arredondado" and self.raio and self.raio.valor * 2 > menor:
             raise ValueError(f"raio de {self.raio.valor} mm não cabe: no máximo {menor // 2} mm")
         if self.forma == "L" and self.braco and not 0 < self.braco.valor < menor:
