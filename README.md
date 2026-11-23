@@ -329,8 +329,10 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       identidade visual
 - [x] **Redimensionar pelas bordas**: alças no meio de cada lado do móvel selecionado; o lado
       oposto fica parado e a medida vira "Quero assim"
-- [ ] Editor de móveis — o que falta (ordem combinada): mover e girar direto no 3D, sofá e
-      bancada planejada em L, lista de corte e desenho do planejado pela tela
+- [x] **Mover e girar no 3D**: arrastar o móvel selecionado pelo piso no 3D ao vivo e botão
+      "Girar 90°"
+- [ ] Editor de móveis — o que falta (ordem combinada): sofá e bancada planejada em L, lista de
+      corte e desenho do planejado pela tela
 - [ ] **Editar em detalhe** (pedido do usuário, 2026-11-20): botão "Editar em detalhe" no painel
       do que estiver selecionado (móvel; depois porta e janela) que abre uma janela (modal) com
       **só aquele objeto em 3D, no centro**, girável, com **alças para puxar** largura,
