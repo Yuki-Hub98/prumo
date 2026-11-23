@@ -12,6 +12,7 @@ dependencies = [
     "arq>=0.28.0",
     "interiores-render",
     "interiores-relatorios",
+    "interiores-cad",
 ]
 
 [build-system]
@@ -26,6 +27,7 @@ interiores-core = { workspace = true }
 interiores-banco = { workspace = true }
 interiores-render = { workspace = true }
 interiores-relatorios = { workspace = true }
+interiores-cad = { workspace = true }
 
 [project.scripts]
 interiores-api = "interiores_api.app:rodar"
