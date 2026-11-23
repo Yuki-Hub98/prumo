@@ -246,3 +246,23 @@ def test_bancada_em_l(api: TestClient) -> None:
     }
     r = api.put(f"{MOVEIS}/{mesa['id']}/bancada", params={"versao": 3}, json={"bancada": fora})
     assert r.status_code == 422 and "sai do tampo" in r.text
+
+
+def test_baixar_desenho_e_lista_de_corte(api: TestClient) -> None:
+    """Desenho (PDF/DXF) e lista de corte (.xlsx) do planejado e da bancada, pela API."""
+    pedido = {"tipo": "bancada", "modelo": "reta_gaveteiro", "centro": [2000, 1500]}
+    assert api.post(MOVEIS, params={"versao": 1}, json=pedido).status_code == 200
+    geo = api.get("/projetos/casa/pavimentos/terreo/geometria").json()
+    mesa = next(m for m in geo["moveis"] if m["tipo"] == "bancada")["id"]
+    pdf = api.get(f"{MOVEIS}/{mesa}/planejado.pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    assert pdf.headers["content-disposition"].startswith("inline")
+    dxf = api.get(f"{MOVEIS}/{mesa}/planejado.dxf")
+    assert dxf.status_code == 200 and b"SECTION" in dxf.content[:200]
+    xlsx = api.get(f"{MOVEIS}/{mesa}/planejado.xlsx")
+    assert xlsx.status_code == 200 and xlsx.content.startswith(b"PK")
+    assert f"planejado-{mesa}-corte.xlsx" in xlsx.headers["content-disposition"]
+    vista = api.get(f"{MOVEIS}/{mesa}/planejado").json()
+    assert any(p["nome"] == "Tampo" and p["fita"] == "2C2L" for p in vista["lista"])
+    assert api.get(f"{MOVEIS}/{mesa}/planejado.png").status_code == 404
+    assert api.get(f"{MOVEIS}/cama/planejado.pdf").status_code == 422  # não é planejado

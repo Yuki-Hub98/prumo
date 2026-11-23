@@ -117,8 +117,16 @@ também o braço visto de dentro) e permite trocar:
 - **Módulos embaixo do tampo**: gaveteiro, nicho ou armário, nas costas ou no braço do L, com a
   distância da ponta e a largura. O módulo novo vai para um lugar livre, fora do canto do L.
 
-Na planta, módulos e pernas aparecem tracejados dentro do tampo. Desenho técnico e lista de
-corte: `interiores planejado gerar <projeto> <cômodo> <móvel>`.
+Na planta, módulos e pernas aparecem tracejados dentro do tampo.
+
+### Lista de corte e desenho pela tela
+
+No painel de todo móvel planejado (e da bancada), **Para o marceneiro**: **Ver desenho (PDF)**
+abre o desenho técnico cotado numa aba nova; **DXF** e **Lista de corte (.xlsx)** baixam os
+arquivos — os mesmos do `interiores planejado gerar`, sempre da versão atual do projeto. Logo
+abaixo, o resumo (peças, chapas e metros de fita) e **Ver a lista de corte**: as peças agrupadas
+por material e espessura, com quantidade, comprimento × largura na unidade escolhida e as bordas
+com fita, e as ferragens. Passe o mouse numa peça para ver a observação (ex.: "recuado 50 mm").
 
 ### Escritório
 

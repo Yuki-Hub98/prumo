@@ -14,7 +14,7 @@ import tomllib
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-from io import BytesIO
+from io import BytesIO, StringIO
 from pathlib import Path
 
 import structlog
@@ -51,6 +51,8 @@ from interiores_banco import arquivos, rascunho, renders, repositorio
 from interiores_banco import tabelas as t
 from interiores_banco import versoes as volta
 from interiores_banco.mapear import Conteudo
+from interiores_cad.movel import desenhar_movel
+from interiores_cad.pdf import pdf_em_bytes
 from interiores_core import tinta as calculo_tinta
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.edicao import Alteracao, Edicao, diferencas, renomear_projeto
@@ -67,6 +69,7 @@ from interiores_core.tela import (
     planejado_para_tela,
 )
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, validar
+from interiores_relatorios.lista_corte import montar_planilha as planilha_corte
 from interiores_relatorios.tinta import cores_das_variacoes
 from interiores_relatorios.tinta import montar_planilha as planilha_tinta
 from interiores_render.cena import (
@@ -581,6 +584,21 @@ class Servico:
             ],
             parametros=asdict(r.parametros),
         )
+
+    def planejado_arquivo(self, codigo: str, comodo: str, id_: str, formato: str) -> bytes:
+        """Desenho técnico (``pdf``/``dxf``) ou lista de corte (``xlsx``) do móvel planejado
+        ou da bancada, os mesmos do ``interiores planejado gerar``, em memória."""
+        carregado, _ = self._carregado(codigo)
+        if formato == "xlsx":
+            buffer = BytesIO()
+            planilha_corte(carregado, comodo, id_).save(buffer)
+            return buffer.getvalue()
+        desenho = desenhar_movel(carregado, comodo, id_)
+        if formato == "pdf":
+            return pdf_em_bytes(desenho)
+        texto = StringIO()
+        desenho.doc.write(texto)
+        return texto.getvalue().encode("utf-8")
 
     def tinta_xlsx(self, codigo: str, pavimento: str, variacoes: dict[str, str]) -> bytes:
         """A planilha de tinta (mesma do ``make tinta``), em memória, para baixar."""

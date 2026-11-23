@@ -506,6 +506,30 @@ def ver_planejado(svc: Svc, codigo: str, comodo: str, id_: str) -> PlanejadoTela
     return svc.planejado(codigo, comodo, id_)
 
 
+_TIPOS_ARQUIVO = {
+    "pdf": "application/pdf",
+    "dxf": "application/dxf",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+}
+
+
+@moveis.get("/{id_}/planejado.{formato}")
+def baixar_planejado(svc: Svc, codigo: str, comodo: str, id_: str, formato: str) -> Response:
+    """Desenho técnico (``.pdf``, ``.dxf``) ou lista de corte (``.xlsx``) do planejado ou da
+    bancada: os mesmos arquivos do ``interiores planejado gerar``."""
+    if formato not in _TIPOS_ARQUIVO:
+        raise KeyError(f"formato '{formato}' não existe (pdf, dxf ou xlsx)")
+    dados = svc.planejado_arquivo(codigo, comodo, id_, formato)
+    nome = f"planejado-{id_}-corte.xlsx" if formato == "xlsx" else f"planejado-{id_}.{formato}"
+    # PDF abre no navegador (ver o desenho); DXF e planilha baixam
+    modo = "inline" if formato == "pdf" else "attachment"
+    return Response(
+        dados,
+        media_type=_TIPOS_ARQUIVO[formato],
+        headers={"Content-Disposition": f'{modo}; filename="{nome}"'},
+    )
+
+
 @moveis.delete("/{id_}")
 def remover_movel(svc: Svc, codigo: str, comodo: str, id_: str, versao: Versao) -> ResultadoEdicao:
     return svc.editar_moveis(

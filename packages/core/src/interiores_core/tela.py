@@ -133,9 +133,25 @@ class ChapaTela(_Tela):
     fita_metros: float
 
 
+class PecaTela(_Tela):
+    """Uma linha da lista de corte."""
+
+    nome: str
+    material: str
+    espessura: int
+    comprimento: float
+    largura: float
+    quantidade: int
+    fita: str = ""
+    """Bordas com fita: "1C" = um lado comprido, "2C2L" = os quatro lados..."""
+    obs: str = ""
+
+
 class PlanejadoTela(_Tela):
     """Vista de frente de um móvel planejado, já calculada, para o editor desenhar."""
 
+    lista: list[PecaTela] = []
+    """Lista de corte: cada peça com medidas, quantidade e fita de borda."""
     vistas: dict[str, list[RetanguloTela]] = {}
     """Bancada: vista de frente de cada trecho (``costas`` e, no L, ``braco``)."""
 
@@ -362,6 +378,7 @@ def planejado_para_tela(m: Movel) -> PlanejadoTela:
             pecas=sum(p.quantidade for p in b.pecas),
             chapas=_chapas(b),
             ferragens=[f"{f.quantidade}× {f.nome}" for f in b.ferragens],
+            lista=_lista(b),
             vistas={nome: _retangulos(v) for nome, v in b.vistas.items()},
         )
     if m.construcao is None:
@@ -376,7 +393,24 @@ def planejado_para_tela(m: Movel) -> PlanejadoTela:
         pecas=sum(p.quantidade for p in r.pecas),
         chapas=_chapas(r),
         ferragens=[f"{f.quantidade}× {f.nome}" for f in r.ferragens],
+        lista=_lista(r),
     )
+
+
+def _lista(r: planejado.Planejado) -> list[PecaTela]:
+    return [
+        PecaTela(
+            nome=p.nome,
+            material=p.material,
+            espessura=p.espessura,
+            comprimento=round(p.comprimento, 1),
+            largura=round(p.largura, 1),
+            quantidade=p.quantidade,
+            fita=p.fita,
+            obs=p.obs,
+        )
+        for p in r.pecas
+    ]
 
 
 def _chapas(r: planejado.Planejado) -> list[ChapaTela]:
