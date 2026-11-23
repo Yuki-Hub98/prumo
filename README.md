@@ -359,12 +359,11 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       DXF e .xlsx)
 - [x] **Módulos da bancada por dentro**: cada módulo (gaveteiro, nicho, armário ou do zero)
       monta vãos, gavetas, nichos e prateleiras no painel, como os outros planejados
-- [ ] **Editar em detalhe** (pedido do usuário, 2026-11-20): botão "Editar em detalhe" no painel
-      do que estiver selecionado (móvel; depois porta e janela) que abre uma janela (modal) com
-      **só aquele objeto em 3D, no centro**, girável, com **alças para puxar** largura,
-      profundidade e **altura**; as medidas em cm mudam ao vivo enquanto puxa (mesma regra das
-      bordas: medida arrastada = "Quero assim", passo de 1 cm, Desfazer volta). Base para editar
-      partes também (prateleira, gaveta, porta do planejado) no mesmo modal
+- [x] **Editar em detalhe** (móvel): janela com só o móvel em 3D, no centro e girável, com alças
+      para puxar largura, profundidade e altura; medidas em cm ao vivo, passo de 1 cm, lado
+      oposto parado, "Quero assim", Desfazer/Refazer na própria janela
+- [ ] Editar em detalhe — o que falta: porta e janela; editar partes (prateleira, gaveta, porta
+      do planejado) no mesmo modal
 - [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis
 - [ ] Referência por foto (pedido do usuário, 2026-11-19 e 2026-11-20): subir uma foto
       (Pinterest, um quarto parecido) pela tela e **guardar a foto no projeto** como referência
