@@ -4,7 +4,7 @@ import { api, ou, type Esquemas, type Medida } from "../api/cliente";
 import { useEditar, usePlanejado } from "../dados";
 import { type Unidade } from "../unidades";
 import { CampoMedida } from "./CampoMedida";
-import { Frente } from "./EditorPlanejado";
+import { Frente, MontagemPorDentro } from "./EditorPlanejado";
 import { ListaDeCorte } from "./ListaDeCorte";
 
 type Bancada = Esquemas["Bancada"];
@@ -52,9 +52,11 @@ export function moduloPronto(id: string, tipo: TipoModulo, trecho: Trecho, dista
 /** Tipo do módulo pelo jeito que ele foi montado (para marcar o botão certo). */
 export function tipoDoModulo(m: Modulo): TipoModulo | null {
   const espacos = m.construcao.vaos.flatMap((v) => v.espacos.map((e) => e.tipo));
-  if (m.portas === "abrir") return "armario";
-  if (espacos.length && espacos.every((t) => t === "gaveta")) return "gaveteiro";
-  if (espacos.every((t) => t === "nicho")) return "nicho";
+  if (m.construcao.vaos.length !== 1) return null; // vários vãos: montado do jeito da pessoa
+  const soNichos = espacos.every((t) => t === "nicho");
+  if (m.portas === "abrir") return soNichos && espacos.length === 2 ? "armario" : null;
+  if (espacos.length === 3 && espacos.every((t) => t === "gaveta")) return "gaveteiro";
+  if (soNichos && espacos.length === 3) return "nicho";
   return null;
 }
 
@@ -125,6 +127,8 @@ export function EditorBancada({
   const mudarModulo = (i: number, campos: Partial<Modulo>) =>
     gravar({ ...bancada, modulos: modulos.map((m, j) => (j === i ? { ...m, ...campos } : m)) });
   const [semLugar, setSemLugar] = useState<string | null>(null);
+  /** Módulo aberto em "Montar por dentro" (um por vez: o painel é estreito). */
+  const [porDentro, setPorDentro] = useState<string | null>(null);
   const adicionar = (tipo: TipoModulo, trecho: Trecho) => {
     const largura = tipo === "armario" ? 800 : 450;
     const comp = comprimentos[trecho];
@@ -242,6 +246,7 @@ export function EditorBancada({
                     {NOME_MODULO[t]}
                   </button>
                 ))}
+                {tipo === null && <span className={`rounded-md px-2 py-0.5 text-xs ${opcao(true)}`}>Do meu jeito</span>}
               </div>
               {emL && (
                 <div className="mt-1 flex items-center gap-1 text-xs">
@@ -273,6 +278,28 @@ export function EditorBancada({
                 ocupado={ocupado}
                 aoSalvar={(med) => mudarModulo(i, { largura: med })}
               />
+              <button
+                type="button"
+                className="mt-1 text-xs link"
+                onClick={() => setPorDentro(porDentro === m.id ? null : m.id)}
+              >
+                {porDentro === m.id ? "Fechar a montagem" : "Montar por dentro (vãos, gavetas, prateleiras)"}
+              </button>
+              {porDentro === m.id && (
+                <div className="mt-1 border-t border-linha pt-1">
+                  <MontagemPorDentro
+                    titulo={<span className="text-xs text-tinta-suave">Frente do {m.id}</span>}
+                    construcao={m.construcao}
+                    portas={m.portas ?? null}
+                    tiposPorta={[null, "abrir"]}
+                    vista={v?.modulos?.[m.id]}
+                    ocupado={ocupado}
+                    gravar={(construcao) => mudarModulo(i, { construcao })}
+                    mudarPortas={(t) => mudarModulo(i, { portas: t === "abrir" ? "abrir" : null })}
+                    unidade={unidade}
+                  />
+                </div>
+              )}
             </div>
           );
         })}
