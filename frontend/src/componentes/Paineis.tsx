@@ -1,13 +1,14 @@
 import { EscolhaOrigem } from "./Origem";
 import { btn, opcao } from "../estilo";
 import { maiuscula } from "../texto";
-import { BookmarkPlus, Crosshair, Info, OctagonAlert, TriangleAlert } from "lucide-react";
+import { BookmarkPlus, Box, Crosshair, Info, OctagonAlert, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, ou, type Medida, type PavimentoTela, type Problema } from "../api/cliente";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCatalogo, useEditar, useEstimadas, useModelosProprios, useProjeto } from "../dados";
 import { formatar, type Origem, paraMm, type Unidade } from "../unidades";
 import { CampoMedida } from "./CampoMedida";
+import { EditarDetalhe } from "./EditarDetalhe";
 import { EditorBancada } from "./EditorBancada";
 import { EditorPlanejado } from "./EditorPlanejado";
 
@@ -52,6 +53,7 @@ export function PainelMovel({
   const editar = useEditar(codigo);
   const [parede, setParede] = useState("");
   const [distancia, setDistancia] = useState("0");
+  const [detalhe, setDetalhe] = useState(false);
   const movel = projeto?.comodos[comodo]?.moveis?.find((m) => m.id === id);
   if (!movel) return null;
   const caminho = { codigo, comodo, id_: id };
@@ -91,6 +93,9 @@ export function PainelMovel({
         >
           Girar 90°
         </button>
+        <button className={botao} onClick={() => setDetalhe(true)} title="Só este móvel em 3D, com alças para puxar">
+          <Box size={14} /> Editar em detalhe
+        </button>
         <button
           className={`${botao} text-erro`}
           disabled={editar.isPending}
@@ -109,6 +114,24 @@ export function PainelMovel({
           Remover
         </button>
       </div>
+      {detalhe && (
+        <EditarDetalhe
+          codigo={codigo}
+          comodo={comodo}
+          id={id}
+          nome={movel.nome ?? movel.tipo}
+          centro={movel.centro as [number, number]}
+          rotacao={movel.rotacao ?? 0}
+          medidas={{
+            largura: movel.largura.valor,
+            profundidade: movel.profundidade.valor,
+            altura: movel.altura.valor,
+            base: movel.elevacao?.valor ?? 0,
+          }}
+          unidade={unidade}
+          aoFechar={() => setDetalhe(false)}
+        />
+      )}
       <SalvarComoModelo codigo={codigo} comodo={comodo} movel={id} nomeAtual={movel.nome ?? ""} />
       <form
         className="mb-2 flex flex-wrap items-center gap-1 text-sm"
