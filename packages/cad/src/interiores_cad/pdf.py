@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from io import BytesIO
 from pathlib import Path
+from typing import BinaryIO
 
 import matplotlib
 from ezdxf.addons.drawing.config import (
@@ -59,7 +61,14 @@ def montar_figura(desenho: Desenho) -> Figure:
     return fig
 
 
-def salvar_pdf(desenho: Desenho, caminho: Path) -> None:
+def pdf_em_bytes(desenho: Desenho) -> bytes:
+    """O mesmo PDF de :func:`salvar_pdf`, em memória (para a API devolver)."""
+    buffer = BytesIO()
+    salvar_pdf(desenho, buffer)
+    return buffer.getvalue()
+
+
+def salvar_pdf(desenho: Desenho, caminho: Path | BinaryIO) -> None:
     """Grava o PDF sem data de criação, para a mesma entrada dar o mesmo arquivo."""
     fig = montar_figura(desenho)
     with matplotlib.rc_context({"pdf.fonttype": 42}):
