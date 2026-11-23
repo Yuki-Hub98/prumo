@@ -7381,6 +7381,14 @@
             "title": "Vistas",
             "default": {}
           },
+          "modulos": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PlanejadoTela"
+            },
+            "type": "object",
+            "title": "Modulos",
+            "default": {}
+          },
           "largura": {
             "type": "integer",
             "title": "Largura"

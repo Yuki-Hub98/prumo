@@ -151,7 +151,6 @@ export function EditorPlanejado({
 }) {
   const editar = useEditar(codigo);
   const vista = usePlanejado(codigo, comodo, id, !!construcao);
-  const [verPortas, setVerPortas] = useState(false);
   const caminho = { codigo, comodo, id_: id };
 
   const gravar = (nova: Construcao | null) =>
@@ -191,38 +190,97 @@ export function EditorPlanejado({
       </section>
     );
 
-  const c = construcao;
   const v = vista.data;
-  const comPorta = (i: number) => c.vaos[i].porta !== false;
   return (
     <section className="border-b border-linha p-3">
+      <MontagemPorDentro
+        titulo={<h3 className="text-xs font-semibold uppercase tracking-wide text-tinta-suave">Montar por dentro</h3>}
+        construcao={construcao}
+        portas={portas}
+        tiposPorta={[null, "abrir", "correr"]}
+        vista={vista.data}
+        erroVista={vista.error?.message}
+        ocupado={editar.isPending}
+        gravar={gravar}
+        mudarPortas={(t) =>
+          editar.mutate((versao) =>
+            ou(
+              api.PATCH("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}", {
+                params: { path: caminho, query: { versao } },
+                body: { portas: t },
+              }),
+            ),
+          )
+        }
+        unidade={unidade}
+      />
+      {v && <ListaDeCorte codigo={codigo} comodo={comodo} id={id} vista={v} unidade={unidade} />}
+      <div className="mt-2 flex items-center justify-between">
+        <p className="text-xs text-tinta-suave">
+          Medidas vazias dividem o que sobra. Porta de abrir é por vão (cobre gavetas e nichos dele); de correr cobre
+          o móvel todo. Desfazer volta cada passo.
+        </p>
+        <button className="text-xs text-erro hover:underline" disabled={editar.isPending} onClick={() => gravar(null)}>
+          Desmontar
+        </button>
+      </div>
+      {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
+    </section>
+  );
+}
+
+type TipoPorta = "abrir" | "correr" | null;
+
+/**
+ * Vãos e espaços de uma construção (vista de frente, portas, cada vão com os espaços de baixo
+ * para cima). Não sabe onde a construção mora: quem usa grava (móvel planejado: a construção
+ * do móvel; bancada: a do módulo).
+ */
+export function MontagemPorDentro({
+  titulo,
+  construcao: c,
+  portas,
+  tiposPorta,
+  vista: v,
+  erroVista,
+  ocupado,
+  gravar,
+  mudarPortas,
+  unidade,
+}: {
+  titulo: React.ReactNode;
+  construcao: Construcao;
+  portas: TipoPorta | undefined;
+  tiposPorta: TipoPorta[];
+  vista: Vista | undefined;
+  erroVista?: string;
+  ocupado: boolean;
+  gravar: (nova: Construcao) => void;
+  mudarPortas: (t: TipoPorta) => void;
+  unidade: Unidade;
+}) {
+  const [verPortas, setVerPortas] = useState(false);
+  const comPorta = (i: number) => c.vaos[i].porta !== false;
+  return (
+    <>
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-tinta-suave">Montar por dentro</h3>
+        {titulo}
         <label className="flex items-center gap-1 text-xs text-tinta-suave">
           <input type="checkbox" checked={verPortas} onChange={(e) => setVerPortas(e.target.checked)} />
           Ver portas
         </label>
       </div>
       {v ? <Frente vista={v} portas={verPortas} /> : <p className="text-sm text-tinta-suave">Calculando…</p>}
-      {vista.error && <p className="mt-1 text-sm text-erro">{vista.error.message}</p>}
+      {erroVista && <p className="mt-1 text-sm text-erro">{erroVista}</p>}
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
         <span className="text-tinta-suave">Portas</span>
-        {([null, "abrir", "correr"] as const).map((t) => (
+        {tiposPorta.map((t) => (
           <button
             key={t ?? "sem"}
             className={`rounded-md px-2 py-0.5 text-xs ${opcao((portas ?? null) === t)}`}
-            disabled={editar.isPending || (portas ?? null) === t}
-            onClick={() =>
-              editar.mutate((versao) =>
-                ou(
-                  api.PATCH("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}", {
-                    params: { path: caminho, query: { versao } },
-                    body: { portas: t },
-                  }),
-                ),
-              )
-            }
+            disabled={ocupado || (portas ?? null) === t}
+            onClick={() => mudarPortas(t)}
           >
             {t === null ? "Sem portas" : `De ${t}`}
           </button>
@@ -234,7 +292,7 @@ export function EditorPlanejado({
           <div key={i} className="min-w-[9.5rem] shrink-0 rounded-md border border-linha-forte bg-superficie p-1.5">
             <div className="mb-1 flex items-center justify-between gap-1">
               <span className="text-xs font-medium">Vão {i + 1}</span>
-              <button className={mini} title="Tirar este vão" disabled={c.vaos.length <= 1 || editar.isPending} onClick={() => gravar(removerVao(c, i))}>
+              <button className={mini} title="Tirar este vão" disabled={c.vaos.length <= 1 || ocupado} onClick={() => gravar(removerVao(c, i))}>
                 ✕
               </button>
             </div>
@@ -247,7 +305,7 @@ export function EditorPlanejado({
             )}
             {portas === "abrir" && (
               <label className="mb-1 flex items-center gap-1 text-xs">
-                <input type="checkbox" checked={comPorta(i)} disabled={editar.isPending} onChange={() => gravar(alternarPorta(c, i))} />
+                <input type="checkbox" checked={comPorta(i)} disabled={ocupado} onChange={() => gravar(alternarPorta(c, i))} />
                 Com porta
               </label>
             )}
@@ -260,7 +318,7 @@ export function EditorPlanejado({
                       aria-label={`espaço ${j + 1} do vão ${i + 1}`}
                       className="min-w-0 flex-1 rounded-md border text-xs"
                       value={esp.tipo}
-                      disabled={editar.isPending}
+                      disabled={ocupado}
                       onChange={(e) => gravar(tipoEspaco(c, i, j, e.target.value as TipoEspaco))}
                     >
                       {TIPOS_ESPACO.map((t) => (
@@ -269,16 +327,16 @@ export function EditorPlanejado({
                         </option>
                       ))}
                     </select>
-                    <button className={mini} title="Tirar" disabled={vao.espacos.length <= 1 || editar.isPending} onClick={() => gravar(removerEspaco(c, i, j))}>
+                    <button className={mini} title="Tirar" disabled={vao.espacos.length <= 1 || ocupado} onClick={() => gravar(removerEspaco(c, i, j))}>
                       ✕
                     </button>
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-1 text-[11px] text-tinta-suave">
                     <span className="flex">
-                      <button className={mini} title="Subir" disabled={j === vao.espacos.length - 1 || editar.isPending} onClick={() => gravar(moverEspaco(c, i, j, 1))}>
+                      <button className={mini} title="Subir" disabled={j === vao.espacos.length - 1 || ocupado} onClick={() => gravar(moverEspaco(c, i, j, 1))}>
                         ↑
                       </button>
-                      <button className={mini} title="Descer" disabled={j === 0 || editar.isPending} onClick={() => gravar(moverEspaco(c, i, j, -1))}>
+                      <button className={mini} title="Descer" disabled={j === 0 || ocupado} onClick={() => gravar(moverEspaco(c, i, j, -1))}>
                         ↓
                       </button>
                     </span>
@@ -295,29 +353,17 @@ export function EditorPlanejado({
             </ol>
             <div className="mt-1 flex flex-wrap gap-1">
               {TIPOS_ESPACO.map((t) => (
-                <button key={t.id} className={mini} disabled={editar.isPending} onClick={() => gravar(adicionarEspaco(c, i, t.id))} title={`Pôr ${t.nome.toLowerCase()} em cima`}>
+                <button key={t.id} className={mini} disabled={ocupado} onClick={() => gravar(adicionarEspaco(c, i, t.id))} title={`Pôr ${t.nome.toLowerCase()} em cima`}>
                   + {t.id}
                 </button>
               ))}
             </div>
           </div>
         ))}
-        <button className={`${botao} shrink-0 self-start`} disabled={editar.isPending} onClick={() => gravar(adicionarVao(c))}>
+        <button className={`${botao} shrink-0 self-start`} disabled={ocupado} onClick={() => gravar(adicionarVao(c))}>
           + Vão
         </button>
       </div>
-
-      {v && <ListaDeCorte codigo={codigo} comodo={comodo} id={id} vista={v} unidade={unidade} />}
-      <div className="mt-2 flex items-center justify-between">
-        <p className="text-xs text-tinta-suave">
-          Medidas vazias dividem o que sobra. Porta de abrir é por vão (cobre gavetas e nichos dele); de correr cobre
-          o móvel todo. Desfazer volta cada passo.
-        </p>
-        <button className="text-xs text-erro hover:underline" disabled={editar.isPending} onClick={() => gravar(null)}>
-          Desmontar
-        </button>
-      </div>
-      {editar.error && <p className="mt-1 text-sm text-erro">{editar.error.message}</p>}
-    </section>
+    </>
   );
 }

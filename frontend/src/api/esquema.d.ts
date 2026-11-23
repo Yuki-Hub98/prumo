@@ -2426,6 +2426,13 @@ export interface components {
             vistas?: {
                 [key: string]: components["schemas"]["RetanguloTela"][];
             };
+            /**
+             * Modulos
+             * @default {}
+             */
+            modulos?: {
+                [key: string]: components["schemas"]["PlanejadoTela"];
+            };
             /** Largura */
             largura: number;
             /** Altura */

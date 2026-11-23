@@ -12,6 +12,11 @@ describe("bancada planejada", () => {
       expect(m.distancia.origem).toBe("estimada");
     }
     expect(moduloPronto("x", "armario", "braco", 0, 800).portas).toBe("abrir");
+    // montado do jeito da pessoa: nenhum dos prontos fica marcado
+    const gav = moduloPronto("x", "gaveteiro", "costas", 30, 450);
+    const doisVaos = { ...gav, construcao: { ...gav.construcao, vaos: [...gav.construcao.vaos, ...gav.construcao.vaos] } };
+    expect(tipoDoModulo(doisVaos)).toBeNull();
+    expect(tipoDoModulo({ ...gav, portas: "abrir" })).toBeNull();
   });
 
   it("id livre não repete o de outro módulo", () => {

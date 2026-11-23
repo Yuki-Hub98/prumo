@@ -154,6 +154,8 @@ class PlanejadoTela(_Tela):
     """Lista de corte: cada peça com medidas, quantidade e fita de borda."""
     vistas: dict[str, list[RetanguloTela]] = {}
     """Bancada: vista de frente de cada trecho (``costas`` e, no L, ``braco``)."""
+    modulos: dict[str, PlanejadoTela] = {}
+    """Bancada: a vista de cada módulo (como um planejado comum), para montar por dentro."""
 
     largura: int
     altura: int
@@ -380,6 +382,7 @@ def planejado_para_tela(m: Movel) -> PlanejadoTela:
             ferragens=[f"{f.quantidade}× {f.nome}" for f in b.ferragens],
             lista=_lista(b),
             vistas={nome: _retangulos(v) for nome, v in b.vistas.items()},
+            modulos={m.modulo.id: planejado_para_tela(m.movel) for m in b.modulos},
         )
     if m.construcao is None:
         raise ValueError(f"o móvel '{m.id}' não é planejado (sem construção)")

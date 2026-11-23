@@ -112,3 +112,26 @@ def test_vista_do_braco_espelhada_com_braco_a_direita() -> None:
     t = bancada.trechos(m)[1]
     assert not bancada.esquerda_no_inicio(t)
     assert bancada.x_da_vista(t, 0, 100) == pytest.approx(t.comprimento - 100)
+
+
+def test_modulo_montado_do_zero() -> None:
+    """Módulo com construção livre (dois vãos: gavetas e nicho com prateleira) entra nas
+    peças, nas partes e na vista dele para a tela."""
+    from interiores_core.tela import planejado_para_tela
+
+    m = nova("reta_gaveteiro")
+    dados = m.model_dump(mode="json", exclude_none=True)
+    mod = dados["bancada"]["modulos"][0]
+    mod["largura"] = {"valor": 800, "origem": "projeto"}
+    mod["distancia"] = {"valor": 670, "origem": "projeto"}
+    mod["construcao"]["vaos"] = [
+        {"espacos": [{"tipo": "gaveta"}, {"tipo": "gaveta"}]},
+        {"espacos": [{"tipo": "nicho"}, {"tipo": "nicho"}], "porta": False},
+    ]
+    m = Movel.model_validate(dados)
+    c = bancada.calcular(m)
+    nomes = {p.nome for p in c.pecas}
+    assert {"gaveteiro: Divisória", "gaveteiro: Prateleira"} <= nomes
+    assert {"gavetas", "prateleiras"} <= set(partes_do_movel(m))
+    tela = planejado_para_tela(m)
+    assert len(tela.modulos["gaveteiro"].larguras_vaos) == 2
