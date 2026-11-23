@@ -492,3 +492,28 @@ def test_sofa_em_l_na_cena() -> None:
     assert not [p for p in cena["prismas"] if p["nome"].startswith("sofa-")]
     nomes = {cx["nome"] for cx in cena["caixas"] if cx["nome"].startswith("sofa-")}
     assert {"sofa-encosto", "sofa-encosto-l", "sofa-braco-e", "sofa-braco-d"} <= nomes
+
+
+@pytest.mark.parametrize("modelo", ["reta_gaveteiro", "l_gaveteiro", "cozinha_l"])
+def test_bancada_no_3d(modelo: str) -> None:
+    """Tampo, pernas e módulos dentro do contorno da bancada; módulos sob o tampo."""
+    from interiores_render.cena import _Feitio
+
+    class _CenaFalsa:
+        def material(self, nome: str, cor: str, **extra: Any) -> str:
+            return nome
+
+    m = Movel.model_validate(catalogo.novo_movel("bancada", "b", (0, 0), modelo))
+    f = _Feitio(_CenaFalsa(), m, "mat")  # type: ignore[arg-type]
+    f.bancada()
+    contorno = geometria.contorno_local(m).buffer(1)
+    nomes = [p.nome for p in f.pecas]
+    assert len(nomes) == len(set(nomes)), "nomes repetidos viram o mesmo objeto no Blender"
+    e = 25 if m.altura.valor < 800 else 30
+    for p in f.pecas:
+        x0, y0, _, x1, y1, z1 = p.caixa
+        if not p.nome.startswith("puxador"):  # a barra sai 25 mm da frente (passa do beiral)
+            assert contorno.contains(Polygon([(x0, y0), (x1, y0), (x1, y1), (x0, y1)])), p.nome
+        if not p.nome.startswith("tampo"):
+            assert z1 <= m.altura.valor - e + 1, p.nome  # tudo embaixo do tampo
+    assert set(partes_do_movel(m)) <= {parte_da_peca(n) for n in nomes}
