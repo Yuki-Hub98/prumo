@@ -293,6 +293,9 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Sofá em L** (de canto): modelo "De canto em L" no catálogo ou forma "Em L" em qualquer
       sofá; encosto nas costas e na lateral, braços nas pontas e almofadas nos dois trechos, na
       planta, no DXF e no 3D
+- [x] **Escritório**: monitor (24", 27", 34"), notebook, computador (gabinete), teclado e mouse,
+      impressora, mesas de escritório (140, 160 e em L) e cadeira presidente; o que vai na mesa
+      já vem na altura dela, e o vão sob o tampo fica livre para o gabinete
 - [x] Planta geral do pavimento e 3D da casa (pavimento inteiro com o teto cortado) — #11, #25, #29
 - [x] **Andares**: criar e remover andares pela tela, com o andar de baixo de referência ao
       desenhar o de cima
@@ -334,8 +337,9 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       oposto fica parado e a medida vira "Quero assim"
 - [x] **Mover e girar no 3D**: arrastar o móvel selecionado pelo piso no 3D ao vivo e botão
       "Girar 90°"
-- [ ] Editor de móveis — o que falta (ordem combinada): sofá e bancada planejada em L, lista de
-      corte e desenho do planejado pela tela
+- [ ] Editor de móveis — o que falta (ordem combinada): bancada/mesa planejada (reta e em L, do
+      zero ou de modelo pronto, com as pernas à vista no canto), lista de corte e desenho do
+      planejado pela tela
 - [ ] **Editar em detalhe** (pedido do usuário, 2026-11-20): botão "Editar em detalhe" no painel
       do que estiver selecionado (móvel; depois porta e janela) que abre uma janela (modal) com
       **só aquele objeto em 3D, no centro**, girável, com **alças para puxar** largura,

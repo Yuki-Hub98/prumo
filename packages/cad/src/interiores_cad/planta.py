@@ -102,6 +102,11 @@ NOME_JANELA = {
 }
 
 
+def _simbolo(m: Movel) -> Simbolo:
+    item = catalogo.item_do_tipo(m.tipo)
+    return item.simbolo if item else Simbolo.GENERICO
+
+
 @dataclass
 class Desenho:
     """DXF pronto e o que o PDF e o carimbo precisam saber dele."""
@@ -314,8 +319,22 @@ class _Planta:
         """Contorno, símbolo do tipo (catálogo), nome e dimensões.
 
         Móvel elevado (TV na parede, armário aéreo) sai tracejado, como na convenção
-        de planta para o que está acima do plano de corte.
+        de planta para o que está acima do plano de corte. Móvel que cabe dentro da
+        projeção de uma mesa (monitor e teclado sobre ela, gabinete embaixo) fica só com o
+        símbolo, sem nome: o texto dele cairia em cima do texto da mesa.
         """
+        poligonos = {m.id: geometria.poligono_movel(m) for m in self.moveis}
+        mesas = [m for m in self.moveis if _simbolo(m) is Simbolo.MESA]
+        dentro_de_outro = {
+            m.id
+            for m in self.moveis
+            if any(
+                o.id != m.id
+                and poligonos[o.id].area > poligonos[m.id].area
+                and poligonos[o.id].buffer(1).contains(poligonos[m.id])
+                for o in mesas
+            )
+        }
         for m in self.moveis:
             cam: dict[str, object] = {"layer": "MOVEL"}
             if not m.ocupa_piso:
@@ -327,6 +346,8 @@ class _Planta:
                 self.msp.add_line(
                     geometria.girar_movel(m, *ini), geometria.girar_movel(m, *fim), dxfattribs=cam
                 )
+            if m.id in dentro_de_outro:
+                continue
             linhas = [m.nome or m.tipo, f"{m.largura.valor} × {m.profundidade.valor}"]
             if m.polegadas:
                 linhas[1] = f'{m.polegadas}" · {linhas[1]}'
@@ -409,6 +430,17 @@ class _Planta:
             linhas.append(((-w * 0.6, -d * 0.85), (w * 0.6, -d * 0.85)))
         elif simbolo is Simbolo.MAQUINA:  # porta (ou tampa) redonda
             circulo(0.0, 0.0, min(w, d) * 0.6)
+        elif simbolo is Simbolo.MONITOR:  # tela fina sobre o pé
+            ret(-w, -20, w, 10)
+        elif simbolo is Simbolo.NOTEBOOK:  # tampa atrás e o teclado
+            linhas.append(((-w, -d + 8), (w, -d + 8)))
+            ret(-w + 25, -d + 35, w - 25, -d + 35 + 2 * d * 0.45)
+        elif simbolo is Simbolo.GABINETE:  # painel da frente
+            linhas.append(((-w, d - 8), (w, d - 8)))
+        elif simbolo is Simbolo.TECLADO:  # teclado | mouse
+            linhas.append(((w - 110, -d), (w - 110, d)))
+            ret(-w + 12, -d + 12, w - 122, d - 12)
+            circulo(w - 42, 0.0, min(32.0, d - 5), 12)
         elif simbolo is Simbolo.CAMA:
             linhas.append(((-w, -d + 60), (w, -d + 60)))  # cabeceira
             n = 2 if m.largura.valor >= 1200 else 1

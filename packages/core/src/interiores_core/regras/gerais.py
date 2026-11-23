@@ -205,10 +205,24 @@ def _faixa_altura(m: Movel) -> tuple[int, int]:
     return base, base + m.altura.valor
 
 
+TAMPO_MESA = 40
+"""mm: espessura do tampo considerada; abaixo dela, o vão da mesa fica livre."""
+
+
+def _cabe_embaixo(mesa: Movel, outro: Movel) -> bool:
+    """``outro`` fica no vão de uma mesa (pés à vista, sem construção): o tampo é que ocupa
+    o espaço; embaixo dele cabe o gabinete, o puff, o gaveteiro..."""
+    item = catalogo.item_do_tipo(mesa.tipo)
+    if item is None or item.simbolo is not catalogo.Simbolo.MESA or mesa.construcao:
+        return False
+    return _faixa_altura(outro)[1] <= _faixa_altura(mesa)[1] - TAMPO_MESA
+
+
 def moveis_no_lugar(ctx: Contexto) -> None:
     """Móvel entrando na parede/fora do cômodo, ou dois móveis no mesmo lugar.
 
-    Dois móveis colidem se se sobrepõem na planta **e** nas faixas de altura.
+    Dois móveis colidem se se sobrepõem na planta **e** nas faixas de altura; o vão
+    debaixo do tampo de uma mesa é livre para o que couber nele.
     """
     for movel in ctx.moveis:
         fora = ctx.poligonos[movel.id].intersection(ctx.fora)
@@ -226,6 +240,8 @@ def moveis_no_lugar(ctx: Contexto) -> None:
             (a0, a1), (b0, b1) = _faixa_altura(a), _faixa_altura(b)
             if a1 <= b0 or b1 <= a0:
                 continue  # um acima do outro (ex.: TV na parede sobre o rack)
+            if _cabe_embaixo(a, b) or _cabe_embaixo(b, a):
+                continue  # debaixo da mesa (ex.: gabinete sob a escrivaninha)
             junto = ctx.poligonos[a.id].intersection(ctx.poligonos[b.id])
             if junto.area > SOBRA:
                 ctx.add(

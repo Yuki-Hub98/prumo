@@ -26,6 +26,7 @@ class Categoria(StrEnum):
     SENTAR = "sentar"
     MESAS = "mesas"
     ELETRONICOS = "eletronicos"
+    ESCRITORIO = "escritorio"
     COZINHA = "cozinha"
     BANHEIRO = "banheiro"
     AREA_SERVICO = "area_servico"
@@ -62,6 +63,14 @@ class Simbolo(StrEnum):
     """Cadeira de escritório: assento redondo e base em estrela."""
     MAQUINA = "maquina"
     """Máquina de lavar (abertura frontal redonda)."""
+    MONITOR = "monitor"
+    """Monitor de computador: tela fina sobre um pé (na mesa)."""
+    NOTEBOOK = "notebook"
+    """Notebook aberto: base com teclado e tampa com a tela atrás."""
+    GABINETE = "gabinete"
+    """Gabinete (torre) do computador, frente para +y."""
+    TECLADO = "teclado"
+    """Teclado com o mouse à direita."""
 
 
 class _Base(BaseModel):
@@ -295,13 +304,16 @@ _ITENS = (
     ),
     ItemCatalogo(
         tipo="escrivaninha",
-        nome="Escrivaninha",
-        categoria=Categoria.MESAS,
+        nome="Escrivaninha / mesa de escritório",
+        categoria=Categoria.ESCRITORIO,
         simbolo=Simbolo.MESA,
         lados_uso=("frente",),
         modelos=(
             _m("padrao", "Padrão (120 × 60)", 1200, 600, 750),
             _m("compacta", "Compacta (90 × 45)", 900, 450, 750),
+            _m("escritorio_140", "Escritório 140 × 70", 1400, 700, 750),
+            _m("escritorio_160", "Escritório 160 × 80", 1600, 800, 750),
+            _m("em_l", "Em L 150 × 150", 1500, 1500, 750, forma="L"),
         ),
         modelo_padrao="padrao",
     ),
@@ -382,11 +394,77 @@ _ITENS = (
     ItemCatalogo(
         tipo="cadeira_escritorio",
         nome="Cadeira de escritório",
-        categoria=Categoria.SENTAR,
+        categoria=Categoria.ESCRITORIO,
         simbolo=Simbolo.CADEIRA_GIRATORIA,
-        lados_uso=("frente",),
-        modelos=(_m("padrao", "Giratória com rodízios", 620, 620, 1050),),
+        lados_uso=("costas", "esquerda", "direita"),  # gira: a frente fica virada para a mesa
+        modelos=(
+            _m("padrao", "Giratória com rodízios", 620, 620, 1050),
+            _m("presidente", "Presidente (encosto alto)", 700, 700, 1250),
+        ),
         modelo_padrao="padrao",
+    ),
+    # ------------------------------------------------------------ escritório
+    ItemCatalogo(
+        tipo="monitor",
+        nome="Monitor",
+        categoria=Categoria.ESCRITORIO,
+        simbolo=Simbolo.MONITOR,
+        lados_uso=(),
+        modelos=(
+            _m("24pol", '24"', 540, 200, 420, polegadas=24, elevacao=750),
+            _m("27pol", '27"', 615, 220, 460, polegadas=27, elevacao=750),
+            _m("34pol", '34" ultrawide', 810, 230, 460, polegadas=34, elevacao=750),
+        ),
+        modelo_padrao="24pol",
+    ),
+    ItemCatalogo(
+        tipo="notebook",
+        nome="Notebook",
+        categoria=Categoria.ESCRITORIO,
+        simbolo=Simbolo.NOTEBOOK,
+        lados_uso=(),
+        modelos=(
+            _m("14pol", '14" (aberto)', 325, 225, 230, polegadas=14, elevacao=750),
+            _m("15pol", '15,6" (aberto)', 360, 250, 245, polegadas=15, elevacao=750),
+        ),
+        modelo_padrao="15pol",
+    ),
+    ItemCatalogo(
+        tipo="computador",
+        nome="Computador (gabinete)",
+        categoria=Categoria.ESCRITORIO,
+        simbolo=Simbolo.GABINETE,
+        lados_uso=(),
+        modelos=(
+            _m("torre", "Torre média", 200, 450, 450),
+            _m("mini", "Mini torre", 180, 380, 360),
+            _m("gamer", "Torre grande (gamer)", 230, 480, 500),
+        ),
+        modelo_padrao="torre",
+    ),
+    ItemCatalogo(
+        tipo="teclado",
+        nome="Teclado e mouse",
+        categoria=Categoria.ESCRITORIO,
+        simbolo=Simbolo.TECLADO,
+        lados_uso=(),
+        modelos=(
+            _m("completo", "Teclado completo + mouse", 580, 160, 35, elevacao=750),
+            _m("compacto", "Teclado compacto + mouse", 450, 140, 35, elevacao=750),
+        ),
+        modelo_padrao="completo",
+    ),
+    ItemCatalogo(
+        tipo="impressora",
+        nome="Impressora",
+        categoria=Categoria.ESCRITORIO,
+        simbolo=Simbolo.GENERICO,
+        lados_uso=("frente",),
+        modelos=(
+            _m("jato", "Jato de tinta / multifuncional", 450, 370, 220),
+            _m("laser", "Laser", 400, 380, 280),
+        ),
+        modelo_padrao="jato",
     ),
     ItemCatalogo(
         tipo="puff",

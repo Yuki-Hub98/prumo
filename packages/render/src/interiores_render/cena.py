@@ -41,7 +41,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import ALTURA_MIN_CAIXA, CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 15
+VERSAO_CENA = 16
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -96,6 +96,11 @@ CORES_MOVEIS = {
     "rack": "#6F5846",
     "tv": "#151515",
     "berco": "#FFFFFF",
+    "monitor": "#1A1A1A",
+    "notebook": "#A7ABB0",
+    "computador": "#1E1E1E",
+    "teclado": "#2C2C2C",
+    "impressora": "#E6E6E4",
 }
 COR_MOVEL_GENERICO = "#B5B0A8"
 
@@ -771,6 +776,14 @@ class _Cena:
             f.cadeira_giratoria()
         elif simbolo is Simbolo.MAQUINA:
             f.maquina()
+        elif simbolo is Simbolo.MONITOR:
+            f.monitor()
+        elif simbolo is Simbolo.NOTEBOOK:
+            f.notebook()
+        elif simbolo is Simbolo.GABINETE:
+            f.gabinete()
+        elif simbolo is Simbolo.TECLADO:
+            f.teclado()
         else:
             f.p("corpo", -f.w, -f.d, f.base, f.w, f.d, f.topo, chanfro=10)
         return f.pecas
@@ -1385,6 +1398,48 @@ class _Feitio:
         self.p("coluna", -30, -30, base + 80, 30, 30, base + 430, self.metal, chanfro=10)
         self.p("assento", -w * 0.8, -d * 0.75, base + 430, w * 0.8, d * 0.8, base + 510, chanfro=35)
         self.p("encosto", -w * 0.7, -d * 0.9, base + 560, w * 0.7, -d * 0.72, topo, chanfro=40)
+        # haste que prende o encosto no assento (sem ela o encosto fica solto no ar)
+        self.p("coluna1", -30, -d * 0.86, base + 470, 30, -d * 0.76, base + 600, self.metal)
+
+    def monitor(self) -> None:
+        """Monitor: tela fina (moldura com o vidro na frente) sobre haste e pé achatado."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        tela = self._mat("tela", rugosidade=0.08)
+        baixo = base + max(60.0, self.h * 0.22)  # borda de baixo da tela
+        self.p("suporte0", -w * 0.35, -d, base, w * 0.35, d * 0.7, base + 12, chanfro=6)
+        self.p("suporte1", -25, -50, base + 12, 25, -20, baixo + 60, chanfro=8)
+        self.p("moldura", -w, -20, baixo, w, 10, topo, chanfro=6)
+        self.p("tela", -w + 8, 10, baixo + 8, w - 8, 12, topo - 8, tela)
+
+    def notebook(self) -> None:
+        """Notebook aberto: base com teclado e a tampa em pé atrás, com a tela para a frente."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        tela = self._mat("tela", rugosidade=0.08)
+        escuro = self._mat("sombra", rugosidade=0.6)
+        self.p("corpo", -w, -d + 10, base, w, d, base + 18, chanfro=6)
+        fundo = -d + 35 + (2 * d) * 0.45
+        self.p("teclas", -w + 25, -d + 35, base + 18, w - 25, fundo, base + 20, escuro)
+        self.p("tampa", -w, -d, base + 10, w, -d + 8, topo, chanfro=4)
+        self.p("tela", -w + 12, -d + 8, base + 30, w - 12, -d + 10, topo - 12, tela)
+
+    def gabinete(self) -> None:
+        """Gabinete (torre): caixa com painel da frente escuro, botão e pezinhos."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        frente = self._mat("vidro_preto", rugosidade=0.25)
+        self.p("rodape", -w + 15, -d + 20, base, w - 15, d - 20, base + 20, self.sombra)
+        self.p("corpo", -w, -d, base + 20, w, d - 8, topo, chanfro=6)
+        self.p("frente", -w + 6, d - 8, base + 30, w - 6, d, topo - 10, frente, chanfro=4)
+        self.p("botao", -12, d, topo - 50, 12, d + 4, topo - 26, self.metal, chanfro=10)
+
+    def teclado(self) -> None:
+        """Teclado (base e bloco de teclas) e o mouse à direita."""
+        w, d, base = self.w, self.d, self.base
+        escuro = self._mat("sombra", rugosidade=0.6)
+        fim = w - 110  # o mouse fica nos últimos 11 cm
+        self.p("corpo", -w, -d, base, fim, d, base + 20, chanfro=6)
+        self.p("teclas", -w + 12, -d + 12, base + 20, fim - 12, d - 12, base + 28, escuro)
+        meio = min(55.0, d - 5)
+        self.p("mouse", w - 75, -meio, base, w - 10, meio, base + 35, chanfro=25)
 
     def maquina(self) -> None:
         """Máquina de lavar: corpo, painel de comandos em cima e porta redonda na frente

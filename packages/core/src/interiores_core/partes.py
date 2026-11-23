@@ -41,6 +41,9 @@ PARTES: dict[str, str] = {
     "estrutura": "Estrutura",
     "escada": "Escada",
     "base": "Base",
+    "teclas": "Teclas",
+    "mouse": "Mouse",
+    "frente": "Painel da frente",
 }
 """Id → nome para a tela, na ordem em que aparecem."""
 
@@ -62,6 +65,10 @@ POR_SIMBOLO: dict[Simbolo, tuple[str, ...]] = {
     Simbolo.BELICHE: ("estrutura", "escada", "colchao", "roupa_de_cama"),
     Simbolo.CADEIRA_GIRATORIA: ("assento", "encosto", "base"),
     Simbolo.MAQUINA: ("portas",),
+    Simbolo.MONITOR: ("moldura", "base"),
+    Simbolo.NOTEBOOK: ("moldura", "teclas"),
+    Simbolo.GABINETE: ("frente",),
+    Simbolo.TECLADO: ("teclas", "mouse"),
 }
 PLANEJADO: tuple[str, ...] = ("portas", "gavetas", "puxadores", "prateleiras")
 """Móvel planejado (com ``construcao``): caixa = corpo; portas, frentes de gaveta,
@@ -79,7 +86,7 @@ _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"^(edredom|dobra)\d*$", "roupa_de_cama"),
         (r"^(poste|grade|estrado)\d*$", "estrutura"),
         (r"^(degrau|banzo)\d*$", "escada"),
-        (r"^(pata|coluna|rodizio)\d*$", "base"),
+        (r"^(pata|coluna|rodizio|suporte)\d*$", "base"),
         (r"^travesseiro\d*$", "travesseiros"),
         (r"^(almofada|encosto)\d+$", "almofadas"),  # sofá: almofadas do assento e das costas
         (r"^encosto(-l)?$", "encosto"),  # sofá em L: costas e lateral
@@ -87,7 +94,10 @@ _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"^assento$", "assento"),
         (r"^tampo$", "tampo"),
         (r"^pe\d+$", "pes"),
-        (r"^moldura$", "moldura"),
+        (r"^(moldura|tampa)$", "moldura"),
+        (r"^teclas\d*$", "teclas"),
+        (r"^mouse$", "mouse"),
+        (r"^frente$", "frente"),
         (r"^bancada$", "bancada"),
         (r"^cuba$", "cuba"),
         (r"^torneira\d*$", "torneira"),

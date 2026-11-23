@@ -435,3 +435,34 @@ def test_sofa_em_l_na_planta(copia: Path, lado: str) -> None:
     # encosto da lateral fica do lado do braço do L
     lateral = max(dentro, key=lambda ln: ln.length if ln.coords[0][0] == ln.coords[1][0] else 0)
     assert (lateral.coords[0][0] > 1600) == (lado == "esquerda")
+
+
+def test_simbolos_do_escritorio(copia: Path) -> None:
+    """Monitor, notebook e teclado (na mesa, tracejados) e gabinete ganham símbolo."""
+    from interiores_core.catalogo import novo_movel
+
+    arq = copia / "comodos" / "quarto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    d["moveis"] = [
+        novo_movel("monitor", "monitor", (1000, 1000)),
+        novo_movel("notebook", "notebook", (2000, 1000)),
+        novo_movel("teclado", "teclado", (1000, 2000)),
+        novo_movel("computador", "pc", (2000, 2000)),
+    ]
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    msp = desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc.modelspace()
+
+    def perto(e: Any, cx: float, cy: float) -> bool:
+        return all(abs(p.x - cx) < 400 and abs(p.y - cy) < 400 for p in (e.dxf.start, e.dxf.end))
+
+    linhas = list(msp.query('LINE[layer=="MOVEL"]'))
+    for cx, cy in ((1000, 1000), (2000, 1000), (1000, 2000), (2000, 2000)):
+        assert [e for e in linhas if perto(e, cx, cy)], (cx, cy)
+    tracejadas = [e for e in linhas if perto(e, 1000, 1000) and e.dxf.linetype == "TRACEJADO"]
+    assert tracejadas  # monitor fica sobre a mesa (elevado)
+    assert "Monitor" in _textos(desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc)
+    # sobre a mesa: só o símbolo (o nome cairia em cima do nome da mesa)
+    d["moveis"].append(novo_movel("escrivaninha", "mesa", (1000, 1000), "escritorio_160"))
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    textos = _textos(desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc)
+    assert "Monitor" not in textos and "Notebook" in textos

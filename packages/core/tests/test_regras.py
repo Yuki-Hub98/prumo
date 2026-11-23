@@ -330,6 +330,21 @@ def test_tv_acima_do_rack_nao_colide(rodar: Checar, moveis: dict[str, Any]) -> N
     assert "moveis_sobrepostos" in codigos(rodar())
 
 
+def test_escritorio_na_mesa_e_embaixo_dela(rodar: Checar, moveis: dict[str, Any]) -> None:
+    """Monitor, notebook e teclado sobre a escrivaninha e gabinete embaixo dela não colidem;
+    uma cômoda alta no mesmo lugar colide."""
+    moveis["moveis"] = [
+        catalogo.novo_movel("escrivaninha", "mesa", (1500, 2400), "escritorio_160"),
+        catalogo.novo_movel("monitor", "monitor", (1400, 2300), "27pol"),
+        catalogo.novo_movel("notebook", "notebook", (1900, 2400)),
+        catalogo.novo_movel("teclado", "teclado", (1400, 2600)),
+        catalogo.novo_movel("computador", "pc", (2100, 2400)),
+    ]
+    assert "moveis_sobrepostos" not in codigos(rodar())
+    moveis["moveis"].append(catalogo.novo_movel("comoda", "comoda", (1000, 2400)))
+    assert ("moveis_sobrepostos", "mesa") in {(p.codigo, p.elemento) for p in rodar()}
+
+
 def test_tomada_acima_de_movel_baixo_nao_e_obstruida(rodar: Checar, moveis: dict[str, Any]) -> None:
     """Rack de 500 na frente da tomada a 300: tapa. TV elevada a 1000: não tapa."""
     moveis["moveis"].append(catalogo.novo_movel("tv", "tv", (3380, 400), "32pol", rotacao=90))
