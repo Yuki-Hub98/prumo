@@ -128,6 +128,18 @@ def test_mudar_forma(api: TestClient) -> None:
     assert cama["formas"] == ["retangular"]
 
 
+def test_sofa_de_canto_em_l(api: TestClient) -> None:
+    pedido = {"tipo": "sofa", "modelo": "canto", "centro": [2000, 1500]}
+    r = api.post(MOVEIS, params={"versao": 1}, json=pedido)
+    assert r.status_code == 200, r.text
+    geo = api.get("/projetos/casa/pavimentos/terreo/geometria").json()
+    sofa = next(m for m in geo["moveis"] if m["tipo"] == "sofa")
+    assert sofa["forma"] == "L" and len(sofa["contorno"]) == 6
+    assert sofa["formas"] == ["retangular", "L"]
+    r = api.patch(f"{MOVEIS}/{sofa['id']}", params={"versao": 2}, json={"lado_l": "direita"})
+    assert r.status_code == 200, r.text
+
+
 def test_catalogo_de_portas_e_janelas_e_tipo_gravado(api: TestClient, projetos: Path) -> None:
     cat = api.get("/catalogo/aberturas").json()
     assert {"giro-80", "camarao-80", "correr-120"} <= {p["id"] for p in cat["portas"]}
