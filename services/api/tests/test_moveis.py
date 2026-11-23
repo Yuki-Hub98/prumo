@@ -220,3 +220,29 @@ def test_redimensionar_pelo_lado(api: TestClient) -> None:
         json={"lado": "direita", "tamanho": 20},
     )
     assert ruim.status_code == 422
+
+
+def test_bancada_em_l(api: TestClient) -> None:
+    """Bancada do catálogo já vem montada; dá para trocar pernas e módulos (o que não fecha
+    é recusado) e a tela recebe as vistas e os detalhes da planta."""
+    pedido = {"tipo": "bancada", "modelo": "l_gaveteiro", "centro": [2000, 1500]}
+    r = api.post(MOVEIS, params={"versao": 1}, json=pedido)
+    assert r.status_code == 200, r.text
+    geo = api.get("/projetos/casa/pavimentos/terreo/geometria").json()
+    mesa = next(m for m in geo["moveis"] if m["tipo"] == "bancada")
+    assert mesa["bancada"] and mesa["forma"] == "L" and mesa["formas"] == ["retangular", "L"]
+    assert len(mesa["detalhes"]) == 5  # gaveteiro + 4 pernas
+    vista = api.get(f"{MOVEIS}/{mesa['id']}/planejado").json()
+    assert set(vista["vistas"]) == {"costas", "braco"}
+    assert {"tampo", "perna", "gaveta"} <= {x["tipo"] for x in vista["retangulos"]}
+    projeto = api.get("/projetos/casa").json()
+    dados = next(m for m in projeto["comodos"]["quarto"]["moveis"] if m["id"] == mesa["id"])
+    bancada = {**dados["bancada"], "pernas": "painel"}
+    r = api.put(f"{MOVEIS}/{mesa['id']}/bancada", params={"versao": 2}, json={"bancada": bancada})
+    assert r.status_code == 200, r.text
+    fora = {
+        **bancada,
+        "modulos": [{**bancada["modulos"][0], "distancia": {"valor": 1500, "origem": "projeto"}}],
+    }
+    r = api.put(f"{MOVEIS}/{mesa['id']}/bancada", params={"versao": 3}, json={"bancada": fora})
+    assert r.status_code == 422 and "sai do tampo" in r.text
