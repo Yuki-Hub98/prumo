@@ -104,6 +104,15 @@ mensagem do cálculo. Tudo entra no rascunho (Desfazer volta cada passo). No 3D 
 portas, as frentes de gaveta com puxador e, nos vãos sem porta, os nichos e as prateleiras.
 Pia, cuba, torneira, fogão e geladeira chegam com a cozinha e o banheiro.
 
+### Editar em detalhe
+
+No painel do móvel, **Editar em detalhe** abre uma janela com **só aquele móvel** em 3D, no
+centro e de frente, girável (arraste o fundo; roda para zoom). Três **alças amarelas** puxam a
+**largura** (lateral), a **profundidade** (frente) e a **altura** (topo): enquanto puxa, uma
+caixa amarela mostra o tamanho novo e as medidas mudam ao vivo, de 1 em 1 cm, com o lado
+oposto parado. Ao soltar, a medida entra como "Quero assim" (como nas bordas da planta).
+**Desfazer**/**Refazer** ficam na própria janela (e Ctrl+Z também vale); **Esc** fecha.
+
 ### Bancada / mesa planejada
 
 No catálogo, **Bancada / mesa planejada**: mesa reta (só pernas ou com gaveteiro), mesa em L
