@@ -357,8 +357,8 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Lista de corte e desenho do planejado pela tela**: no painel do planejado e da bancada,
       a lista de peças (medidas, fita, chapas, ferragens) e os arquivos para o marceneiro (PDF,
       DXF e .xlsx)
-- [ ] Editor de móveis — o que falta: montar o módulo da bancada por dentro (hoje: gaveteiro,
-      nicho ou armário)
+- [x] **Módulos da bancada por dentro**: cada módulo (gaveteiro, nicho, armário ou do zero)
+      monta vãos, gavetas, nichos e prateleiras no painel, como os outros planejados
 - [ ] **Editar em detalhe** (pedido do usuário, 2026-11-20): botão "Editar em detalhe" no painel
       do que estiver selecionado (móvel; depois porta e janela) que abre uma janela (modal) com
       **só aquele objeto em 3D, no centro**, girável, com **alças para puxar** largura,

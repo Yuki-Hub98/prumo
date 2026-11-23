@@ -116,6 +116,10 @@ também o braço visto de dentro) e permite trocar:
   não tem módulo embaixo: pontas, canto do L (à vista) e meio de vão acima de 1,80 m;
 - **Módulos embaixo do tampo**: gaveteiro, nicho ou armário, nas costas ou no braço do L, com a
   distância da ponta e a largura. O módulo novo vai para um lugar livre, fora do canto do L.
+  Em cada módulo, **Montar por dentro** abre o mesmo editor dos planejados (vãos, gavetas,
+  nichos, cabideiros, alturas e porta de abrir): começa de um dos prontos e vira "Do meu jeito"
+  quando muda. As checagens dos planejados (gaveta estreita, prateleira longa...) valem para
+  cada módulo.
 
 Na planta, módulos e pernas aparecem tracejados dentro do tampo.
 
