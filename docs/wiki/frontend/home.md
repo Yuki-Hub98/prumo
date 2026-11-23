@@ -172,6 +172,13 @@ soltar, a largura (lados) ou a profundidade (frente/costas) muda com o **lado op
 De 1 em 1 cm, mínimo 10 cm. A medida arrastada entra como **"Quero assim"** (decisão do
 usuário: arrastar é decidir) — troque no painel se foi medida. Desfazer volta.
 
+## Mover e girar no 3D
+
+No **3D** ao vivo, com um móvel selecionado (clique nele): **arraste o próprio móvel** e ele
+desliza pelo piso, de 1 em 1 cm, com o contorno amarelo junto; ao soltar, a posição é gravada
+(como arrastar na planta). **Girar 90°** (no topo do 3D) gira o selecionado. Arrastar o fundo
+continua girando a câmera; a câmera fica parada enquanto o móvel é arrastado. Desfazer volta.
+
 ## Acabamento, puxador e pés
 
 No painel do móvel (aba **Móvel**): **Acabamento** (madeira clara, madeira escura, MDF

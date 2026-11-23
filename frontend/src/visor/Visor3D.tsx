@@ -1,5 +1,6 @@
 import { opcao } from "../estilo";
 import { Line, OrbitControls } from "@react-three/drei";
+import { RotateCw } from "lucide-react";
 import { Canvas, type ThreeEvent, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box3, Color, Mesh, MeshStandardMaterial, Plane, Vector3, type Object3D } from "three";
@@ -40,7 +41,7 @@ const FOLGA_CONTORNO = 0.03;
 
 /** Móvel selecionado: uma linha grossa e quase transparente em volta, sem mudar a cor
  * dele (a cor escolhida continua aparecendo como é). */
-function Contorno({ scene, selecionado }: { scene: Object3D; selecionado: string | null }) {
+function Contorno({ scene, selecionado, versao }: { scene: Object3D; selecionado: string | null; versao: number }) {
   const pontos = useMemo(() => {
     if (!selecionado) return null;
     const caixa = new Box3();
@@ -54,7 +55,8 @@ function Contorno({ scene, selecionado }: { scene: Object3D; selecionado: string
     if (caixa.isEmpty()) return null;
     caixa.expandByScalar(FOLGA_CONTORNO);
     return arestas({ min: caixa.min.toArray(), max: caixa.max.toArray() });
-  }, [scene, selecionado]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ``versao``: o móvel andou
+  }, [scene, selecionado, versao]);
   if (!pontos) return null;
   // amarelo trena (o mesmo da seleção na planta), quase transparente para não esconder a cor
   return <Line points={pontos} segments lineWidth={5} color={corToken("--trena", "#f2b200")} transparent opacity={0.5} depthWrite={false} />;
@@ -76,7 +78,21 @@ function movelDe(o: Object3D | null, ids: string[]): string | null {
   return null;
 }
 
-type Controles = { target: Vector3; update: () => void };
+type Controles = { target: Vector3; update: () => void; enabled: boolean };
+
+/** Passo do arrastar no 3D (m): 1 cm, como na planta. */
+const PASSO_3D = 0.01;
+const PISO = new Plane(new Vector3(0, 1, 0), 0);
+
+/** Malhas de um móvel (para mover juntas). */
+function pecasDo(scene: Object3D, id: string): Object3D[] {
+  const pecas: Object3D[] = [];
+  scene.traverse((o) => {
+    if (o instanceof Mesh && (o.userData.movel === id || movelDaPeca(o.name, (o.userData.material as string) ?? "", [id])))
+      pecas.push(o);
+  });
+  return pecas;
+}
 
 const caixa = (b: Box3): Caixa => ({ min: b.min.toArray(), max: b.max.toArray() });
 
@@ -88,6 +104,7 @@ function Modelo({
   pintura,
   selecionado,
   aoMovel,
+  aoArrastar,
   moveis,
 }: {
   moveis: string[];
@@ -98,7 +115,11 @@ function Modelo({
   pintura: Pintura | null;
   selecionado: string | null;
   aoMovel?: (id: string) => void;
+  aoArrastar?: (id: string, d: [number, number]) => void;
 }) {
+  // arrastar o móvel selecionado pelo piso: as peças andam juntas; ao soltar, grava (mm)
+  const arrasto = useRef<{ id: string; ini: Vector3; pecas: Object3D[]; bases: Vector3[]; d: Vector3 } | null>(null);
+  const [andou, setAndou] = useState(0);
   // remontado a cada versão do projeto: muda junto com a planta, sem esperar render
   const scene = useMemo(() => montarCena(cena), [cena]);
   useEffect(() => () => descartar(scene), [scene]);
@@ -150,9 +171,32 @@ function Modelo({
 
   return (
     <>
-    <Contorno scene={scene} selecionado={selecionado} />
+    <Contorno scene={scene} selecionado={selecionado} versao={andou} />
     <primitive
       object={scene}
+      onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+        if (!aoArrastar || !selecionado || e.button !== 0) return;
+        const id = movelDe(e.object, moveis);
+        if (id !== selecionado) return;
+        const ini = e.ray.intersectPlane(PISO, new Vector3());
+        if (!ini) return;
+        e.stopPropagation();
+        (e.target as Element).setPointerCapture?.(e.pointerId);
+        if (controles) controles.enabled = false; // não gira a câmera enquanto arrasta
+        const pecas = pecasDo(scene, id);
+        arrasto.current = { id, ini, pecas, bases: pecas.map((p) => p.position.clone()), d: new Vector3() };
+      }}
+      onPointerUp={(e: ThreeEvent<PointerEvent>) => {
+        const a = arrasto.current;
+        if (!a) return;
+        e.stopPropagation();
+        arrasto.current = null;
+        if (controles) controles.enabled = true;
+        // x do 3D = x da planta; z do 3D = −y da planta (m → mm)
+        const dx = Math.round(a.d.x * 1000);
+        const dy = Math.round(-a.d.z * 1000);
+        if (dx || dy) aoArrastar?.(a.id, [dx, dy]);
+      }}
       onClick={(e: ThreeEvent<MouseEvent>) => {
         if (e.delta > 4 || !aoMovel) return; // arrastou para girar: não é clique
         const id = movelDe(e.object, moveis);
@@ -164,7 +208,19 @@ function Modelo({
       // mãozinha em cima de móvel (clicável); fora dele, o cursor de girar/arrastar de sempre
       onPointerMove={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation(); // só o objeto mais perto (o que o clique pegaria)
-        gl.domElement.style.cursor = aoMovel && movelDe(e.object, moveis) ? "pointer" : "";
+        const a = arrasto.current;
+        if (a) {
+          const p = e.ray.intersectPlane(PISO, new Vector3());
+          if (!p) return;
+          const passo = (v: number) => Math.round(v / PASSO_3D) * PASSO_3D;
+          a.d.set(passo(p.x - a.ini.x), 0, passo(p.z - a.ini.z));
+          a.pecas.forEach((o, i) => o.position.set(a.bases[i].x + a.d.x, a.bases[i].y, a.bases[i].z + a.d.z));
+          setAndou((n) => n + 1);
+          gl.domElement.style.cursor = "grabbing";
+          return;
+        }
+        const id = movelDe(e.object, moveis);
+        gl.domElement.style.cursor = !id || !aoMovel ? "" : id === selecionado && aoArrastar ? "grab" : "pointer";
       }}
       onPointerOut={() => {
         gl.domElement.style.cursor = "";
@@ -186,8 +242,14 @@ export default function Visor3D({
   pintura = null,
   selecionado = null,
   aoMovel,
+  aoArrastar,
+  aoGirar,
   moveis = [],
 }: {
+  /** Arrastar o móvel selecionado pelo piso (deslocamento em mm na planta). */
+  aoArrastar?: (id: string, d: [number, number]) => void;
+  /** Girar o móvel selecionado 90°. */
+  aoGirar?: (id: string) => void;
   /** Ids de todos os móveis (para achar o móvel de uma peça clicada). */
   moveis?: string[];
   cena: Cena3D;
@@ -213,9 +275,15 @@ export default function Visor3D({
           <input type="checkbox" checked={teto} onChange={(e) => setTeto(e.target.checked)} />
           Teto
         </label>
+        {selecionado && aoGirar && (
+          <button className={`ml-2 px-2 py-0.5 text-sm ${opcao(false)}`} onClick={() => aoGirar(selecionado)} title="Girar o móvel selecionado 90°">
+            <RotateCw size={14} className="mr-1 inline" />
+            Girar 90°
+          </button>
+        )}
       </div>
       <p className="absolute bottom-3 left-3 z-10 text-xs text-tinta-suave">
-        Clique num móvel para selecionar · arraste para girar · roda para zoom · botão direito para mover
+        Clique num móvel para selecionar{aoArrastar && " · arraste o selecionado para mover"} · arraste o fundo para girar · roda para zoom · botão direito para deslocar a vista
         {vista !== "cima" && vista !== "perspectiva" && " · parede da frente cortada"}
       </p>
       <Canvas camera={{ fov: 45, near: 0.05, far: 200 }} gl={{ localClippingEnabled: true, logarithmicDepthBuffer: true }}>
@@ -230,6 +298,7 @@ export default function Visor3D({
           pintura={pintura}
           selecionado={selecionado}
           aoMovel={aoMovel}
+          aoArrastar={aoArrastar}
           moveis={moveis}
         />
         <OrbitControls makeDefault enableDamping={false} />

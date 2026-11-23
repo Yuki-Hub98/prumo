@@ -22,7 +22,12 @@ export function Tela3D({
   geometria,
   selecionado,
   aoSelecionarMovel,
+  aoMoverMovel,
+  aoGirarMovel,
 }: {
+  /** Arrastar o móvel no 3D: deslocamento em mm na planta. */
+  aoMoverMovel?: (id: string, d: [number, number]) => void;
+  aoGirarMovel?: (id: string) => void;
   codigo: string;
   pavimento: string;
   comodo: string | null;
@@ -84,6 +89,8 @@ export function Tela3D({
               pintura={pintura}
               selecionado={selecionado}
               aoMovel={aoSelecionarMovel}
+              aoArrastar={aoMoverMovel}
+              aoGirar={aoGirarMovel}
               moveis={geometria?.moveis.map((m) => m.id) ?? []}
             />
           </Suspense>

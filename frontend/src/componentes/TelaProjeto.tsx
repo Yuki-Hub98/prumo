@@ -123,6 +123,18 @@ export function TelaProjeto({
       { onSuccess: (r) => setNovos(r.novos) },
     );
 
+  const girar = (m: MovelTela) =>
+    editar.mutate(
+      (versao) =>
+        ou(
+          api.POST("/projetos/{codigo}/comodos/{comodo}/moveis/{id_}/mover", {
+            params: { path: { codigo, comodo: m.comodo, id_: m.id }, query: { versao } },
+            body: { rotacao: (((m.rotacao ?? 0) + 90) % 360) as 0 | 90 | 180 | 270 },
+          }),
+        ),
+      { onSuccess: (r) => setNovos(r.novos) },
+    );
+
   const redimensionar = (m: MovelTela, lado: LadoMovel, tamanho: number) =>
     editar.mutate(
       (versao) =>
@@ -253,6 +265,14 @@ export function TelaProjeto({
               geometria={geometria.data}
               selecionado={selecionado}
               aoSelecionarMovel={selecionar}
+              aoMoverMovel={(id, [dx, dy]) => {
+                const m = geometria.data?.moveis.find((x) => x.id === id);
+                if (m) mover(m, [m.centro[0] + dx, m.centro[1] + dy]);
+              }}
+              aoGirarMovel={(id) => {
+                const m = geometria.data?.moveis.find((x) => x.id === id);
+                if (m) girar(m);
+              }}
             />
           ) : geometria.data ? (
             <Planta
