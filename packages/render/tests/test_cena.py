@@ -443,3 +443,52 @@ def test_todo_movel_do_catalogo_tem_as_partes_que_declara(item: Any) -> None:
         achadas = {parte_da_peca(p.nome) for p in f.pecas}
         faltam = set(partes_do_movel(m)) - achadas
         assert not faltam, f"{item.tipo}/{mod.id}: sem peça para {faltam}"
+
+
+@pytest.mark.parametrize("lado", ["esquerda", "direita"])
+@pytest.mark.parametrize("pes", [None, "rodape"])
+def test_sofa_em_l_peca_a_peca(lado: str, pes: str | None) -> None:
+    """Sofá de canto: montado com encosto, braços, almofadas e pés, tudo dentro do L."""
+    from interiores_render.cena import _Feitio
+
+    class _CenaFalsa:
+        def material(self, nome: str, cor: str, **extra: Any) -> str:
+            return nome
+
+    dados = catalogo.novo_movel("sofa", "s", (0, 0), "canto")
+    dados["lado_l"] = lado
+    if pes:
+        dados["pes"] = pes
+    m = Movel.model_validate(dados)
+    f = _Feitio(_CenaFalsa(), m, "mat")  # type: ignore[arg-type]
+    f.assento_l()
+    contorno = geometria.contorno_local(m).buffer(1)
+    for p in f.pecas:
+        x0, y0, _, x1, y1, _ = p.caixa
+        assert x0 < x1 and y0 < y1, p.nome
+        assert contorno.contains(Polygon([(x0, y0), (x1, y0), (x1, y1), (x0, y1)])), p.nome
+    partes = {parte_da_peca(p.nome) for p in f.pecas}
+    assert set(partes_do_movel(m)) <= partes
+    # almofadas de assento nos dois trechos: a do braço do L fica do lado escolhido
+    almofadas = [p.caixa for p in f.pecas if p.nome.startswith("almofada")]
+    na_frente = [c for c in almofadas if c[1] > 0]
+    assert na_frente and all((c[0] > 0) == (lado == "esquerda") for c in na_frente)
+
+
+def test_sofa_em_l_na_cena() -> None:
+    """Na cena o sofá em L sai em peças (caixas), não como bloco extrudado."""
+    from interiores_core.carregar import ProjetoCarregado
+    from interiores_core.modelo import DadosComodo
+
+    c = carregar(DADOS)
+    dados = c.dados_comodos["quarto"].model_dump(mode="json", exclude_none=True)
+    dados["moveis"] = [catalogo.novo_movel("sofa", "sofa", (1600, 1500), "canto")]
+    novo = ProjetoCarregado(
+        pasta=c.pasta, projeto=c.projeto,
+        dados_comodos={**c.dados_comodos, "quarto": DadosComodo.model_validate(dados)},
+        variacoes={},
+    )  # fmt: skip
+    cena = montar_cena(novo, "quarto")
+    assert not [p for p in cena["prismas"] if p["nome"].startswith("sofa-")]
+    nomes = {cx["nome"] for cx in cena["caixas"] if cx["nome"].startswith("sofa-")}
+    assert {"sofa-encosto", "sofa-encosto-l", "sofa-braco-e", "sofa-braco-d"} <= nomes
