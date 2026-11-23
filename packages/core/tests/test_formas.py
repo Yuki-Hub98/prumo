@@ -62,3 +62,25 @@ def test_formas_possiveis_e_limites() -> None:
         movel(forma="arredondado", raio={"valor": 500, "origem": "projeto"})
     with pytest.raises(ValidationError, match="braço"):
         movel(forma="L", braco={"valor": 900, "origem": "projeto"})
+
+
+def test_sofa_em_l() -> None:
+    """Sofá: retangular ou em L (de canto); braço padrão = fundo de um assento."""
+    assert geometria.formas_possiveis(movel("sofa")) == ("retangular", "L")
+    assert geometria.formas_possiveis(movel("poltrona")) == ("retangular",)
+    med = {"origem": "projeto"}
+    canto = movel(
+        "sofa", forma="L", largura={"valor": 2600, **med}, profundidade={"valor": 1600, **med}
+    )
+    assert geometria.braco_l(canto) == geometria.BRACO_SOFA
+    assert geometria.braco_l(movel("sofa", forma="L")) == 480  # 60 % de 800: cabe no lado menor
+    assert geometria.braco_l(movel(forma="L")) == 320  # mesa continua 40 %
+
+
+def test_catalogo_tem_sofa_de_canto() -> None:
+    from interiores_core.catalogo import item_do_tipo
+
+    item = item_do_tipo("sofa")
+    assert item is not None
+    canto = item.modelo("canto")
+    assert canto is not None and canto.forma == "L"

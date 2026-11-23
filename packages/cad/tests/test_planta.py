@@ -405,3 +405,33 @@ def test_snapshot(casa: ProjetoCarregado, comodo: str | None) -> None:
     assert atual == esperado, (
         "planta mudou; se foi de propósito, suba o 'planta vN' e regrave o snapshot"
     )
+
+
+@pytest.mark.parametrize("lado", ["esquerda", "direita"])
+def test_sofa_em_l_na_planta(copia: Path, lado: str) -> None:
+    """Sofá de canto: contorno em L e o símbolo (encostos, braços, lugares) dentro dele."""
+    from shapely import LineString
+
+    from interiores_core import geometria
+    from interiores_core.catalogo import novo_movel
+    from interiores_core.modelo import Movel
+
+    arq = copia / "comodos" / "quarto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    sofa = {**novo_movel("sofa", "sofa", (1600, 1200), "canto"), "lado_l": lado}
+    d["moveis"] = [sofa]
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    doc = desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc
+    msp = doc.modelspace()
+    contorno = geometria.poligono_movel(Movel.model_validate(sofa))
+    polis = [e for e in msp.query('LWPOLYLINE[layer=="MOVEL"]') if len(e) == 6]
+    assert polis, "contorno em L"
+    linhas = [
+        LineString([e.dxf.start.vec2, e.dxf.end.vec2]) for e in msp.query('LINE[layer=="MOVEL"]')
+    ]
+    dentro = [ln for ln in linhas if contorno.buffer(1).contains(ln)]
+    # 2 encostos + 2 braços + 3 divisões nas costas (230 cm) + 1 no começo do braço do L
+    assert len(dentro) == 8
+    # encosto da lateral fica do lado do braço do L
+    lateral = max(dentro, key=lambda ln: ln.length if ln.coords[0][0] == ln.coords[1][0] else 0)
+    assert (lateral.coords[0][0] > 1600) == (lado == "esquerda")

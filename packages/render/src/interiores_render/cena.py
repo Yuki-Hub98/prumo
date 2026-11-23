@@ -656,7 +656,7 @@ class _Cena:
     def moveis_(self) -> None:
         for m in self.moveis:
             mat = self.material_movel(m)
-            if m.forma is not None and len(geometria.formas_possiveis(m)) > 1:
+            if m.forma is not None and _forma_em_bloco(m):
                 self.movel_com_forma(m, mat)
                 continue
             for peca in self.pecas_movel(m, mat):
@@ -739,6 +739,8 @@ class _Cena:
             f.planejado()
         elif simbolo is Simbolo.CAMA:
             f.cama()
+        elif simbolo is Simbolo.ASSENTO and m.forma == "L" and m.tipo == "sofa":
+            f.assento_l()
         elif simbolo is Simbolo.ASSENTO:
             f.assento()
         elif simbolo is Simbolo.CADEIRA:
@@ -943,6 +945,12 @@ class _Cena:
         return [0.45, 0.35, -0.82]
 
 
+def _forma_em_bloco(m: Movel) -> bool:
+    """Móvel cuja forma sai como bloco extrudado (genérico, mesa); o sofá em L é montado
+    peça a peça (:meth:`_Feitio.assento_l`)."""
+    return m.tipo != "sofa" and len(geometria.formas_possiveis(m)) > 1
+
+
 def _pes_da_forma(m: Movel) -> list[tuple[float, float]]:
     """Onde vão os pés de uma mesa com forma (referencial do móvel): redonda, nos quatro
     "cantos" da elipse; arredondada e em L, nos cantos da forma recuados para dentro."""
@@ -959,6 +967,14 @@ def _pes_da_forma(m: Movel) -> list[tuple[float, float]]:
     if dentro.is_empty or not isinstance(dentro, Polygon):
         return [(0.0, 0.0)]
     return [(float(x), float(y)) for x, y in list(dentro.exterior.coords)[:-1]]
+
+
+def _divide(a: float, b: float, folga: float = 20.0) -> list[tuple[float, float]]:
+    """Trecho [a, b] em 1 a 3 almofadas iguais (como no sofá reto), com ``folga`` entre elas."""
+    livre = b - a
+    n = 1 if livre < 1100 else 2 if livre < 1900 else 3
+    larg = (livre - folga * (n - 1)) / n
+    return [(a + i * (larg + folga), a + i * (larg + folga) + larg) for i in range(n)]
 
 
 @dataclass(frozen=True)
@@ -1001,10 +1017,17 @@ class _Feitio:
     def metal(self) -> str:
         return self._mat("metal", rugosidade=0.3, metal=True)
 
-    def pes(self, altura: float, lado: float = 40.0, recuo: float = 60.0) -> None:
+    def pes(
+        self, altura: float, lado: float = 40.0, recuo: float = 60.0,
+        pontos: list[tuple[float, float]] | None = None,
+    ) -> None:  # fmt: skip
         """Quatro pés no estilo escolhido: quadrado (metal, o padrão), palito (fino, na cor
-        do móvel), metálico fino ou nenhum (rodapé recuado escuro)."""
+        do móvel), metálico fino ou nenhum (rodapé recuado escuro). ``pontos``: centros dos
+        pés para quem não é retângulo (sofá em L); o rodapé segue o contorno recuado."""
         w, d, estilo = self.w, self.d, self.m.pes or "quadrado"
+        if pontos is not None:
+            self._pes_em(altura, lado, recuo, pontos, estilo)
+            return
         if estilo == "rodape":
             self.p("rodape", -w + recuo, -d + recuo, self.base, w - recuo, d - recuo,
                    self.base + altura, self.sombra)  # fmt: skip
@@ -1018,6 +1041,28 @@ class _Feitio:
         for i, (x, y) in enumerate((x, y) for y in ys for x in xs):
             self.p(f"pe{i}", x, y, self.base, x + lado, y + lado, self.base + altura, mat,
                    chanfro=chanfro)  # fmt: skip
+
+    def _pes_em(
+        self, altura: float, lado: float, recuo: float, pontos: list[tuple[float, float]],
+        estilo: str,
+    ) -> None:  # fmt: skip
+        if estilo == "rodape":  # sem pé: rodapé escuro recuado nos dois trechos do L
+            w, d, b = self.w, self.d, geometria.braco_l(self.m)
+            s = -1.0 if self.m.lado_l == "direita" else 1.0
+            trechos = ((-w + recuo, -d + recuo, w - recuo, -d + b - recuo),
+                       (w - b + recuo, -d + b - recuo, w - recuo, d - recuo))  # fmt: skip
+            for nome, (x0, y0, x1, y1) in zip(("rodape", "rodape-l"), trechos, strict=True):
+                xa, xb = sorted((x0 * s, x1 * s))
+                self.p(nome, xa, y0, self.base, xb, y1, self.base + altura, self.sombra)
+            return
+        mat, chanfro = self.metal, 0.0
+        if estilo == "palito":
+            lado, mat, chanfro = lado * 0.7, self.mat, lado * 0.3
+        elif estilo == "metalico":
+            lado = 18.0
+        for i, (x, y) in enumerate(pontos):
+            self.p(f"pe{i}", x - lado / 2, y - lado / 2, self.base, x + lado / 2, y + lado / 2,
+                   self.base + altura, mat, chanfro=chanfro)  # fmt: skip
 
     def puxador(
         self, nome: str, x: float, y: float, z: float, comprido: float, deitado: bool
@@ -1107,6 +1152,55 @@ class _Feitio:
                 topo - 50,
                 chanfro=70,
             )
+
+    def assento_l(self) -> None:
+        """Sofá de canto: trecho das costas (largura toda) e trecho do braço do L, que vem
+        para a frente do lado ``lado_l`` (esquerda de quem olha de frente = +x). Encosto
+        nas costas e na lateral de fora do braço; braços nas duas pontas; almofadas de
+        assento e de costas nos dois trechos (o canto fica com o trecho das costas)."""
+        w, d, base, topo = self.w, self.d, self.base, self.topo
+        b = geometria.braco_l(self.m)
+        enc, braco = min(200.0, b / 6), min(150.0, w / 4, d / 4)
+        assento = min(450.0, self.h * 0.55)
+        pe, alt_braco = 100.0, base + min(650.0, self.h * 0.75)
+        s = -1.0 if self.m.lado_l == "direita" else 1.0
+
+        def q(nome: str, x0: float, y0: float, z0: float, x1: float, y1: float, z1: float,
+              material: str | None = None, chanfro: float = 0.0) -> None:  # fmt: skip
+            xa, xb = sorted((x0 * s, x1 * s))
+            self.p(nome, xa, y0, z0, xb, y1, z1, material, chanfro)
+
+        r = 60.0  # recuo dos pés
+        pes = [(-w + r, -d + r), (w - r, -d + r), (w - r, d - r), (w - b + r, d - r),
+               (w - b + r, -d + b - r), (-w + r, -d + b - r)]  # fmt: skip
+        self.pes(pe, pontos=[(x * s, y) for x, y in pes])
+        # estrutura: os dois trechos
+        q("base", -w, -d, base + pe, w, -d + b, base + assento - 120, chanfro=20)
+        q("base-l", w - b, -d + b, base + pe, w, d, base + assento - 120, chanfro=20)
+        q("encosto", -w, -d, base + pe, w, -d + enc, topo, chanfro=40)
+        q("encosto-l", w - enc, -d + enc, base + pe, w, d - braco, topo, chanfro=40)
+        q("braco-e", -w, -d + enc, base + pe, -w + braco, -d + b, alt_braco, chanfro=45)
+        q("braco-d", w - b, d - braco, base + pe, w, d, alt_braco, chanfro=45)
+        # almofadas do trecho das costas (com o canto) e do trecho do braço
+        costas = (-w + braco, w - enc)
+        lado = (-d + b, d - braco)
+        fundo = 170.0
+        for i, (x0, x1) in enumerate(_divide(*costas)):
+            q(f"almofada{i}", x0, -d + enc, base + assento - 120, x1, -d + b - 10,
+              base + assento, chanfro=55)  # fmt: skip
+            x1e = min(x1, w - enc - fundo)
+            if x1e - x0 > 150:
+                q(f"encosto{i}", x0 + 10, -d + enc, base + assento, x1e - 10, -d + enc + fundo,
+                  topo - 50, chanfro=70)  # fmt: skip
+        n = len(_divide(*costas))
+        q(f"encosto{n}", w - enc - fundo, -d + enc, base + assento, w - enc, -d + b,
+          topo - 50, chanfro=70)  # fmt: skip
+        for j, (y0, y1) in enumerate(_divide(*lado)):
+            k = n + 1 + j
+            q(f"almofada{k}", w - b + 10, y0 + 10, base + assento - 120, w - enc, y1,
+              base + assento, chanfro=55)  # fmt: skip
+            q(f"encosto{k}", w - enc - fundo, y0 + 10, base + assento, w - enc, y1 - 10,
+              topo - 50, chanfro=70)  # fmt: skip
 
     def cadeira(self) -> None:
         w, d, base, topo = self.w, self.d, self.base, self.topo

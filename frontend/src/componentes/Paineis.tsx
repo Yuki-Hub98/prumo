@@ -54,6 +54,7 @@ export function PainelMovel({
   const movel = projeto?.comodos[comodo]?.moveis?.find((m) => m.id === id);
   if (!movel) return null;
   const caminho = { codigo, comodo, id_: id };
+  const formas = geometria.moveis.find((m) => m.id === id)?.formas;
   const paredesDoComodo = geometria.paredes.filter((p) => p.lado_a === comodo || p.lado_b === comodo);
 
   const mover = (corpo: { rotacao?: 0 | 90 | 180 | 270; parede?: string; distancia?: number }) =>
@@ -142,8 +143,10 @@ export function PainelMovel({
           aoSalvar={(m) => alterar(campo, m)}
         />
       ))}
-      {(geometria.moveis.find((m) => m.id === id)?.formas?.length ?? 0) > 1 && (
+      {(formas?.length ?? 0) > 1 && (
         <Forma
+          formas={formas ?? []}
+          sofa={movel.tipo === "sofa"}
           forma={movel.forma ?? null}
           raio={movel.raio}
           braco={movel.braco}
@@ -203,6 +206,8 @@ const FORMAS: { id: "arredondado" | "redondo" | "L" | null; nome: string }[] = [
 
 /** Forma vista de cima: retangular, cantos arredondados (raio), redondo/oval ou em L. */
 function Forma({
+  formas,
+  sofa,
   forma,
   raio,
   braco,
@@ -211,6 +216,9 @@ function Forma({
   ocupado,
   aoMudar,
 }: {
+  /** As que o móvel aceita ("retangular", "arredondado", "redondo", "L"). */
+  formas: string[];
+  sofa: boolean;
   forma: "arredondado" | "redondo" | "L" | null;
   raio?: Medida | null;
   braco?: Medida | null;
@@ -223,7 +231,7 @@ function Forma({
     <div className="mt-2 border-t border-linha pt-2 text-sm">
       <span className="text-tinta-suave">Forma</span>
       <div className="mt-1 flex flex-wrap gap-1">
-        {FORMAS.map((f) => (
+        {FORMAS.filter((f) => formas.includes(f.id ?? "retangular")).map((f) => (
           <button
             key={f.nome}
             type="button"
@@ -242,7 +250,11 @@ function Forma({
       {forma === "L" && (
         <>
           <CampoMedida rotulo="Largura do braço" medida={braco} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => aoMudar({ braco: m })} />
-          {!braco && <p className="text-xs text-tinta-suave">Sem medida: 40 % do lado menor</p>}
+          {!braco && (
+            <p className="text-xs text-tinta-suave">
+              {sofa ? "Sem medida: fundo de um assento (90 cm)" : "Sem medida: 40 % do lado menor"}
+            </p>
+          )}
           <div className="mt-1 flex items-center gap-1 text-xs">
             <span className="text-tinta-suave">Braço para a frente do lado</span>
             {(["esquerda", "direita"] as const).map((l) => (

@@ -402,6 +402,19 @@
           "polegadas": null,
           "energia": null,
           "forma": null
+        },
+        {
+          "id": "canto",
+          "nome": "De canto em L (260 × 160)",
+          "largura": 2600,
+          "profundidade": 1600,
+          "altura": 850,
+          "elevacao": null,
+          "portas": null,
+          "largura_porta": null,
+          "polegadas": null,
+          "energia": null,
+          "forma": "L"
         }
       ],
       "modelo_padrao": "3_lugares"

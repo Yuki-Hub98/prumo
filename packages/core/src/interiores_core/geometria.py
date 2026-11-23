@@ -212,10 +212,19 @@ RAIO_PADRAO = 100
 """mm: raio dos cantos quando a forma é arredondada e o raio ainda não foi dado."""
 
 
+BRACO_SOFA = 900
+"""mm: fundo de um assento de sofá, padrão dos dois trechos do sofá em L."""
+
+
 def braco_l(movel: Movel) -> float:
-    """Largura dos braços do L (dada, ou 40 % do lado menor)."""
+    """Largura dos braços do L: a dada ou, sem medida, 40 % do lado menor (no sofá, o
+    fundo de um assento: 90 cm, até 60 % do lado menor)."""
+    if movel.braco:
+        return float(movel.braco.valor)
     menor = min(movel.largura.valor, movel.profundidade.valor)
-    return float(movel.braco.valor) if movel.braco else round(menor * 0.4)
+    if movel.tipo == "sofa":
+        return float(min(BRACO_SOFA, round(menor * 0.6)))
+    return float(round(menor * 0.4))
 
 
 def contorno_local(movel: Movel) -> Polygon:
@@ -251,13 +260,18 @@ def poligono_movel(movel: Movel) -> Polygon:
 
 
 def formas_possiveis(movel: Movel) -> tuple[str, ...]:
-    """Formas que este móvel aceita: corpo simples (sob medida, banco, berço) e mesas; os
-    outros (cama, sofá, guarda-roupa) e os planejados ficam retangulares."""
+    """Formas que este móvel aceita: corpo simples (sob medida, banco, berço) e mesas, todas;
+    sofá, retangular ou em L (de canto); os outros (cama, poltrona, guarda-roupa) e os
+    planejados ficam retangulares."""
     from interiores_core.catalogo import Simbolo, item_do_tipo
 
     item = item_do_tipo(movel.tipo)
     simbolo = item.simbolo if item else Simbolo.GENERICO
-    if movel.construcao is not None or simbolo not in (Simbolo.GENERICO, Simbolo.MESA):
+    if movel.construcao is not None:
+        return ("retangular",)
+    if movel.tipo == "sofa":
+        return ("retangular", "L")
+    if simbolo not in (Simbolo.GENERICO, Simbolo.MESA):
         return ("retangular",)
     return ("retangular", "arredondado", "redondo", "L")
 

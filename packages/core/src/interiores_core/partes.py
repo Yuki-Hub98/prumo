@@ -82,7 +82,7 @@ _REGRAS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"^(pata|coluna|rodizio)\d*$", "base"),
         (r"^travesseiro\d*$", "travesseiros"),
         (r"^(almofada|encosto)\d+$", "almofadas"),  # sofá: almofadas do assento e das costas
-        (r"^encosto$", "encosto"),
+        (r"^encosto(-l)?$", "encosto"),  # sofá em L: costas e lateral
         (r"^braco-[ed]$", "bracos"),
         (r"^assento$", "assento"),
         (r"^tampo$", "tampo"),
