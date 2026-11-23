@@ -22,7 +22,7 @@ são padrões configuráveis em `regras.toml`, não norma técnica.
 | Porta batendo em móvel ao abrir | — | erro |
 | Tomada/interruptor atrás de móvel (na faixa de altura dele) | — | aviso |
 | Móvel entrando na parede | — | erro |
-| Móveis sobrepostos (planta e altura) | — | aviso |
+| Móveis sobrepostos (planta e altura; o vão sob o tampo de mesa/escrivaninha é livre para o que couber nele, ex.: gabinete) | — | aviso |
 | TV perto de quem assiste | 1,5 × diagonal | aviso |
 | Quarto: lateral da cama (2 lados no casal, 1 no solteiro) | 600 mm | aviso |
 | Quarto: frente de guarda-roupa de porta de abrir | 900 mm ou folha + 100 | aviso |

@@ -104,6 +104,14 @@ mensagem do cálculo. Tudo entra no rascunho (Desfazer volta cada passo). No 3D 
 portas, as frentes de gaveta com puxador e, nos vãos sem porta, os nichos e as prateleiras.
 Pia, cuba, torneira, fogão e geladeira chegam com a cozinha e o banheiro.
 
+### Escritório
+
+Na lista de móveis: **monitor**, **notebook**, **teclado e mouse** (já vêm a 75 cm do piso, a
+altura da mesa: é só arrastar para cima dela), **computador** (gabinete, no chão — pode ficar
+embaixo da mesa sem acusar sobreposição), **impressora**, **mesa de escritório** (140 × 70,
+160 × 80 e em L 150 × 150) e **cadeira de escritório** (padrão e presidente). Na planta, o que
+fica sobre ou sob a mesa aparece só com o símbolo, sem nome, para não embolar com o da mesa.
+
 ### Formas
 
 Mesa, escrivaninha, banco/puff, berço e móvel sob medida têm **forma** no painel do móvel:
