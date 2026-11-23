@@ -238,6 +238,7 @@ _ITENS = (
             _m("2_lugares", "2 lugares", 1600, 900, 850),
             _m("3_lugares", "3 lugares", 2100, 900, 850),
             _m("retratil", "Retrátil (fechado)", 2300, 1000, 950),
+            _m("canto", "De canto em L (260 × 160)", 2600, 1600, 850, forma="L"),
         ),
         modelo_padrao="3_lugares",
     ),
