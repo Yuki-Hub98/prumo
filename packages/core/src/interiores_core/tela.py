@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict
 from shapely import Polygon
 from shapely.geometry.base import BaseGeometry
 
-from interiores_core import bancada, escadas, geometria, planejado
+from interiores_core import bancada, cotas, escadas, geometria, planejado
 from interiores_core.medidas import medidas_estimadas
 from interiores_core.modelo import (
     DadosComodo,
@@ -216,6 +216,25 @@ class EstruturaTela(_Tela):
     escada: EscadaTela | None = None
 
 
+class CotaTela(_Tela):
+    """Cota pronta para desenhar (ver :mod:`interiores_core.cotas`)."""
+
+    de: Pt
+    ate: Pt
+    lado: Pt
+    """Para onde a cota sai da linha medida (unitário)."""
+    fileira: int
+    """0 = a mais perto da linha medida."""
+    tipo: str
+    """``comodo`` (face interna, por dentro), ``trecho`` (cadeia com as aberturas),
+    ``eixo`` (eixos das paredes, por fora) ou ``geral`` (total externo)."""
+    valor: int
+    """mm."""
+    comodo: str | None = None
+    origem: str = "projeto"
+    """De onde vêm as medidas que ela usa: ``trena``, ``projeto`` ou ``estimada`` (chute)."""
+
+
 class PavimentoTela(_Tela):
     id: str
     paredes: list[ParedeTela]
@@ -224,6 +243,7 @@ class PavimentoTela(_Tela):
     moveis: list[MovelTela]
     instalacoes: list[InstalacaoTela]
     estrutura: list[EstruturaTela] = []
+    cotas: list[CotaTela] = []
     limites: tuple[Pt, Pt] | None
     """Canto inferior-esquerdo e superior-direito de tudo (para enquadrar)."""
 
@@ -393,6 +413,19 @@ def pavimento_para_tela(
         moveis=moveis,
         instalacoes=instalacoes,
         estrutura=estrutura,
+        cotas=[
+            CotaTela(
+                de=_pts([k.de])[0],
+                ate=_pts([k.ate])[0],
+                lado=k.lado,
+                fileira=k.fileira,
+                tipo=k.tipo,
+                valor=k.valor,
+                comodo=k.comodo,
+                origem=k.origem,
+            )
+            for k in cotas.cotas_do_pavimento(pav)
+        ],
         limites=limites,
     )
 

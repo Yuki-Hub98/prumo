@@ -1487,6 +1487,40 @@ export interface components {
             };
         };
         /**
+         * CotaTela
+         * @description Cota pronta para desenhar (ver :mod:`interiores_core.cotas`).
+         */
+        CotaTela: {
+            /** De */
+            de: [
+                number,
+                number
+            ];
+            /** Ate */
+            ate: [
+                number,
+                number
+            ];
+            /** Lado */
+            lado: [
+                number,
+                number
+            ];
+            /** Fileira */
+            fileira: number;
+            /** Tipo */
+            tipo: string;
+            /** Valor */
+            valor: number;
+            /** Comodo */
+            comodo?: string | null;
+            /**
+             * Origem
+             * @default projeto
+             */
+            origem?: string;
+        };
+        /**
          * DadosComodo
          * @description Raiz de ``comodos/<comodo>.json``: mobiliário e dados específicos.
          */
@@ -2541,6 +2575,11 @@ export interface components {
              * @default []
              */
             estrutura?: components["schemas"]["EstruturaTela"][];
+            /**
+             * Cotas
+             * @default []
+             */
+            cotas?: components["schemas"]["CotaTela"][];
             /** Limites */
             limites: [
                 [
