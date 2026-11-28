@@ -359,8 +359,8 @@ export function TelaProjeto({
                   { id: "movel", titulo: "Móvel" },
                   { id: "cores", titulo: "Cores" },
                   { id: "imagens", titulo: "Imagens" },
-                  { id: "problemas", titulo: "Problemas", marca: problemas.length, tom: piorGravidade(problemas) },
                   { id: "estruturas", titulo: "Estruturas" },
+                  { id: "problemas", titulo: "Problemas", marca: problemas.length, tom: piorGravidade(problemas) },
                 ]}
                 ativa={aba}
                 aoTrocar={setAba}

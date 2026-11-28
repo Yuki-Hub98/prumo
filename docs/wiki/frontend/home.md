@@ -61,7 +61,7 @@ No topo da coluna da direita fica o título (**Painel de edição**, ou **Editar
 editor) e o botão **☰**, que fecha a coluna (sobra uma faixa com o ☰ para reabrir; fica
 lembrado no navegador). Em "Móveis e cores" a coluna tem **abas**: **Móvel** (o móvel selecionado e
 adicionar do catálogo; clicar num móvel na planta abre esta aba), **Cores**, **Imagens**,
-**Problemas** (com a contagem, e o que falta medir) e **Estruturas** (ver abaixo). A **largura é ajustável**: arraste a faixa
+**Estruturas** (ver abaixo) e, por último, **Problemas** (com a contagem, e o que falta medir). A **largura é ajustável**: arraste a faixa
 cinza da borda esquerda (ou use ← → com ela em foco; clique duplo volta ao padrão); fica
 lembrada neste navegador. Em "Editar planta" a coluna mostra o editor, sem abas.
 
