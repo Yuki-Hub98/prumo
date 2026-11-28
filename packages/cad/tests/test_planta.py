@@ -553,3 +553,14 @@ def test_andar_de_cima_mostra_o_vao_da_escada(copia: Path) -> None:
     arq.write_text(json.dumps(d), encoding="utf-8")
     doc = desenhar_planta(carregar(copia), "cima", None, DATA).doc
     assert "DESCE" in _textos(doc, "TEXTO")
+
+
+def test_cotas_da_tela_batem_com_o_dxf(casa: ProjetoCarregado) -> None:
+    """As cotas que a tela desenha (core) são as mesmas do DXF do cômodo."""
+    from interiores_core import cotas
+
+    pav = casa.projeto.pavimentos[0]
+    quarto = next(c for c in pav.comodos if c.id == "quarto")
+    da_tela = sorted(k.valor for k in cotas.cotas_do_comodo(pav, quarto))
+    do_dxf = sorted(_cotas(desenhar_planta(casa, "terreo", "quarto", DATA).doc))
+    assert da_tela == do_dxf
