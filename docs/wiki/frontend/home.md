@@ -113,6 +113,21 @@ caixa amarela mostra o tamanho novo e as medidas mudam ao vivo, de 1 em 1 cm, co
 oposto parado. Ao soltar, a medida entra como "Quero assim" (como nas bordas da planta).
 **Desfazer**/**Refazer** ficam na própria janela (e Ctrl+Z também vale); **Esc** fecha.
 
+**Partes do planejado.** No móvel montado por dentro, clique numa gaveta, nicho, cabideiro ou
+prateleira (a prateleira escolhe o espaço logo abaixo dela): o espaço fica amarelo e o painel
+passa a editar **o espaço** (tipo, altura, subir/descer, tirar) e **o vão** dele (largura, com
+porta). As alças viram a **altura do espaço** e a **largura do vão**: puxar é como mover a
+prateleira ou a divisória, e o vizinho do outro lado cede o espaço (se tiver medida fixa, ela
+diminui; se for automática, divide o que sobra). **Esconder as portas** tira as folhas e os
+puxadores delas para ver o de dentro. "← Móvel inteiro" (ou clicar no fundo) volta às alças do
+móvel.
+
+**Porta e janela.** No editor de planta, o painel da porta/janela também tem **Editar em
+detalhe**: abre o trecho da parede com o vão (a porta vista do lado para onde abre; a janela,
+por dentro). As alças puxam **um lado** (largura, com o outro lado parado), **o outro lado**
+(distância do início e largura), **a altura** e, na janela, **o peitoril** (com o topo parado).
+Tudo de 1 em 1 cm, como "Quero assim".
+
 ### Bancada / mesa planejada
 
 No catálogo, **Bancada / mesa planejada**: mesa reta (só pernas ou com gaveteiro), mesa em L

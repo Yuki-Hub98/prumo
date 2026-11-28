@@ -68,6 +68,19 @@ def test_caixa_vaos_e_alturas() -> None:
     assert p["Prateleira"] == (873, 520, 6)  # recuada 80 pelo trilho da porta de correr
 
 
+def test_layout_aponta_vao_e_espaco() -> None:
+    """Cada espaço (e a prateleira em cima dele) sabe o vão e o índice: o editar em detalhe
+    acha no 3D a parte clicada."""
+    calc = planejado.calcular(Movel.model_validate(guarda_roupa()))
+    espacos = [
+        (r.tipo, r.vao, r.espaco) for r in calc.layout if r.tipo in ("gaveta", "nicho", "cabideiro")
+    ]
+    assert espacos[:4] == [("gaveta", 0, 0), ("gaveta", 0, 1), ("cabideiro", 0, 2), ("nicho", 0, 3)]
+    assert espacos[4:] == [("nicho", 1, j) for j in range(5)]
+    prateleiras = [(r.vao, r.espaco) for r in calc.layout if r.tipo == "prateleira"]
+    assert prateleiras[:2] == [(0, 1), (0, 2)]  # entre gavetas não há prateleira
+
+
 def test_gavetas_e_portas_de_correr() -> None:
     calc = planejado.calcular(Movel.model_validate(guarda_roupa()))
     p = pecas(calc)

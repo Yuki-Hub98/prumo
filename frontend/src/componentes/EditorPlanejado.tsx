@@ -85,7 +85,7 @@ export function Frente({ vista, portas }: { vista: Vista; portas: boolean }) {
 }
 
 /** Campo de medida curto: vazio = "auto" (divide o que sobra); Enter ou sair do campo aplica. */
-function CampoAuto({
+export function CampoAuto({
   mm,
   unidade,
   rotulo,

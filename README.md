@@ -362,8 +362,11 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Editar em detalhe** (móvel): janela com só o móvel em 3D, no centro e girável, com alças
       para puxar largura, profundidade e altura; medidas em cm ao vivo, passo de 1 cm, lado
       oposto parado, "Quero assim", Desfazer/Refazer na própria janela
-- [ ] Editar em detalhe — o que falta: porta e janela; editar partes (prateleira, gaveta, porta
-      do planejado) no mesmo modal
+- [x] **Editar em detalhe: porta, janela e partes**: a porta/janela abre com o trecho da parede,
+      com alças para os dois lados (largura e distância do início), a altura e o peitoril; no
+      planejado, clicar numa gaveta, nicho, cabideiro ou prateleira edita aquele espaço e o vão
+      (tipo, altura, largura, porta), com alças que movem a prateleira/divisória e "esconder as
+      portas" para ver o de dentro
 - [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis
 - [ ] Referência por foto (pedido do usuário, 2026-11-19 e 2026-11-20): subir uma foto
       (Pinterest, um quarto parecido) pela tela e **guardar a foto no projeto** como referência

@@ -186,6 +186,26 @@ def test_moveis_com_detalhe(cena: dict[str, Any]) -> None:
     assert cena["materiais"]["metal"].get("metal") is True
 
 
+def test_pecas_marcadas_com_parede_e_abertura(cena: dict[str, Any]) -> None:
+    """O visor isola uma porta/janela (editar em detalhe) pelos ``extras`` das peças."""
+    pecas = cena["prismas"] + cena["caixas"]
+    da_janela = {p["nome"] for p in pecas if p.get("extras", {}).get("abertura") == "janela-quarto"}
+    assert {"vidro-janela-quarto", "peitoril-janela-quarto", "verga-janela-quarto"} <= da_janela
+    assert any(n.startswith("caixilho-janela-quarto") for n in da_janela)
+    janela = next(p for p in pecas if p["nome"] == "vidro-janela-quarto")
+    parede = janela["extras"]["parede"]
+    trecho = [p for p in pecas if p.get("extras", {}).get("parede") == parede]
+    assert any(p["nome"].startswith(f"parede-{parede}-") for p in trecho)
+    assert any(
+        p["nome"].startswith("batente-porta-") for p in pecas if p.get("extras", {}).get("abertura")
+    )
+    # móveis e piso não levam a marca
+    assert not any("parede" in p.get("extras", {}) for p in pecas if p["nome"] == "piso")
+    assert not any(
+        "abertura" in p.get("extras", {}) for p in pecas if "movel" in p.get("extras", {})
+    )
+
+
 def test_janela_porta_e_luz(cena: dict[str, Any]) -> None:
     nomes = _nomes(cena["caixas"])
     assert {
@@ -338,6 +358,47 @@ def test_planejado_no_3d_igual_ao_desenho() -> None:
     assert all(n["centro"][0] < 1500 for n in nichos)
     assert any(n.startswith("gab-prateleira") for n in pecas)
     assert sum(n.startswith("gab-puxador") for n in pecas) == 2  # um por gaveta
+
+
+def test_planejado_com_porta_tem_o_de_dentro() -> None:
+    """Atrás da porta de abrir saem gavetas, nichos e prateleiras (marcados ``atras_da_porta``,
+    dentro do volume da folha); o puxador da porta leva ``da_porta``: o visor esconde as
+    folhas e vê o de dentro (editar em detalhe)."""
+    from interiores_core.carregar import ProjetoCarregado
+    from interiores_core.modelo import DadosComodo
+
+    c = carregar(DADOS)
+    dados = c.dados_comodos["quarto"].model_dump(mode="json", exclude_none=True)
+    med = {"origem": "projeto"}
+    dados["moveis"] = [{
+        "id": "gab", "tipo": "sob_medida", "centro": [1500, 1500], "rotacao": 0,
+        "largura": {"valor": 800, **med}, "profundidade": {"valor": 500, **med},
+        "altura": {"valor": 800, **med}, "portas": "abrir",
+        "construcao": {
+            "chapa": {"material": "MDF", "espessura": {"valor": 18, **med}},
+            "fundo": {"material": "HDF", "espessura": {"valor": 6, **med}},
+            "vaos": [{"espacos": [{"tipo": "gaveta"}, {"tipo": "nicho"}]}],
+        },
+    }]  # fmt: skip
+    novo = ProjetoCarregado(
+        pasta=c.pasta, projeto=c.projeto,
+        dados_comodos={**c.dados_comodos, "quarto": DadosComodo.model_validate(dados)},
+        variacoes={},
+    )  # fmt: skip
+    pecas = {
+        cx["nome"]: cx
+        for cx in montar_cena(novo, "quarto")["caixas"]
+        if cx["nome"].startswith("gab-")
+    }
+    dentro = {n for n, p in pecas.items() if p["extras"].get("atras_da_porta")}
+    assert dentro == {"gab-gaveta0", "gab-nicho0", "gab-prateleira0"}
+    porta = next(p for n, p in pecas.items() if n.startswith("gab-porta"))
+    # a gaveta de dentro não passa da frente da folha
+    frente = lambda p: p["centro"][1] + p["tamanho"][1] / 2  # noqa: E731
+    assert frente(pecas["gab-gaveta0"]) < frente(porta)
+    puxadores = [p for n, p in pecas.items() if n.startswith("gab-puxador")]
+    # duas folhas (800 mm), um puxador em cada; a gaveta interna não tem
+    assert len(puxadores) == 2 and all(p["extras"]["da_porta"] == "1" for p in puxadores)
 
 
 def test_mesa_redonda_e_puff_em_l() -> None:

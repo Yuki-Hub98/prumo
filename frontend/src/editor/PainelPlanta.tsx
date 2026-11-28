@@ -2,7 +2,9 @@ import { EscolhaOrigem } from "../componentes/Origem";
 import { btn } from "../estilo";
 import { useState } from "react";
 import { api, ou, type Medida, type PavimentoTela } from "../api/cliente";
+import { Box } from "lucide-react";
 import { CampoMedida } from "../componentes/CampoMedida";
+import { type AberturaDetalhe, EditarDetalheAbertura, type ParedeDetalhe } from "../componentes/EditarDetalheAbertura";
 import { useCatalogoAberturas, useEditar, useProjeto } from "../dados";
 import { formatar, paraMm, type Origem, type Unidade } from "../unidades";
 import type { Item } from "../componentes/Planta";
@@ -606,8 +608,10 @@ function NovaInstalacao({
 
 function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx & { id: string }) {
   const cat = useCatalogoAberturas().data;
+  const [detalhe, setDetalhe] = useState(false);
   const a = pav.aberturas?.find((x) => x.id === id);
   if (!a) return null;
+  const parede = pav.paredes?.find((p) => p.id === a.parede);
   const caminho = { ...base, id_: id };
   const alterar = (campos: Record<string, unknown>) =>
     fazer((versao) =>
@@ -623,6 +627,21 @@ function PainelAbertura({ id, pav, unidade, base, fazer, ocupado, aoItem }: Ctx 
           {a.parede}
         </button>
       </p>
+      {parede && (
+        <button className={`${botao} mb-1`} onClick={() => setDetalhe(true)} title="Só esta abertura em 3D, com alças para puxar">
+          <Box size={14} /> Editar em detalhe
+        </button>
+      )}
+      {detalhe && parede && (
+        <EditarDetalheAbertura
+          codigo={base.codigo}
+          pavimento={base.pavimento}
+          abertura={a as AberturaDetalhe}
+          parede={parede as ParedeDetalhe}
+          unidade={unidade}
+          aoFechar={() => setDetalhe(false)}
+        />
+      )}
       {medidas.map((c) => (
         <CampoMedida key={c} rotulo={rotulos[c]} medida={(a as Record<string, unknown>)[c] as Medida} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ [c]: m })} />
       ))}

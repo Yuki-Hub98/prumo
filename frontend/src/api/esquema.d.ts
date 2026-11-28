@@ -2722,6 +2722,8 @@ export interface components {
             rotulo?: string;
             /** Vao */
             vao?: number | null;
+            /** Espaco */
+            espaco?: number | null;
         };
         /**
          * Severidade

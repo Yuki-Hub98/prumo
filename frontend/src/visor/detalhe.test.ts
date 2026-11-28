@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { caixaPuxada, cenaDoMovel, medidaPuxada, pontoDaAlca, tNoEixo } from "./detalhe";
+import {
+  aberturaPuxada,
+  alcasDaParte,
+  caixaAbertura,
+  caixaPuxada,
+  cenaDaParede,
+  cenaDoMovel,
+  eixoAlcaAbertura,
+  eixoParte,
+  medidaParte,
+  medidaPuxada,
+  MINIMO_PARTE_MM,
+  naFrente,
+  pontoAlcaAbertura,
+  pontoDaAlca,
+  pontoParte,
+  regiaoDoEspaco,
+  regiaoPuxada,
+  regioesClicaveis,
+  tNoEixo,
+} from "./detalhe";
 import type { Cena3D } from "./montarCena";
 
 const m = { largura: 1380, profundidade: 1880, altura: 550, base: 0 };
@@ -39,5 +59,76 @@ describe("editar em detalhe", () => {
     expect(c.max[0]).toBeCloseTo(0.81);
     expect(c.max[2]).toBeCloseTo(0.94); // costas paradas
     expect(c.min[2]).toBeCloseTo(-1.06);
+  });
+});
+
+describe("editar em detalhe: porta e janela", () => {
+  const j = { inicio: 800, largura: 1200, altura: 1000, peitoril: 1100 };
+
+  it("isola o trecho da parede com as aberturas dela", () => {
+    const p = (nome: string, extras: Record<string, string> | null) => ({ nome, extras }) as never;
+    const cena = { versao: 1, prismas: [p("parede-p1-0", { parede: "p1" }), p("parede-p2-0", { parede: "p2" }), p("piso", null)], caixas: [p("caixilho-j1-b", { parede: "p1", abertura: "j1" })], materiais: {}, aviso: null } as unknown as Cena3D;
+    const so = cenaDaParede(cena, "p1");
+    expect([...so.prismas, ...so.caixas].map((x) => x.nome)).toEqual(["parede-p1-0", "caixilho-j1-b"]);
+  });
+
+  it("caixa do vão centrada no vão original, lado a em −z", () => {
+    const c = caixaAbertura(j, j, 150);
+    expect(c.min.map((v) => +v.toFixed(3))).toEqual([-0.6, 1.1, -0.075]);
+    expect(c.max.map((v) => +v.toFixed(3))).toEqual([0.6, 2.1, 0.075]);
+    expect(pontoAlcaAbertura("inicio", c, -1).map((v) => +v.toFixed(3))).toEqual([-0.6, 1.6, -0.075]);
+    expect(pontoAlcaAbertura("peitoril", c, 1)[1]).toBeCloseTo(1.1);
+    // depois de puxar o início 10 cm para fora, a caixa cresce para −x
+    expect(caixaAbertura(j, { ...j, inicio: 700, largura: 1300 }, 150).min[0]).toBeCloseTo(-0.7);
+  });
+
+  it("puxar mantém a borda oposta parada, com limites", () => {
+    expect(aberturaPuxada("fim", j, 0.203)).toEqual({ ...j, largura: 1400 });
+    expect(aberturaPuxada("inicio", j, 0.1)).toEqual({ ...j, inicio: 700, largura: 1300 });
+    expect(aberturaPuxada("inicio", j, 5)).toEqual({ ...j, inicio: 0, largura: 2000 }); // não passa do início da parede
+    expect(aberturaPuxada("inicio", j, -5)).toEqual({ ...j, inicio: 1900, largura: 100 });
+    expect(aberturaPuxada("altura", j, -5).altura).toBe(100);
+    expect(aberturaPuxada("peitoril", j, 0.2)).toEqual({ ...j, peitoril: 900, altura: 1200 });
+    expect(aberturaPuxada("peitoril", j, 5)).toEqual({ ...j, peitoril: 0, altura: 2100 }); // não passa do piso
+    expect(eixoAlcaAbertura("inicio")).toEqual([-1, 0, 0]);
+  });
+});
+
+describe("editar em detalhe: partes do planejado", () => {
+  const mov = { largura: 1800, profundidade: 600, altura: 2300, base: 0 };
+  const rs = [
+    { tipo: "lateral", x: 0, y: 0, largura: 18, altura: 2300 },
+    { tipo: "gaveta", x: 18, y: 118, largura: 873, altura: 200, vao: 0, espaco: 0 },
+    { tipo: "prateleira", x: 18, y: 518, largura: 873, altura: 18, vao: 0, espaco: 1 },
+    { tipo: "nicho", x: 909, y: 118, largura: 873, altura: 423, vao: 1, espaco: 0 },
+    { tipo: "porta", x: 0, y: 100, largura: 900, altura: 2200, vao: 0 },
+  ];
+
+  it("clica em espaços e prateleiras; acha o espaço", () => {
+    expect(regioesClicaveis(rs).map((r) => r.tipo)).toEqual(["gaveta", "prateleira", "nicho"]);
+    expect(regiaoDoEspaco(rs, { vao: 1, espaco: 0 })?.tipo).toBe("nicho");
+    expect(regiaoDoEspaco(rs, { vao: 0, espaco: 1 })).toBeUndefined(); // prateleira não é espaço
+  });
+
+  it("vista de frente no 3D: esquerda de quem olha em +x, na frente (−z)", () => {
+    const { centro, tamanho } = naFrente(rs[1], mov, 0);
+    expect(centro.map((v) => +v.toFixed(4))).toEqual([+(0.9 - 0.018 - 0.4365).toFixed(4), 0.218, -0.3]);
+    expect(tamanho.map((v) => +v.toFixed(3))).toEqual([0.873, 0.2]);
+  });
+
+  it("alças só onde há vizinho para ceder espaço", () => {
+    expect(alcasDaParte({ vao: 0, espaco: 0 }, 2, 4)).toEqual([{ alca: "altura", borda: "fim" }, { alca: "largura", borda: "fim" }]);
+    expect(alcasDaParte({ vao: 1, espaco: 3 }, 2, 4)).toEqual([{ alca: "altura", borda: "inicio" }, { alca: "largura", borda: "inicio" }]);
+    expect(alcasDaParte({ vao: 0, espaco: 0 }, 1, 1)).toEqual([]);
+    expect(eixoParte("largura", "fim")).toEqual([-1, 0, 0]); // direita de quem olha
+    expect(eixoParte("altura", "inicio")).toEqual([0, -1, 0]);
+  });
+
+  it("região puxada e medida em passos de 1 cm", () => {
+    expect(regiaoPuxada(rs[1], "altura", "inicio", 300)).toMatchObject({ y: 18, altura: 300 });
+    expect(regiaoPuxada(rs[1], "largura", "fim", 900)).toMatchObject({ x: 18, largura: 900 });
+    expect(pontoParte(rs[1], "altura", "fim", mov)[1]).toBeCloseTo(0.318);
+    expect(medidaParte(1328.4, 0.0249)).toBe(1348);
+    expect(medidaParte(200, -5)).toBe(MINIMO_PARTE_MM);
   });
 });
