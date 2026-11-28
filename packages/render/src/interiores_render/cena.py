@@ -35,15 +35,17 @@ from interiores_core.catalogo import Simbolo
 from interiores_core.modelo import (
     Comodo,
     Janela,
+    Laje,
     Movel,
     Pavimento,
+    Pilar,
     PontoInstalacao,
     Porta,
     Variacao,
 )
 from interiores_core.partes import ALTURA_MIN_CAIXA, CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 17
+VERSAO_CENA = 18
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -311,10 +313,80 @@ class _Cena:
             self._n("piso"), self.cores["piso"], rugosidade=0.45, textura=self.textura_piso
         )
         self.prisma(self._n("piso"), self.util, -20, 0, piso)
-        # no pavimento as duas vistas são de fora, por cima: o teto sai das duas
-        oculto = ["superior", "perspectiva"] if self.no_pavimento else ["superior"]
+        if self._laje_cobre():
+            return  # a laje faz o teto (ver :meth:`vigas_e_lajes`)
         teto = self.material("teto", self.cores["teto"])
-        self.prisma(self._n("teto"), self.util, self.pe, self.pe + 20, teto, oculto_em=oculto)
+        self.prisma(
+            self._n("teto"), self.util, self.pe, self.pe + 20, teto, oculto_em=self._oculto_teto
+        )
+
+    @property
+    def _oculto_teto(self) -> list[str]:
+        """Vistas onde o teto (e a laje e as vigas) some: no pavimento as duas vistas são de
+        fora, por cima."""
+        return ["superior", "perspectiva"] if self.no_pavimento else ["superior"]
+
+    def _laje_cobre(self) -> bool:
+        """Alguma laje do pavimento cobre (quase todo) este cômodo."""
+        for e in self.pav.estrutura:
+            if isinstance(e, Laje):
+                g = geometria.poligono_estrutura(self.pav, e)
+                if g is not None and g.intersection(self.util).area >= 0.5 * self.util.area:
+                    return True
+        return False
+
+    # -- estrutura
+
+    def _recorte(self) -> BaseGeometry | None:
+        """Na cena do cômodo, só a estrutura em volta dele (com a espessura das paredes);
+        no pavimento, tudo."""
+        if self.no_pavimento:
+            return None
+        esp = max((p.espessura.valor for p in self.pav.paredes), default=150)
+        return self.util.buffer(esp, join_style="mitre")
+
+    def pilares(self) -> None:
+        """Pilares do piso ao pé-direito, antes das paredes: a parede sai recortada em volta
+        (faces sobrepostas saem pretas no render)."""
+        mat = self.material("parede", self.cores["parede"], rugosidade=0.85, textura="pintura")
+        recorte, pe = self._recorte(), float(self.pav.pe_direito.valor)
+        for e in self.pav.estrutura:
+            if not isinstance(e, Pilar):
+                continue
+            g = geometria.poligono_estrutura(self.pav, e)
+            if g is None or (recorte is not None and not recorte.intersects(g)):
+                continue
+            with self.marcando(estrutura=e.id):
+                self.prisma(f"pilar-{e.id}", g, 0, pe, mat)
+            self.ocupado = self.ocupado.union(g)
+
+    def vigas_e_lajes(self) -> None:
+        """Vigas (só o trecho fora das paredes: dentro delas não aparece) descendo da laje, e
+        lajes do pé-direito para cima, no lugar do teto (somem nas vistas de cima)."""
+        recorte, pe = self._recorte(), float(self.pav.pe_direito.valor)
+        paredes = unary_union(
+            [geometria.corpo(p) for p in self.pav.paredes if geometria.comprimento(p) > 0]
+        )
+        parede = self.material("parede", self.cores["parede"], rugosidade=0.85, textura="pintura")
+        teto = self.material("teto", self.cores["teto"])
+        oculto = self._oculto_teto
+        for e in self.pav.estrutura:
+            if isinstance(e, Pilar):
+                continue
+            g: BaseGeometry | None = geometria.poligono_estrutura(self.pav, e)
+            if g is None:
+                continue
+            if recorte is not None:
+                g = g.intersection(recorte)
+            with self.marcando(estrutura=e.id):
+                if isinstance(e, Laje):
+                    for i, pol in enumerate(_poligonos(g)):
+                        z1 = pe + e.espessura.valor
+                        self.prisma(f"laje-{e.id}-{i}", pol, pe, z1, teto, oculto_em=oculto)
+                else:
+                    z0 = pe - e.altura.valor
+                    for i, pol in enumerate(_poligonos(g.difference(paredes))):
+                        self.prisma(f"viga-{e.id}-{i}", pol, z0, pe, parede, oculto_em=oculto)
 
     def paredes(self, ids: list[str] | None = None) -> None:
         """Paredes do cômodo (ou as ``ids`` pedidas) com os vãos, caixilhos e portas."""
@@ -823,9 +895,15 @@ class _Cena:
     # -- câmeras e luzes
 
     def _livre(self, folga: float) -> BaseGeometry:
-        """Área onde dá para ficar em pé: longe de paredes, móveis no piso e giro de porta."""
+        """Área onde dá para ficar em pé: longe de paredes, pilares, móveis no piso e giro de
+        porta."""
         bloqueios = unary_union(
             [geometria.poligono_movel(m).buffer(folga) for m in self.moveis if m.ocupa_piso]
+            + [
+                g.buffer(folga)
+                for e in self.pav.estrutura
+                if isinstance(e, Pilar) and (g := geometria.poligono_estrutura(self.pav, e))
+            ]
             + [
                 g.buffer(folga)
                 for ab in self.pav.aberturas
@@ -1676,7 +1754,9 @@ def montar_cena(
             raise KeyError(f"variação '{variacao}' não existe para '{comodo}' ({disponiveis})")
     cena = _Cena(carregado, pav, c, var)
     cena.piso_teto()
+    cena.pilares()
     cena.paredes()
+    cena.vigas_e_lajes()
     cena.rodape()
     cena.moveis_()
     cena.luminarias()
@@ -1795,6 +1875,8 @@ def montar_cena_pavimento(
         cena.prismas, cena.caixas, cena.materiais = prismas, caixas, materiais
         cena.ocupado, cena.paredes_feitas = ocupado, feitas
         cena.piso_teto()
+        if not cenas:
+            cena.pilares()  # uma vez só, para o pavimento inteiro
         cena.paredes()
         ocupado = cena.ocupado
         cena.rodape()
@@ -1806,6 +1888,7 @@ def montar_cena_pavimento(
     if soltas:  # paredes que nenhum cômodo usa (muro, mureta): saem também
         cenas[0].ocupado = ocupado
         cenas[0].paredes(soltas)
+    cenas[0].vigas_e_lajes()
     luzes.append({"tipo": "sol", "direcao": [0.45, 0.35, -0.82], "energia": 2.5})
     disponiveis = _cameras_pavimento(
         unary_union([geometria.corpo(p) for p in pav.paredes if geometria.comprimento(p) > 0]),

@@ -578,3 +578,41 @@ def test_bancada_no_3d(modelo: str) -> None:
         if not p.nome.startswith("tampo"):
             assert z1 <= m.altura.valor - e + 1, p.nome  # tudo embaixo do tampo
     assert set(partes_do_movel(m)) <= {parte_da_peca(n) for n in nomes}
+
+
+def test_pilar_viga_e_laje(copia: Path) -> None:
+    """Pilar recorta a parede (sem faces sobrepostas), viga só fora das paredes, laje no
+    lugar do teto e escondida nas vistas de cima; no pavimento, uma vez só."""
+    arq = copia / "projeto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    med = {"origem": "estimada"}
+    d["pavimentos"][0]["estrutura"] = [
+        {"id": "pl", "tipo": "pilar", "centro": [0, 0],
+         "largura": {"valor": 300, **med}, "profundidade": {"valor": 300, **med}},
+        {"id": "vg", "tipo": "viga", "inicio": [0, 2000], "fim": [3200, 2000],
+         "largura": {"valor": 150, **med}, "altura": {"valor": 400, **med}},
+        {"id": "lj", "tipo": "laje", "espessura": {"valor": 120, **med}},
+    ]  # fmt: skip
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    c = carregar(copia)
+    cena = montar_cena(c, "quarto")
+    prismas = cena["prismas"]
+    nomes = _nomes(prismas)
+    assert "teto" not in nomes  # a laje faz o teto
+    laje = [p for p in prismas if p.get("extras", {}).get("estrutura") == "lj"]
+    assert laje and all(p["z0"] == 2600 and p["z1"] == 2720 for p in laje)
+    assert all(p["oculto_em"] == ["superior"] for p in laje)
+    pilar = next(p for p in prismas if p["nome"] == "pilar-pl")
+    assert (pilar["z0"], pilar["z1"]) == (0, 2600)
+    paredes = unary_union(
+        [Polygon(p["contorno"]) for p in prismas if p["nome"].startswith("parede-")]
+    )
+    assert paredes.intersection(Polygon(pilar["contorno"])).area < 1  # a parede desvia do pilar
+    vigas = [p for p in prismas if p["nome"].startswith("viga-vg")]
+    assert vigas and all((p["z0"], p["z1"]) == (2200, 2600) for p in vigas)
+
+    pav = montar_cena_pavimento(c, "terreo")
+    assert sum(p["nome"] == "pilar-pl" for p in pav["prismas"]) == 1
+    lajes = [p for p in pav["prismas"] if p.get("extras", {}).get("estrutura") == "lj"]
+    assert len(lajes) == 1 and lajes[0]["oculto_em"] == ["superior", "perspectiva"]
+    assert not any(p["nome"].startswith("teto") for p in pav["prismas"])
