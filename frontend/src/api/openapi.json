@@ -1730,6 +1730,253 @@
         }
       }
     },
+    "/projetos/{codigo}/pavimentos/{pavimento}/estrutura": {
+      "post": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Adicionar Estrutura",
+        "description": "Pilar, viga ou laje (campo ``tipo``).",
+        "operationId": "adicionar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura_post",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Pilar"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Viga"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Laje"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "tipo",
+                  "mapping": {
+                    "pilar": "#/components/schemas/Pilar",
+                    "viga": "#/components/schemas/Viga",
+                    "laje": "#/components/schemas/Laje"
+                  }
+                },
+                "title": "Elemento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projetos/{codigo}/pavimentos/{pavimento}/estrutura/{id_}": {
+      "patch": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Alterar Estrutura",
+        "operationId": "alterar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura__id___patch",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Campos"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "planta"
+        ],
+        "summary": "Remover Estrutura",
+        "operationId": "remover_estrutura_projetos__codigo__pavimentos__pavimento__estrutura__id___delete",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          },
+          {
+            "name": "pavimento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pavimento"
+            }
+          },
+          {
+            "name": "id_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id "
+            }
+          },
+          {
+            "name": "versao",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versão do projeto que a tela estava vendo.",
+              "title": "Versao"
+            },
+            "description": "Versão do projeto que a tela estava vendo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEdicao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/pavimentos/{pavimento}/comodos": {
       "post": {
         "tags": [
@@ -4945,6 +5192,69 @@
         "title": "Espaco",
         "description": "Espaço dentro de um vão, de baixo para cima.\n\nEntre dois espaços seguidos entra uma prateleira, exceto entre duas gavetas\n(que ficam empilhadas). ``altura`` é a altura livre do espaço (na gaveta, a\naltura da frente); se faltar, divide igualmente o que sobra no vão."
       },
+      "EstruturaTela": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "contorno": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Contorno"
+          },
+          "furos": {
+            "items": {
+              "items": {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Furos",
+            "default": []
+          },
+          "estimada": {
+            "type": "boolean",
+            "title": "Estimada",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "contorno"
+        ],
+        "title": "EstruturaTela",
+        "description": "Pilar, viga ou laje projetados na planta."
+      },
       "FaceTela": {
         "properties": {
           "parede": {
@@ -5501,6 +5811,92 @@
         ],
         "title": "Janela",
         "description": "Janela com peitoril (altura do piso até o vão)."
+      },
+      "Laje": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "const": "laje",
+            "title": "Tipo"
+          },
+          "espessura": {
+            "$ref": "#/components/schemas/Medida"
+          },
+          "sistema": {
+            "type": "string",
+            "enum": [
+              "macica",
+              "pre_moldada"
+            ],
+            "title": "Sistema",
+            "description": "``macica`` (concreto moldado no local) ou ``pre_moldada`` (vigotas e lajotas/EPS).",
+            "default": "pre_moldada"
+          },
+          "contorno": {
+            "anyOf": [
+              {
+                "items": {
+                  "prefixItems": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ],
+                  "type": "array",
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                "type": "array",
+                "minItems": 3,
+                "description": "Polígono em mm (sem repetir o 1º ponto)."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contorno",
+            "description": "Sem contorno: o pavimento inteiro, por fora das paredes."
+          },
+          "furos": {
+            "items": {
+              "items": {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "type": "array",
+              "minItems": 3,
+              "description": "Polígono em mm (sem repetir o 1º ponto)."
+            },
+            "type": "array",
+            "title": "Furos"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "espessura"
+        ],
+        "title": "Laje",
+        "description": "Laje de cobertura do pavimento: o teto dele e o piso do andar de cima.\n\nFica em cima das paredes (do pé-direito para cima). Sem ``contorno``, cobre o pavimento\ninteiro por fora das paredes. ``furos``: vãos na laje (escada, shaft, claraboia)."
       },
       "Lata": {
         "properties": {
@@ -7060,11 +7456,15 @@
                 },
                 {
                   "$ref": "#/components/schemas/Viga"
+                },
+                {
+                  "$ref": "#/components/schemas/Laje"
                 }
               ],
               "discriminator": {
                 "propertyName": "tipo",
                 "mapping": {
+                  "laje": "#/components/schemas/Laje",
                   "pilar": "#/components/schemas/Pilar",
                   "viga": "#/components/schemas/Viga"
                 }
@@ -7151,6 +7551,14 @@
             },
             "type": "array",
             "title": "Instalacoes"
+          },
+          "estrutura": {
+            "items": {
+              "$ref": "#/components/schemas/EstruturaTela"
+            },
+            "type": "array",
+            "title": "Estrutura",
+            "default": []
           },
           "limites": {
             "anyOf": [

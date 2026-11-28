@@ -196,6 +196,93 @@
       "title": "Janela",
       "type": "object"
     },
+    "Laje": {
+      "additionalProperties": false,
+      "description": "Laje de cobertura do pavimento: o teto dele e o piso do andar de cima.\n\nFica em cima das paredes (do pé-direito para cima). Sem ``contorno``, cobre o pavimento\ninteiro por fora das paredes. ``furos``: vãos na laje (escada, shaft, claraboia).",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "tipo": {
+          "const": "laje",
+          "title": "Tipo",
+          "type": "string"
+        },
+        "espessura": {
+          "$ref": "#/$defs/Medida"
+        },
+        "sistema": {
+          "default": "pre_moldada",
+          "description": "``macica`` (concreto moldado no local) ou ``pre_moldada`` (vigotas e lajotas/EPS).",
+          "enum": [
+            "macica",
+            "pre_moldada"
+          ],
+          "title": "Sistema",
+          "type": "string"
+        },
+        "contorno": {
+          "anyOf": [
+            {
+              "description": "Polígono em mm (sem repetir o 1º ponto).",
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array"
+              },
+              "minItems": 3,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sem contorno: o pavimento inteiro, por fora das paredes.",
+          "title": "Contorno"
+        },
+        "furos": {
+          "items": {
+            "description": "Polígono em mm (sem repetir o 1º ponto).",
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            "minItems": 3,
+            "type": "array"
+          },
+          "title": "Furos",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "tipo",
+        "espessura"
+      ],
+      "title": "Laje",
+      "type": "object"
+    },
     "Medida": {
       "additionalProperties": false,
       "description": "Medida em milímetros inteiros, sempre com origem.\n\nExemplo: ``{\"valor\": 3150, \"origem\": \"trena\", \"obs\": \"rodapé a rodapé\"}``.\nValores com casa decimal são recusados (unidade interna é mm inteiro).",
@@ -396,6 +483,7 @@
           "items": {
             "discriminator": {
               "mapping": {
+                "laje": "#/$defs/Laje",
                 "pilar": "#/$defs/Pilar",
                 "viga": "#/$defs/Viga"
               },
@@ -407,6 +495,9 @@
               },
               {
                 "$ref": "#/$defs/Viga"
+              },
+              {
+                "$ref": "#/$defs/Laje"
               }
             ]
           },

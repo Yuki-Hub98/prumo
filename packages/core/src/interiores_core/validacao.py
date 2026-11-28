@@ -11,11 +11,11 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
-from itertools import pairwise
+from itertools import combinations, pairwise
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
-from shapely import LineString, Point
+from shapely import LineString, Point, Polygon
 
 from interiores_core import catalogo, geometria
 from interiores_core.modelo import (
@@ -24,6 +24,7 @@ from interiores_core.modelo import (
     DadosComodo,
     Instalacao,
     Janela,
+    Laje,
     Movel,
     Parede,
     Pavimento,
@@ -135,17 +136,52 @@ class _Validador:
             self.comodo(pav, comodo)
         self.aberturas(pav)
         self.instalacoes(pav)
+        self.estrutura(pav)
         if not pav.estrutura:
             self.add(
                 Severidade.INFO,
                 "sem_estrutura",
-                "nenhum pilar ou viga informado — confirme se não há",
+                "nenhum pilar, viga ou laje informado — confirme se não há",
                 pavimento=pav.id,
             )
         if pav.rodape is None:
             self.add(
                 Severidade.INFO, "sem_rodape", "altura do rodapé não informada", pavimento=pav.id
             )
+
+    def estrutura(self, pav: Pavimento) -> None:
+        """Laje com contorno que se cruza, furo fora da laje, lajes sobrepostas; viga sem
+        comprimento."""
+        lajes: list[tuple[str, Polygon]] = []
+        for e in pav.estrutura:
+            if isinstance(e, Laje):
+                if e.contorno and not Polygon(e.contorno).is_valid:
+                    self.add(Severidade.ERRO, "laje_invalida",
+                             f"laje '{e.id}': o contorno se cruza", pavimento=pav.id,
+                             elemento=e.id, regiao=list(e.contorno))  # fmt: skip
+                g = geometria.poligono_estrutura(pav, e)
+                if g is None:
+                    self.add(Severidade.AVISO, "laje_sem_contorno",
+                             f"laje '{e.id}' sem contorno e o pavimento não tem paredes",
+                             pavimento=pav.id, elemento=e.id)  # fmt: skip
+                    continue
+                base = Polygon(e.contorno) if e.contorno else geometria.contorno_pavimento(pav)
+                for furo in e.furos:
+                    if base is not None and base.is_valid and not base.contains(Polygon(furo)):
+                        self.add(Severidade.AVISO, "furo_fora_da_laje",
+                                 f"laje '{e.id}': furo passa da borda da laje",
+                                 pavimento=pav.id, elemento=e.id, regiao=list(furo))  # fmt: skip
+                if g.is_valid:
+                    lajes.append((e.id, g))
+            elif e.tipo == "viga" and e.inicio == e.fim:
+                self.add(Severidade.ERRO, "viga_sem_comprimento",
+                         f"viga '{e.id}' com início igual ao fim", pavimento=pav.id,
+                         elemento=e.id, posicao=e.inicio)  # fmt: skip
+        for (a, ga), (b, gb) in combinations(lajes, 2):
+            if ga.intersection(gb).area > 1000:  # mais que 1 mm × 1000 mm
+                self.add(Severidade.AVISO, "lajes_sobrepostas",
+                         f"lajes '{a}' e '{b}' se sobrepõem", pavimento=pav.id,
+                         elemento=a)  # fmt: skip
 
     def paredes(self, pav: Pavimento) -> None:
         validas = [p for p in pav.paredes if geometria.comprimento(p) > 0]

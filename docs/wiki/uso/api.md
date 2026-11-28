@@ -63,6 +63,7 @@ make api                # http://localhost:8010/docs (documentação interativa)
 | POST/PATCH/DELETE | `.../paredes`, `.../paredes/{id}` | paredes (`/dividir`, `?cascata=`) |
 | POST | `.../vertices/mover` | arrastar um canto |
 | POST/PATCH/DELETE | `.../aberturas`, `.../aberturas/{id}` | portas e janelas |
+| POST/PATCH/DELETE | `.../estrutura`, `.../estrutura/{id}` | pilares, vigas e lajes (campo `tipo`) |
 | POST/PATCH/DELETE | `.../comodos`, `.../comodos/{id}` | cômodos |
 | POST/PATCH/DELETE | `.../instalacoes`, `.../instalacoes/{id}` | tomadas, água, esgoto... |
 | GET | `/catalogo` | tipos e modelos de móvel (medidas padrão, lados de uso) |

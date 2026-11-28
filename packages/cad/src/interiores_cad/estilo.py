@@ -44,6 +44,8 @@ HIDRAULICA (água fria/quente, esgoto, ralo) foi incluída a pedido do usuário 
 NOMES_CAMADAS = frozenset(c.nome for c in CAMADAS)
 
 COR_PREENCHIMENTO_PAREDE = (90, 90, 90)
+COR_PILAR = (35, 35, 35)
+"""Pilar mais escuro que a parede: aparece mesmo embutido nela."""
 ESTILO_TEXTO = "PRUMO"
 ESTILO_COTA = "PRUMO"
 FONTE = "DejaVuSans.ttf"

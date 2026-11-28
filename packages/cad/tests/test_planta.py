@@ -486,3 +486,25 @@ def test_bancada_desenho_tecnico_e_planta(copia: Path) -> None:
     planta = desenhar_planta(casa, "terreo", "quarto", DATA).doc.modelspace()
     # módulo (4 lados + diagonal) e 4 pernas (4 lados cada)
     assert len(planta.query('LINE[layer=="MOVEL"]')) >= 5 + 16
+
+
+def test_estrutura_na_planta(copia: Path) -> None:
+    """Pilar hachurado, viga tracejada e furo da laje tracejado com X, na camada PAREDE; no
+    quarto, só o que toca nele."""
+    arq = copia / "projeto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    med = {"origem": "projeto"}
+    d["pavimentos"][0]["estrutura"] = [
+        {"id": "pl", "tipo": "pilar", "centro": [0, 0],
+         "largura": {"valor": 300, **med}, "profundidade": {"valor": 300, **med}},
+        {"id": "vg", "tipo": "viga", "inicio": [0, 2000], "fim": [3200, 2000],
+         "largura": {"valor": 150, **med}, "altura": {"valor": 400, **med}},
+        {"id": "lj", "tipo": "laje", "espessura": {"valor": 120, **med},
+         "furos": [[[500, 500], [1500, 500], [1500, 1500], [500, 1500]]]},
+    ]  # fmt: skip
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    msp = desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc.modelspace()
+    hachuras = [h for h in msp.query('HATCH[layer=="PAREDE"]') if h.rgb == (35, 35, 35)]
+    assert len(hachuras) == 1  # o pilar
+    tracejadas = [e for e in msp.query('*[layer=="PAREDE"]') if e.dxf.linetype == "TRACEJADO"]
+    assert len(tracejadas) == 4  # viga + furo + as duas diagonais do X

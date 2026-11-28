@@ -151,3 +151,23 @@ def test_preferencias(api: TestClient) -> None:
     assert api.patch("/preferencias", json={"unidade": "m"}).json() == {"unidade": "m"}
     assert api.get("/preferencias").json() == {"unidade": "m"}
     assert api.patch("/preferencias", json={"unidade": "pé"}).status_code == 422
+
+
+def test_estrutura_pilar_viga_laje(api: TestClient) -> None:
+    """Aba Estruturas: lançar, mudar e tirar pilar, viga e laje; a planta traz a projeção."""
+    laje = {"id": "laje-terreo", "tipo": "laje", "espessura": _trena(120)}
+    pilar = {"id": "pilar-1", "tipo": "pilar", "centro": [0, 0],
+             "largura": _trena(200), "profundidade": _trena(200)}  # fmt: skip
+    for v, e in enumerate((laje, pilar), start=1):
+        r = api.post(f"{PAV}/estrutura", params={"versao": v}, json=e)
+        assert r.status_code == 200, r.text
+    furo = [[500, 500], [1500, 500], [1500, 2500], [500, 2500]]
+    r = api.patch(f"{PAV}/estrutura/laje-terreo", params={"versao": 3}, json={"furos": [furo]})
+    assert r.status_code == 200, r.text
+    tela = api.get(f"{PAV}/geometria").json()
+    est = {e["id"]: e for e in tela["estrutura"]}
+    assert est["laje-terreo"]["tipo"] == "laje" and len(est["laje-terreo"]["furos"]) == 1
+    assert not est["pilar-1"]["estimada"]
+    r = api.patch(f"{PAV}/estrutura/pilar-1", params={"versao": 4}, json={"espessura": _trena(1)})
+    assert r.status_code == 422, r.text  # campo de laje no pilar
+    assert api.delete(f"{PAV}/estrutura/pilar-1", params={"versao": 4}).json()["versao"] == 5

@@ -180,6 +180,19 @@ class InstalacaoTela(_Tela):
     parede: str | None = None
 
 
+class EstruturaTela(_Tela):
+    """Pilar, viga ou laje projetados na planta."""
+
+    id: str
+    tipo: str
+    """pilar, viga ou laje."""
+    contorno: list[Pt]
+    """Projeção na planta (a laje, por fora; os furos vêm à parte)."""
+    furos: list[list[Pt]] = []
+    estimada: bool = False
+    """Alguma medida (tamanho, espessura, altura) é chute."""
+
+
 class PavimentoTela(_Tela):
     id: str
     paredes: list[ParedeTela]
@@ -187,6 +200,7 @@ class PavimentoTela(_Tela):
     comodos: list[ComodoTela]
     moveis: list[MovelTela]
     instalacoes: list[InstalacaoTela]
+    estrutura: list[EstruturaTela] = []
     limites: tuple[Pt, Pt] | None
     """Canto inferior-esquerdo e superior-direito de tudo (para enquadrar)."""
 
@@ -313,6 +327,20 @@ def pavimento_para_tela(
         )
         for i in pav.instalacoes
     ]
+    estrutura = []
+    for e in pav.estrutura:
+        g = geometria.poligono_estrutura(pav, e)
+        if g is None:
+            continue
+        estrutura.append(
+            EstruturaTela(
+                id=e.id,
+                tipo=e.tipo,
+                contorno=_pts(g.exterior.coords[:-1]),
+                furos=[_pts(f.coords[:-1]) for f in g.interiors],
+                estimada=bool(medidas_estimadas(e)),
+            )
+        )
     xs = [x for p in paredes for x, _ in p.corpo] + [x for m in moveis for x, _ in m.cantos]
     ys = [y for p in paredes for _, y in p.corpo] + [y for m in moveis for _, y in m.cantos]
     limites = ((min(xs), min(ys)), (max(xs), max(ys))) if xs else None
@@ -323,6 +351,7 @@ def pavimento_para_tela(
         comodos=comodos,
         moveis=moveis,
         instalacoes=instalacoes,
+        estrutura=estrutura,
         limites=limites,
     )
 

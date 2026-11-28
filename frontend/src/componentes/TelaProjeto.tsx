@@ -8,6 +8,7 @@ import { proximoId, type Pt } from "../editor/geometria";
 import { PainelPlanta } from "../editor/PainelPlanta";
 import { BarraRascunho, BotoesDesfazer, PainelHistorico, useRascunho } from "./Desfazer";
 import { PainelCores } from "./PainelCores";
+import { PainelEstruturas } from "./PainelEstruturas";
 import { PainelImagens } from "./PainelImagens";
 import { NovoAndar } from "./NovoAndar";
 import { PainelTinta } from "./PainelTinta";
@@ -50,12 +51,13 @@ export function TelaProjeto({
   const unidade = useUnidade();
   const editar = useEditar(codigo);
   const [selecionado, setSelecionado] = useState<string | null>(null);
-  const [aba, setAba] = useState<"movel" | "cores" | "imagens" | "problemas">("cores");
+  const [aba, setAba] = useState<"movel" | "cores" | "imagens" | "problemas" | "estruturas">("cores");
+  const [estruturaSel, setEstruturaSel] = useState<string | null>(null);
   // clicar num móvel abre a aba Móvel e seleciona o cômodo dele (a aba Cores já pinta o móvel)
   const selecionar = (id: string | null) => {
     setSelecionado(id);
     if (!id) return;
-    if (aba !== "cores") setAba("movel"); // pintando: fica em Cores, com a linha do móvel marcada
+    if (aba !== "cores" && aba !== "estruturas") setAba("movel"); // pintando: fica em Cores, com a linha do móvel marcada
     const m = geometria.data?.moveis.find((x) => x.id === id);
     if (m) setComodo(m.comodo);
   };
@@ -288,6 +290,23 @@ export function TelaProjeto({
               cores={coresVistas}
               fundo={abaixo ? (fundo ?? null) : null}
               destaque={destaque}
+              estrutura={
+                modo === "moveis" && aba === "estruturas"
+                  ? {
+                      sel: estruturaSel,
+                      aoSelecionar: setEstruturaSel,
+                      aoMoverPilar: (id, centro) =>
+                        editar.mutate((versao) =>
+                          ou(
+                            api.PATCH("/projetos/{codigo}/pavimentos/{pavimento}/estrutura/{id_}", {
+                              params: { path: { ...base, id_: id }, query: { versao } },
+                              body: { centro },
+                            }),
+                          ),
+                        ),
+                    }
+                  : undefined
+              }
               editor={
                 modo === "planta"
                   ? {
@@ -341,6 +360,7 @@ export function TelaProjeto({
                   { id: "cores", titulo: "Cores" },
                   { id: "imagens", titulo: "Imagens" },
                   { id: "problemas", titulo: "Problemas", marca: problemas.length, tom: piorGravidade(problemas) },
+                  { id: "estruturas", titulo: "Estruturas" },
                 ]}
                 ativa={aba}
                 aoTrocar={setAba}
@@ -399,6 +419,17 @@ export function TelaProjeto({
                   ) : (
                     <p className="p-3 text-sm text-tinta-suave">Clique num cômodo para pedir as imagens 3D dele.</p>
                   ))}
+                {aba === "estruturas" && geometria.data && (
+                  <PainelEstruturas
+                    codigo={codigo}
+                    pavimento={pavimento}
+                    geometria={geometria.data}
+                    comodo={comodo}
+                    unidade={unidade}
+                    sel={estruturaSel}
+                    aoSelecionar={setEstruturaSel}
+                  />
+                )}
                 {aba === "problemas" && (
                   <>
                     <PainelProblemas problemas={problemas} novos={novos} aoVer={verNaPlanta} />
