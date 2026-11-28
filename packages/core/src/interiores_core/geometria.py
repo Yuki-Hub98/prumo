@@ -23,6 +23,7 @@ from interiores_core.modelo import (
     Pilar,
     PontoInstalacao,
     Porta,
+    Projeto,
 )
 
 FOLGA_LADO = 10.0
@@ -384,6 +385,12 @@ def poligono_estrutura(pavimento: Pavimento, e: ElementoEstrutural) -> Polygon |
         return None
     faixa = LineString([e.inicio, e.fim]).buffer(e.largura.valor / 2, cap_style="flat")
     return faixa if isinstance(faixa, Polygon) else None
+
+
+def pavimento_abaixo(projeto: Projeto, pavimento: Pavimento) -> Pavimento | None:
+    """O andar logo abaixo (maior cota de piso menor que a deste), se houver."""
+    abaixo = [p for p in projeto.pavimentos if p.cota_piso.valor < pavimento.cota_piso.valor]
+    return max(abaixo, key=lambda p: p.cota_piso.valor, default=None)
 
 
 def furos_de_escada(pavimento: Pavimento) -> list[Polygon]:
