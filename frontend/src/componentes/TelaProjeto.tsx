@@ -295,12 +295,12 @@ export function TelaProjeto({
                   ? {
                       sel: estruturaSel,
                       aoSelecionar: setEstruturaSel,
-                      aoMoverPilar: (id, centro) =>
+                      aoMover: (id, campo, ponto) =>
                         editar.mutate((versao) =>
                           ou(
                             api.PATCH("/projetos/{codigo}/pavimentos/{pavimento}/estrutura/{id_}", {
                               params: { path: { ...base, id_: id }, query: { versao } },
-                              body: { centro },
+                              body: { [campo]: ponto },
                             }),
                           ),
                         ),
@@ -359,8 +359,8 @@ export function TelaProjeto({
                   { id: "movel", titulo: "Móvel" },
                   { id: "cores", titulo: "Cores" },
                   { id: "imagens", titulo: "Imagens" },
-                  { id: "problemas", titulo: "Problemas", marca: problemas.length, tom: piorGravidade(problemas) },
                   { id: "estruturas", titulo: "Estruturas" },
+                  { id: "problemas", titulo: "Problemas", marca: problemas.length, tom: piorGravidade(problemas) },
                 ]}
                 ativa={aba}
                 aoTrocar={setAba}

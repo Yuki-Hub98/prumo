@@ -36,13 +36,14 @@ from interiores_cad.folha import (
     desenhar_folha,
     escolher_folha,
 )
-from interiores_core import bancada, catalogo, geometria, planejado
+from interiores_core import bancada, catalogo, escadas, geometria, planejado
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.catalogo import Simbolo
 from interiores_core.medidas import Medida
 from interiores_core.modelo import (
     EXTERNO,
     Comodo,
+    Escada,
     Janela,
     Laje,
     Movel,
@@ -55,7 +56,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.regras import VERSAO_REGRAS, checar
 
-VERSAO_GERADOR = f"interiores-cad {__version__} · planta v7 · {VERSAO_REGRAS}"
+VERSAO_GERADOR = f"interiores-cad {__version__} · planta v8 · {VERSAO_REGRAS}"
 """Entra na chave de cache das saídas: mudou o desenho, suba o ``planta vN``.
 
 Inclui a versão das regras porque as checagens são desenhadas na planta.
@@ -288,6 +289,8 @@ class _Planta:
                 hachura.rgb = COR_PILAR
                 hachura.paths.add_polyline_path(pts, is_closed=True)
                 self.msp.add_lwpolyline(pts, close=True, dxfattribs=cam)
+            elif isinstance(e, Escada):
+                self.escada(e)
             elif isinstance(e, Laje):
                 for furo in g.interiors:
                     pts = list(furo.coords)[:-1]
@@ -298,6 +301,32 @@ class _Planta:
             else:
                 pts = list(g.exterior.coords)[:-1]
                 self.msp.add_lwpolyline(pts, close=True, dxfattribs=tracejado)
+
+    def escada(self, e: Escada) -> None:
+        """Cada degrau e o patamar em PAREDE; linha de subida com seta e "SOBE n × e" em
+        TEXTO (do pé à chegada)."""
+        calc = escadas.calcular(self.pavimento, e)
+        for d in calc.degraus:
+            pts = list(d.poligono.exterior.coords)[:-1]
+            self.msp.add_lwpolyline(pts, close=True, dxfattribs={"layer": "PAREDE"})
+        if calc.nucleo is not None:
+            pts = list(calc.nucleo.exterior.coords)[:-1]
+            self.msp.add_lwpolyline(pts, close=True, dxfattribs={"layer": "PAREDE"})
+        cam = calc.caminho
+        self.msp.add_lwpolyline(cam, dxfattribs={"layer": "TEXTO"})
+        (xa, ya), (xb, yb) = cam[-2], cam[-1]
+        ang = math.atan2(yb - ya, xb - xa)
+        ponta = self.mm(3)
+        for lado in (-1, 1):
+            a = ang + math.pi + lado * math.radians(25)
+            fim = (xb + ponta * math.cos(a), yb + ponta * math.sin(a))
+            self.msp.add_line((xb, yb), fim, dxfattribs={"layer": "TEXTO"})
+        self.texto(
+            f"SOBE {calc.espelhos}× {calc.espelho:.0f}",
+            (cam[0][0], cam[0][1] - self.mm(3)),
+            Texto.INSTALACAO,
+            "TEXTO",
+        )
 
     # -- aberturas
 

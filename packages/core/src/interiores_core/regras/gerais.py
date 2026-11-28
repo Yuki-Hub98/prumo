@@ -18,6 +18,13 @@ LIMITES = {
     "cabideiro_altura_min": 1000,
     "cabideiro_profundidade_min": 550,
     "gaveta_largura_min": 300,
+    "escada_espelho_min": 160,
+    "escada_espelho_max": 190,
+    "escada_piso_min": 250,
+    "escada_blondel_min": 600,
+    "escada_blondel_max": 650,
+    "escada_largura_min": 800,
+    "escada_altura_livre": 2100,
 }
 """Padrões; o ``regras.toml`` do projeto pode sobrescrever.
 
@@ -28,6 +35,8 @@ LIMITES = {
   para MDF 18 mm com carga leve), altura
   mínima do espaço de cabideiro, profundidade mínima do móvel com cabideiro
   (cabide ~450 + folga) e largura mínima de vão com gaveta.
+- escadas (mm): espelho confortável, piso mínimo, faixa da fórmula de Blondel
+  (2 × espelho + piso), largura mínima de residência e altura livre (cabeça).
 """
 
 TOLERANCIA = 10.0

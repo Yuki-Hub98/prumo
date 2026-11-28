@@ -25,7 +25,9 @@ Projeto (schema_version, projeto, imovel)
     ├── aberturas[]: porta (de, para, folha giro|correr, abre_para, dobradica)
     │                ou janela (peitoril); parede, distancia_inicio, largura, altura
     ├── estrutura[]: pilar (centro, largura, profundidade) | viga (inicio, fim, largura,
-    │                altura) | laje (espessura, sistema, contorno?, furos[])
+    │                altura) | laje (espessura, sistema, contorno?, furos[]) | escada
+    │                (forma reta|L|U|caracol, inicio, direcao, largura, gira,
+    │                degraus_primeiro_lance?, desnivel?, piso?)
     ├── instalacoes[]: ponto (tomada, interruptor, ponto_luz, agua_fria, agua_quente,
     │                  esgoto, ralo, gas; posicao, altura, parede?, comodo?) ou trecho
     └── comodos[]: id, nome, tipo, paredes[], pe_direito?
@@ -39,6 +41,10 @@ Projeto (schema_version, projeto, imovel)
 - **Laje** é a de cobertura do pavimento (teto dele, piso do de cima), do pé-direito para
   cima. Sem `contorno`, cobre o pavimento inteiro por fora das paredes; `furos` são contornos
   em mm.
+- **Escada** sobe do pavimento para o de cima. Degraus, espelho e piso saem da conta
+  (`interiores_core.escadas`): espelho perto de 175 mm (no máximo 185), piso pela fórmula de
+  Blondel (2 × espelho + piso ≈ 635 mm). Desnível sem valor = pé-direito + espessura da laje. A
+  laje do pavimento ganha o furo sozinha onde sobram menos de 2,10 m até ela.
 
 ## `comodos/<cômodo>.json` (móveis)
 

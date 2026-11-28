@@ -348,7 +348,7 @@ def remover_abertura(
 def adicionar_estrutura(
     svc: Svc, codigo: str, pavimento: str, versao: Versao, elemento: NovaEstrutura
 ) -> ResultadoEdicao:
-    """Pilar, viga ou laje (campo ``tipo``)."""
+    """Pilar, viga, laje ou escada (campo ``tipo``)."""
     return svc.editar(
         codigo, versao, "adicionar_estrutura",
         lambda p: edicao.adicionar_estrutura(p, pavimento, elemento),

@@ -1736,7 +1736,7 @@
           "planta"
         ],
         "summary": "Adicionar Estrutura",
-        "description": "Pilar, viga ou laje (campo ``tipo``).",
+        "description": "Pilar, viga, laje ou escada (campo ``tipo``).",
         "operationId": "adicionar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura_post",
         "parameters": [
           {
@@ -1784,6 +1784,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/Laje"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Escada"
                   }
                 ],
                 "discriminator": {
@@ -1791,7 +1794,8 @@
                   "mapping": {
                     "pilar": "#/components/schemas/Pilar",
                     "viga": "#/components/schemas/Viga",
-                    "laje": "#/components/schemas/Laje"
+                    "laje": "#/components/schemas/Laje",
+                    "escada": "#/components/schemas/Escada"
                   }
                 },
                 "title": "Elemento"
@@ -5162,6 +5166,228 @@
         ],
         "title": "DividirParede"
       },
+      "Escada": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "tipo": {
+            "type": "string",
+            "const": "escada",
+            "title": "Tipo"
+          },
+          "forma": {
+            "type": "string",
+            "enum": [
+              "reta",
+              "L",
+              "U",
+              "caracol"
+            ],
+            "title": "Forma",
+            "default": "reta"
+          },
+          "inicio": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Inicio"
+          },
+          "direcao": {
+            "type": "integer",
+            "exclusiveMaximum": 360.0,
+            "minimum": 0.0,
+            "title": "Direcao",
+            "description": "Sentido da subida (graus).",
+            "default": 0
+          },
+          "largura": {
+            "$ref": "#/components/schemas/Medida",
+            "description": "Largura do lance (no caracol, do degrau)."
+          },
+          "gira": {
+            "type": "string",
+            "enum": [
+              "esquerda",
+              "direita"
+            ],
+            "title": "Gira",
+            "description": "L, U e caracol: para que lado a escada vira subindo.",
+            "default": "esquerda"
+          },
+          "degraus_primeiro_lance": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Degraus Primeiro Lance",
+            "description": "L e U: pisos antes do patamar (sem valor: metade)."
+          },
+          "desnivel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Altura a vencer; sem valor: pé-direito + espessura da laje."
+          },
+          "piso": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Medida"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Profundidade do degrau; sem valor: pela fórmula de Blondel."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "inicio",
+          "largura"
+        ],
+        "title": "Escada",
+        "description": "Escada de alvenaria do pavimento para o de cima.\n\n``inicio`` é o meio da borda do 1º degrau (onde se começa a subir) e ``direcao`` o\nsentido da subida em graus (0 = +x, 90 = +y). No caracol/leque, ``inicio`` é o centro e\n``direcao`` o ângulo do 1º degrau. Degraus, espelho e piso saem da conta\n(:mod:`interiores_core.escadas`); a laje do pavimento ganha o furo sozinha."
+      },
+      "EscadaTela": {
+        "properties": {
+          "inicio": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Inicio"
+          },
+          "degraus": {
+            "items": {
+              "items": {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Degraus"
+          },
+          "patamares": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Patamares",
+            "default": []
+          },
+          "caminho": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Caminho"
+          },
+          "desnivel": {
+            "type": "integer",
+            "title": "Desnivel"
+          },
+          "espelhos": {
+            "type": "integer",
+            "title": "Espelhos"
+          },
+          "espelho": {
+            "type": "number",
+            "title": "Espelho"
+          },
+          "piso": {
+            "type": "number",
+            "title": "Piso"
+          },
+          "blondel": {
+            "type": "number",
+            "title": "Blondel"
+          },
+          "lances": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Lances"
+          },
+          "giro": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Giro"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inicio",
+          "degraus",
+          "caminho",
+          "desnivel",
+          "espelhos",
+          "espelho",
+          "piso",
+          "blondel",
+          "lances"
+        ],
+        "title": "EscadaTela",
+        "description": "A conta da escada e o desenho dos degraus."
+      },
       "Espaco": {
         "properties": {
           "tipo": {
@@ -5244,6 +5470,16 @@
             "type": "boolean",
             "title": "Estimada",
             "default": false
+          },
+          "escada": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EscadaTela"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -7459,11 +7695,15 @@
                 },
                 {
                   "$ref": "#/components/schemas/Laje"
+                },
+                {
+                  "$ref": "#/components/schemas/Escada"
                 }
               ],
               "discriminator": {
                 "propertyName": "tipo",
                 "mapping": {
+                  "escada": "#/components/schemas/Escada",
                   "laje": "#/components/schemas/Laje",
                   "pilar": "#/components/schemas/Pilar",
                   "viga": "#/components/schemas/Viga"

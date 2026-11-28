@@ -144,7 +144,36 @@ class Laje(_Modelo):
     furos: list[Contorno] = Field(default_factory=list)
 
 
-ElementoEstrutural = Annotated[Pilar | Viga | Laje, Field(discriminator="tipo")]
+class Escada(_Modelo):
+    """Escada de alvenaria do pavimento para o de cima.
+
+    ``inicio`` é o meio da borda do 1º degrau (onde se começa a subir) e ``direcao`` o
+    sentido da subida em graus (0 = +x, 90 = +y). No caracol/leque, ``inicio`` é o centro e
+    ``direcao`` o ângulo do 1º degrau. Degraus, espelho e piso saem da conta
+    (:mod:`interiores_core.escadas`); a laje do pavimento ganha o furo sozinha.
+    """
+
+    id: Id
+    tipo: Literal["escada"]
+    forma: Literal["reta", "L", "U", "caracol"] = "reta"
+    inicio: Ponto
+    direcao: int = Field(0, ge=0, lt=360, description="Sentido da subida (graus).")
+    largura: Medida = Field(description="Largura do lance (no caracol, do degrau).")
+    gira: Literal["esquerda", "direita"] = Field(
+        "esquerda", description="L, U e caracol: para que lado a escada vira subindo."
+    )
+    degraus_primeiro_lance: int | None = Field(
+        None, ge=1, description="L e U: pisos antes do patamar (sem valor: metade)."
+    )
+    desnivel: Medida | None = Field(
+        None, description="Altura a vencer; sem valor: pé-direito + espessura da laje."
+    )
+    piso: Medida | None = Field(
+        None, description="Profundidade do degrau; sem valor: pela fórmula de Blondel."
+    )
+
+
+ElementoEstrutural = Annotated[Pilar | Viga | Laje | Escada, Field(discriminator="tipo")]
 
 
 # ---------------------------------------------------------------- instalações

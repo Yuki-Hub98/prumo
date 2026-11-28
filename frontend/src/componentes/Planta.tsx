@@ -1,6 +1,8 @@
 import { maiuscula } from "../texto";
 import { useEffect, useRef, useState } from "react";
 import type { Cores, MovelTela, PavimentoTela, Problema } from "../api/cliente";
+
+type EstruturaTela = NonNullable<PavimentoTela["estrutura"]>[number];
 import { PADRAO } from "./PainelCores";
 import { formatar, type Unidade } from "../unidades";
 import { encaixar, vertices, type Pt } from "../editor/geometria";
@@ -9,8 +11,9 @@ import { encaixar, vertices, type Pt } from "../editor/geometria";
 export type ModoEstrutura = {
   sel: string | null;
   aoSelecionar: (id: string | null) => void;
-  /** Soltou o pilar arrastado: centro novo (grudado num canto de parede ou na grade). */
-  aoMoverPilar: (id: string, centro: Pt) => void;
+  /** Soltou o arrastado: pilar ganha ``centro`` novo (grudado num canto de parede ou na
+   * grade); escada, ``inicio`` novo (na grade). */
+  aoMover: (id: string, campo: "centro" | "inicio", ponto: Pt) => void;
 };
 
 /** Quanto o ponteiro anda (px na tela) antes de um clique num móvel virar arrasto. */
@@ -150,6 +153,132 @@ export function Planta({
   // puxando um lado do móvel selecionado (alças no meio de cada lado)
   const [puxando, setPuxando] = useState<{ id: string; lado: LadoMovel; ini: Pt; normal: Pt; t0: number; t: number } | null>(null);
 
+  /** Pilar, viga, laje ou escada na planta (com a aba Estruturas: clique, arrasto, laje). */
+  const desenharEstrutura = (e: EstruturaTela) => {
+    const marcada = estrutura?.sel === e.id;
+    const cor = marcada ? SEL : e.estimada ? "var(--chute)" : HALO[e.id] ?? "var(--tinta-suave)";
+    const clicar = (ev: React.PointerEvent) => {
+      if (!estrutura) return;
+      ev.stopPropagation();
+      estrutura.aoSelecionar(e.id);
+      if (e.tipo === "pilar" || e.tipo === "escada") {
+        (ev.target as Element).setPointerCapture?.(ev.pointerId);
+        setArrastoPilar({ id: e.id, ini: emMm(ev), d: [0, 0], solto: false, tela: [ev.clientX, ev.clientY] });
+      }
+    };
+    const furos = (e.furos ?? []).map((f, i) => {
+      const xs = f.map((q) => q[0]);
+      const ys = f.map((q) => q[1]);
+      const [a, b] = [Math.min(...xs), Math.max(...xs)];
+      const [c, d] = [Math.min(...ys), Math.max(...ys)];
+      return (
+        <g key={i} pointerEvents="none" stroke={marcada ? SEL : "var(--tinta-suave)"} strokeWidth={1.2} strokeDasharray="8 5" vectorEffect="non-scaling-stroke">
+          <polygon points={pontos(f)} fill="none" vectorEffect="non-scaling-stroke" />
+          <line x1={a} y1={-c} x2={b} y2={-d} vectorEffect="non-scaling-stroke" />
+          <line x1={a} y1={-d} x2={b} y2={-c} vectorEffect="non-scaling-stroke" />
+        </g>
+      );
+    });
+    if (e.tipo === "laje")
+      return (
+        <g key={e.id}>
+          {estrutura && (
+            <polygon
+              points={pontos(e.contorno)}
+              fill={marcada ? SEL : "none"}
+              fillOpacity={0.08}
+              stroke={cor}
+              strokeWidth={marcada ? 3 : 1.2}
+              strokeDasharray="14 6"
+              vectorEffect="non-scaling-stroke"
+              pointerEvents="none"
+            />
+          )}
+          {furos}
+        </g>
+      );
+    const d = arrastoPilar?.id === e.id ? arrastoPilar.d : [0, 0];
+    const moverArrasto = (ev: React.PointerEvent) => {
+      const a = arrastoPilar;
+      if (!a || a.id !== e.id) return;
+      const solto = a.solto || Math.hypot(ev.clientX - a.tela[0], ev.clientY - a.tela[1]) > FOLGA_PX;
+      const m = emMm(ev);
+      setArrastoPilar({ ...a, solto, d: solto ? [m[0] - a.ini[0], m[1] - a.ini[1]] : [0, 0] });
+    };
+    const soltarArrasto = () => {
+      const a = arrastoPilar;
+      setArrastoPilar(null);
+      if (!a?.solto || !estrutura) return;
+      if (e.tipo === "escada" && e.escada) {
+        const [x, y] = e.escada.inicio;
+        estrutura.aoMover(e.id, "inicio", [Math.round((x + a.d[0]) / PASSO) * PASSO, Math.round((y + a.d[1]) / PASSO) * PASSO]);
+        return;
+      }
+      const pts = e.contorno;
+      const cx = (Math.min(...pts.map((q) => q[0])) + Math.max(...pts.map((q) => q[0]))) / 2;
+      const cy = (Math.min(...pts.map((q) => q[1])) + Math.max(...pts.map((q) => q[1]))) / 2;
+      const novo = encaixar([cx + a.d[0], cy + a.d[1]], cantos);
+      estrutura.aoMover(e.id, "centro", [Math.round(novo[0]), Math.round(novo[1])]);
+    };
+    if (e.tipo === "escada" && e.escada) {
+      const esc = e.escada;
+      const cam = esc.caminho;
+      const [xa, ya] = cam[cam.length - 2];
+      const [xb, yb] = cam[cam.length - 1];
+      const ang = Math.atan2(yb - ya, xb - xa);
+      const ponta = 180;
+      const seta = [-1, 1].map((l) => [xb - ponta * Math.cos(ang + (l * Math.PI) / 7), yb - ponta * Math.sin(ang + (l * Math.PI) / 7)]);
+      return (
+        <g
+          key={e.id}
+          transform={`translate(${d[0]},${-d[1]})`}
+          className={estrutura ? "cursor-move" : undefined}
+          pointerEvents={estrutura ? "auto" : "none"}
+          onPointerDown={clicar}
+          onPointerMove={moverArrasto}
+          onPointerUp={soltarArrasto}
+        >
+          <title>{`Escada ${e.id}: ${esc.espelhos} espelhos de ${Math.round(esc.espelho)} mm`}</title>
+          {esc.degraus.map((g, i) => (
+            <polygon
+              key={i}
+              points={pontos(g)}
+              fill={esc.patamares?.includes(i) ? "var(--superficie-2)" : "var(--superficie)"}
+              stroke={marcada ? SEL : e.estimada ? "var(--chute)" : HALO[e.id] ?? "var(--tinta-suave)"}
+              strokeWidth={marcada ? 2 : 1}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          <polyline points={pontos(cam)} fill="none" stroke="var(--tinta)" strokeWidth={1.2} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+          <polygon points={pontos([[xb, yb], ...seta])} fill="var(--tinta)" pointerEvents="none" />
+          <circle cx={cam[0][0]} cy={-cam[0][1]} r={45} fill="var(--tinta)" pointerEvents="none" />
+          <text x={cam[0][0]} y={-cam[0][1] + 260} fontSize={150} textAnchor="middle" fill="var(--tinta-suave)" pointerEvents="none">
+            SOBE
+          </text>
+          {furos}
+        </g>
+      );
+    }
+    return (
+      <polygon
+        key={e.id}
+        points={pontos(e.contorno.map(([x, y]) => [x + d[0], y + d[1]]))}
+        fill={e.tipo === "pilar" ? "var(--tinta)" : "transparent"}
+        stroke={e.tipo === "pilar" && !marcada && !e.estimada && !HALO[e.id] ? "none" : cor}
+        strokeWidth={marcada ? 3 : 1.5}
+        strokeDasharray={e.tipo === "viga" || (!marcada && e.estimada) ? "8 5" : undefined}
+        vectorEffect="non-scaling-stroke"
+        pointerEvents={estrutura ? (e.tipo === "viga" ? "stroke" : "auto") : "none"}
+        className={estrutura ? (e.tipo === "pilar" ? "cursor-move" : "cursor-pointer") : undefined}
+        onPointerDown={clicar}
+        onPointerMove={moverArrasto}
+        onPointerUp={soltarArrasto}
+      >
+        <title>{`${e.tipo === "pilar" ? "Pilar" : "Viga"} ${e.id}`}</title>
+      </polygon>
+    );
+  };
+
   return (
     <svg
       ref={svg}
@@ -256,6 +385,9 @@ export function Planta({
         );
       })}
 
+      {/* escadas embaixo das paredes (encostam nelas); pilar e viga vão por cima */}
+      {(geometria.estrutura ?? []).filter((e) => e.tipo === "escada").map(desenharEstrutura)}
+
       {/* paredes, com os vãos abertos por cima */}
       {geometria.paredes.map((p) => {
         const marcada = ehSel("parede", p.id) || editor?.destacadas.includes(p.id);
@@ -314,84 +446,7 @@ export function Planta({
 
       {/* estrutura: laje (só com a aba aberta), furo da laje com X, viga tracejada (acima do
           corte), pilar preenchido */}
-      {(geometria.estrutura ?? []).map((e) => {
-        const marcada = estrutura?.sel === e.id;
-        const cor = marcada ? SEL : e.estimada ? "var(--chute)" : HALO[e.id] ?? "var(--tinta-suave)";
-        const clicar = (ev: React.PointerEvent) => {
-          if (!estrutura) return;
-          ev.stopPropagation();
-          estrutura.aoSelecionar(e.id);
-          if (e.tipo === "pilar") {
-            (ev.target as Element).setPointerCapture?.(ev.pointerId);
-            setArrastoPilar({ id: e.id, ini: emMm(ev), d: [0, 0], solto: false, tela: [ev.clientX, ev.clientY] });
-          }
-        };
-        const furos = (e.furos ?? []).map((f, i) => {
-          const xs = f.map((q) => q[0]);
-          const ys = f.map((q) => q[1]);
-          const [a, b] = [Math.min(...xs), Math.max(...xs)];
-          const [c, d] = [Math.min(...ys), Math.max(...ys)];
-          return (
-            <g key={i} pointerEvents="none" stroke={marcada ? SEL : "var(--tinta-suave)"} strokeWidth={1.2} strokeDasharray="8 5" vectorEffect="non-scaling-stroke">
-              <polygon points={pontos(f)} fill="none" vectorEffect="non-scaling-stroke" />
-              <line x1={a} y1={-c} x2={b} y2={-d} vectorEffect="non-scaling-stroke" />
-              <line x1={a} y1={-d} x2={b} y2={-c} vectorEffect="non-scaling-stroke" />
-            </g>
-          );
-        });
-        if (e.tipo === "laje")
-          return (
-            <g key={e.id}>
-              {estrutura && (
-                <polygon
-                  points={pontos(e.contorno)}
-                  fill={marcada ? SEL : "none"}
-                  fillOpacity={0.08}
-                  stroke={cor}
-                  strokeWidth={marcada ? 3 : 1.2}
-                  strokeDasharray="14 6"
-                  vectorEffect="non-scaling-stroke"
-                  pointerEvents="none"
-                />
-              )}
-              {furos}
-            </g>
-          );
-        const d = arrastoPilar?.id === e.id ? arrastoPilar.d : [0, 0];
-        return (
-          <polygon
-            key={e.id}
-            points={pontos(e.contorno.map(([x, y]) => [x + d[0], y + d[1]]))}
-            fill={e.tipo === "pilar" ? "var(--tinta)" : "transparent"}
-            stroke={e.tipo === "pilar" && !marcada && !e.estimada && !HALO[e.id] ? "none" : cor}
-            strokeWidth={marcada ? 3 : 1.5}
-            strokeDasharray={e.tipo === "viga" || (!marcada && e.estimada) ? "8 5" : undefined}
-            vectorEffect="non-scaling-stroke"
-            pointerEvents={estrutura ? (e.tipo === "viga" ? "stroke" : "auto") : "none"}
-            className={estrutura ? (e.tipo === "pilar" ? "cursor-move" : "cursor-pointer") : undefined}
-            onPointerDown={clicar}
-            onPointerMove={(ev) => {
-              const a = arrastoPilar;
-              if (!a || a.id !== e.id) return;
-              const solto = a.solto || Math.hypot(ev.clientX - a.tela[0], ev.clientY - a.tela[1]) > FOLGA_PX;
-              const m = emMm(ev);
-              setArrastoPilar({ ...a, solto, d: solto ? [m[0] - a.ini[0], m[1] - a.ini[1]] : [0, 0] });
-            }}
-            onPointerUp={() => {
-              const a = arrastoPilar;
-              setArrastoPilar(null);
-              if (!a?.solto || !estrutura) return;
-              const pts = e.contorno;
-              const cx = (Math.min(...pts.map((q) => q[0])) + Math.max(...pts.map((q) => q[0]))) / 2;
-              const cy = (Math.min(...pts.map((q) => q[1])) + Math.max(...pts.map((q) => q[1]))) / 2;
-              const novo = encaixar([cx + a.d[0], cy + a.d[1]], cantos);
-              estrutura.aoMoverPilar(e.id, [Math.round(novo[0]), Math.round(novo[1])]);
-            }}
-          >
-            <title>{`${e.tipo === "pilar" ? "Pilar" : "Viga"} ${e.id}`}</title>
-          </polygon>
-        );
-      })}
+      {(geometria.estrutura ?? []).filter((e) => e.tipo !== "escada").map(desenharEstrutura)}
 
       {/* cor de cada parede: faixa na face voltada para o cômodo pintado */}
       {cores &&

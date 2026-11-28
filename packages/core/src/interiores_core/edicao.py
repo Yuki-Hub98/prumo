@@ -431,13 +431,17 @@ CAMPOS_ESTRUTURA = {
     "pilar": {"centro", "largura", "profundidade"},
     "viga": {"inicio", "fim", "largura", "altura"},
     "laje": {"espessura", "sistema", "contorno", "furos"},
-}
+    "escada": {
+        "forma", "inicio", "direcao", "largura", "gira", "degraus_primeiro_lance", "desnivel",
+        "piso",
+    },
+}  # fmt: skip
 
 
 def adicionar_estrutura(
     projeto: Projeto, pavimento: str, elemento: ElementoEstrutural | Mapping[str, Any]
 ) -> Edicao:
-    """Acrescenta um pilar, viga ou laje ao pavimento (id novo)."""
+    """Acrescenta um pilar, viga, laje ou escada ao pavimento (id novo)."""
 
     def mudar(d: Dados) -> None:
         pav = _pav(d, pavimento)

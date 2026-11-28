@@ -3,15 +3,21 @@ import { api, ou, type Medida, type PavimentoTela } from "../api/cliente";
 import { useEditar, useProjeto } from "../dados";
 import { proximoId } from "../editor/geometria";
 import {
+  type ContaEscada,
   type Elemento,
+  type Escada,
+  FORMAS,
   furoNoCentro,
   furoParaRetangulo,
+  girar90,
   NOMES,
+  novaEscada,
   novaLaje,
   novaViga,
   novoPilar,
   ordenar,
   type Retangulo,
+  resumoEscada,
   retanguloParaFuro,
   SISTEMAS,
 } from "../estruturas";
@@ -61,6 +67,94 @@ function CampoPonto({ rotulo, p, unidade, aoMudar }: { rotulo: string; p: number
   );
 }
 
+/** Medida que pode ficar automática (sem valor = a conta decide). */
+function MedidaAuto({ rotulo, medida, auto, unidade, ocupado, aoSalvar }: {
+  rotulo: string;
+  medida?: Medida | null;
+  auto: string;
+  unidade: Unidade;
+  ocupado: boolean;
+  aoSalvar: (m: Medida | null) => void;
+}) {
+  return (
+    <div>
+      <CampoMedida rotulo={rotulo} medida={medida} unidade={unidade} ocupado={ocupado} aoSalvar={aoSalvar} />
+      {medida ? (
+        <button className="mb-1 text-xs text-tinta-suave hover:underline" disabled={ocupado} onClick={() => aoSalvar(null)}>
+          Voltar ao automático
+        </button>
+      ) : (
+        <p className="-mt-1 mb-1 text-right text-xs text-tinta-suave">automático: {auto}</p>
+      )}
+    </div>
+  );
+}
+
+/** Painel da escada: forma, largura, sentido, lances, piso e desnível, e a conta. */
+function PainelEscada({ e, conta, unidade, ocupado, alterar }: {
+  e: Escada;
+  conta: ContaEscada | null;
+  unidade: Unidade;
+  ocupado: boolean;
+  alterar: (campos: Record<string, unknown>) => void;
+}) {
+  const cm = (mm: number) => formatar(Math.round(mm), unidade);
+  const forma = e.forma ?? "reta";
+  return (
+    <>
+      <label className="flex items-center justify-between gap-2 py-1 text-sm">
+        <span className="text-tinta-suave">Forma</span>
+        <select className="rounded-md border text-sm" value={forma} disabled={ocupado} onChange={(ev) => alterar({ forma: ev.target.value })}>
+          {Object.entries(FORMAS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </select>
+      </label>
+      <CampoMedida rotulo={forma === "caracol" ? "Largura do degrau" : "Largura"} medida={e.largura} unidade={unidade} ocupado={ocupado} aoSalvar={(m: Medida) => alterar({ largura: m })} />
+      <CampoPonto rotulo={forma === "caracol" ? "Centro" : "Pé da escada"} p={e.inicio} unidade={unidade} aoMudar={(p) => alterar({ inicio: p })} />
+      <div className="flex flex-wrap items-center gap-2 py-1">
+        <button className={botao} disabled={ocupado} onClick={() => alterar({ direcao: girar90(e.direcao) })} title="Gira o sentido da subida">
+          Girar 90°
+        </button>
+        {forma !== "reta" && (
+          <button className={botao} disabled={ocupado} onClick={() => alterar({ gira: e.gira === "direita" ? "esquerda" : "direita" })}>
+            Virar para a {e.gira === "direita" ? "esquerda" : "direita"}
+          </button>
+        )}
+      </div>
+      {(forma === "L" || forma === "U") && (
+        <label className="flex items-center justify-between gap-2 py-1 text-sm">
+          <span className="text-tinta-suave">Degraus antes do patamar</span>
+          <input
+            type="number"
+            min={1}
+            className="w-16 rounded-md border px-1 text-right"
+            placeholder={conta ? String(conta.lances[0]) : ""}
+            defaultValue={e.degraus_primeiro_lance ?? ""}
+            key={`${e.id}-${e.degraus_primeiro_lance ?? ""}`}
+            onBlur={(ev) => {
+              const n = ev.target.value === "" ? null : Math.max(1, Math.round(Number(ev.target.value)));
+              if (n !== (e.degraus_primeiro_lance ?? null)) alterar({ degraus_primeiro_lance: n });
+            }}
+          />
+        </label>
+      )}
+      <MedidaAuto rotulo="Piso do degrau" medida={e.piso} auto={conta ? `${cm(conta.piso)} (Blondel)` : "—"} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ piso: m })} />
+      <MedidaAuto rotulo="Desnível" medida={e.desnivel} auto={conta ? `${cm(conta.desnivel)} (pé-direito + laje)` : "—"} unidade={unidade} ocupado={ocupado} aoSalvar={(m) => alterar({ desnivel: m })} />
+      {conta && (
+        <div className="mt-2 rounded-md bg-papel p-2 text-xs">
+          {resumoEscada(conta, cm).map((l) => (
+            <p key={l}>{l}</p>
+          ))}
+          <p className="mt-1 text-tinta-suave">A laje deste andar ganha o furo sozinha onde a cabeça bateria (menos de 2,10 m).</p>
+        </div>
+      )}
+    </>
+  );
+}
+
 /**
  * Aba **Estruturas**: lajes, vigas e pilares do andar. Lista, acrescenta e edita o escolhido
  * (medidas com a origem, posição, tipo de laje e furos). Na planta, o pilar se arrasta (gruda
@@ -87,6 +181,7 @@ export function PainelEstruturas({
   const projeto = useProjeto(codigo).data;
   const editar = useEditar(codigo);
   const [paredeViga, setParedeViga] = useState("");
+  const [formaEscada, setFormaEscada] = useState<NonNullable<Escada["forma"]>>("reta");
   const pav = projeto?.projeto.pavimentos.find((p) => p.id === pavimento);
   const itens = ordenar((pav?.estrutura ?? []) as Elemento[]);
   const base = { codigo, pavimento };
@@ -154,6 +249,23 @@ export function PainelEstruturas({
             + Pilar
           </button>
           <span className="flex items-center gap-1">
+            <select className="rounded-md border text-xs" value={formaEscada} onChange={(ev) => setFormaEscada(ev.target.value as typeof formaEscada)} aria-label="forma da escada nova">
+              {Object.entries(FORMAS).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <button
+              className={botao}
+              disabled={editar.isPending}
+              title="No centro do cômodo escolhido, subindo para a direita; arraste na planta"
+              onClick={() => criar(novaEscada(proximoId("escada-", ids), centroComodo(), formaEscada))}
+            >
+              + Escada
+            </button>
+          </span>
+          <span className="flex items-center gap-1">
             <select className="rounded-md border text-xs" value={paredeViga} onChange={(ev) => setParedeViga(ev.target.value)} aria-label="parede da viga nova">
               <option value="">viga sobre a parede…</option>
               {paredes.map((p) => (
@@ -201,6 +313,9 @@ export function PainelEstruturas({
               <CampoPonto rotulo="Início" p={e.inicio} unidade={unidade} aoMudar={(p) => alterar(e.id, { inicio: p })} />
               <CampoPonto rotulo="Fim" p={e.fim} unidade={unidade} aoMudar={(p) => alterar(e.id, { fim: p })} />
             </>
+          )}
+          {e.tipo === "escada" && (
+            <PainelEscada e={e} conta={tela?.escada ?? null} unidade={unidade} ocupado={editar.isPending} alterar={(campos) => alterar(e.id, campos)} />
           )}
           {e.tipo === "laje" && (
             <>

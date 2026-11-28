@@ -171,3 +171,15 @@ def test_estrutura_pilar_viga_laje(api: TestClient) -> None:
     r = api.patch(f"{PAV}/estrutura/pilar-1", params={"versao": 4}, json={"espessura": _trena(1)})
     assert r.status_code == 422, r.text  # campo de laje no pilar
     assert api.delete(f"{PAV}/estrutura/pilar-1", params={"versao": 4}).json()["versao"] == 5
+
+
+def test_escada(api: TestClient) -> None:
+    """Escada em U: a tela traz a conta (espelhos, piso, lances) e os degraus."""
+    esc = {"id": "escada-1", "tipo": "escada", "forma": "U", "inicio": [400, 600],
+           "largura": _trena(900)}  # fmt: skip
+    r = api.post(f"{PAV}/estrutura", params={"versao": 1}, json=esc)
+    assert r.status_code == 200, r.text
+    r = api.patch(f"{PAV}/estrutura/escada-1", params={"versao": 2}, json={"gira": "direita"})
+    assert r.status_code == 200, r.text
+    e = api.get(f"{PAV}/geometria").json()["estrutura"][0]["escada"]
+    assert e["espelhos"] == 16 and e["lances"] == [7, 7] and len(e["degraus"]) == 15

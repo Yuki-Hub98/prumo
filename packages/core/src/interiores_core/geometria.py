@@ -11,9 +11,11 @@ from shapely import LineString, Point, Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import polygonize, unary_union
 
+from interiores_core import escadas
 from interiores_core.modelo import (
     Comodo,
     ElementoEstrutural,
+    Escada,
     Laje,
     Movel,
     Parede,
@@ -368,18 +370,29 @@ def poligono_estrutura(pavimento: Pavimento, e: ElementoEstrutural) -> Polygon |
     if isinstance(e, Pilar):
         (x, y), w, d = e.centro, e.largura.valor / 2, e.profundidade.valor / 2
         return Polygon([(x - w, y - d), (x + w, y - d), (x + w, y + d), (x - w, y + d)])
+    if isinstance(e, Escada):
+        return escadas.calcular(pavimento, e).contorno
     if isinstance(e, Laje):
         laje = Polygon(e.contorno) if e.contorno else contorno_pavimento(pavimento)
         if laje is None:
             return None
         resto: BaseGeometry = laje
-        for furo in e.furos:
-            resto = resto.difference(Polygon(furo))
+        for furo in [Polygon(f) for f in e.furos] + furos_de_escada(pavimento):
+            resto = resto.difference(furo)
         return _maior_poligono(resto)
     if e.inicio == e.fim:
         return None
     faixa = LineString([e.inicio, e.fim]).buffer(e.largura.valor / 2, cap_style="flat")
     return faixa if isinstance(faixa, Polygon) else None
+
+
+def furos_de_escada(pavimento: Pavimento) -> list[Polygon]:
+    """Furos que as escadas do pavimento abrem na laje dele (onde a cabeça bateria)."""
+    return [
+        f
+        for e in pavimento.estrutura
+        if isinstance(e, Escada) and (f := escadas.furo(pavimento, e)) is not None
+    ]
 
 
 def _maior_poligono(g: BaseGeometry) -> Polygon | None:

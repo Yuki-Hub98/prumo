@@ -15,10 +15,11 @@ from pydantic import BaseModel, ConfigDict
 from shapely import Polygon
 from shapely.geometry.base import BaseGeometry
 
-from interiores_core import bancada, geometria, planejado
+from interiores_core import bancada, escadas, geometria, planejado
 from interiores_core.medidas import medidas_estimadas
 from interiores_core.modelo import (
     DadosComodo,
+    Escada,
     Janela,
     Movel,
     Pavimento,
@@ -180,6 +181,26 @@ class InstalacaoTela(_Tela):
     parede: str | None = None
 
 
+class EscadaTela(_Tela):
+    """A conta da escada e o desenho dos degraus."""
+
+    inicio: Pt
+    """Pé da escada (no caracol, o centro): o ponto que anda ao arrastar."""
+    degraus: list[list[Pt]]
+    """Contorno de cada degrau (o patamar incluído), do primeiro ao último."""
+    patamares: list[int] = []
+    """Índices (em ``degraus``) dos patamares."""
+    caminho: list[Pt]
+    """Linha de subida, do pé à chegada (seta "sobe")."""
+    desnivel: int
+    espelhos: int
+    espelho: float
+    piso: float
+    blondel: float
+    lances: list[int]
+    giro: float | None = None
+
+
 class EstruturaTela(_Tela):
     """Pilar, viga ou laje projetados na planta."""
 
@@ -191,6 +212,7 @@ class EstruturaTela(_Tela):
     furos: list[list[Pt]] = []
     estimada: bool = False
     """Alguma medida (tamanho, espessura, altura) é chute."""
+    escada: EscadaTela | None = None
 
 
 class PavimentoTela(_Tela):
@@ -339,6 +361,7 @@ def pavimento_para_tela(
                 contorno=_pts(g.exterior.coords[:-1]),
                 furos=[_pts(f.coords[:-1]) for f in g.interiors],
                 estimada=bool(medidas_estimadas(e)),
+                escada=_escada_tela(pav, e) if isinstance(e, Escada) else None,
             )
         )
     xs = [x for p in paredes for x, _ in p.corpo] + [x for m in moveis for x, _ in m.cantos]
@@ -353,6 +376,23 @@ def pavimento_para_tela(
         instalacoes=instalacoes,
         estrutura=estrutura,
         limites=limites,
+    )
+
+
+def _escada_tela(pav: Pavimento, e: Escada) -> EscadaTela:
+    c = escadas.calcular(pav, e)
+    return EscadaTela(
+        inicio=(float(e.inicio[0]), float(e.inicio[1])),
+        degraus=[_pts(d.poligono.exterior.coords[:-1]) for d in c.degraus],
+        patamares=[i for i, d in enumerate(c.degraus) if d.patamar],
+        caminho=_pts(c.caminho),
+        desnivel=round(c.desnivel),
+        espelhos=c.espelhos,
+        espelho=round(c.espelho, 1),
+        piso=c.piso,
+        blondel=round(c.blondel, 1),
+        lances=list(c.lances),
+        giro=round(c.giro) if c.giro is not None else None,
     )
 
 
