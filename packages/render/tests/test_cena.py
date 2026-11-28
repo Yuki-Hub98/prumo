@@ -616,3 +616,25 @@ def test_pilar_viga_e_laje(copia: Path) -> None:
     lajes = [p for p in pav["prismas"] if p.get("extras", {}).get("estrutura") == "lj"]
     assert len(lajes) == 1 and lajes[0]["oculto_em"] == ["superior", "perspectiva"]
     assert not any(p["nome"].startswith("teto") for p in pav["prismas"])
+
+
+def test_escada_e_furo_na_laje(copia: Path) -> None:
+    """Degraus maciços do piso ao topo de cada um; a laje sai em pedaços sem buraco, sem
+    cobrir o vão da escada."""
+    arq = copia / "projeto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    med = {"origem": "projeto"}
+    d["pavimentos"][0]["estrutura"] = [
+        {"id": "lj", "tipo": "laje", "espessura": {"valor": 120, **med}},
+        {"id": "esc", "tipo": "escada", "forma": "U", "inicio": [400, 600],
+         "largura": {"valor": 900, **med}},
+    ]  # fmt: skip
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    cena = montar_cena(carregar(copia), "quarto")
+    degraus = [p for p in cena["prismas"] if p["nome"].startswith("degrau-esc-")]
+    assert len(degraus) == 15 and all(p["z0"] == 0 for p in degraus)
+    assert sorted(p["z1"] for p in degraus)[-1] == pytest.approx(15 * 2720 / 16)
+    laje = [Polygon(p["contorno"]) for p in cena["prismas"] if p["nome"].startswith("laje-lj")]
+    assert len(laje) > 1 and all(not p.interiors for p in laje)  # cortada em volta do furo
+    ultimo = max(degraus, key=lambda p: p["z1"])
+    assert unary_union(laje).intersection(Polygon(ultimo["contorno"])).area < 1

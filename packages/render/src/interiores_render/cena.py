@@ -24,16 +24,18 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from shapely import LineString, Point, Polygon
+from shapely import box as shapely_box
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
-from interiores_core import bancada, catalogo, geometria, planejado
+from interiores_core import bancada, catalogo, escadas, geometria, planejado
 from interiores_core.acabamentos import ACABAMENTOS
 from interiores_core.carregar import ProjetoCarregado
 from interiores_core.catalogo import Simbolo
 from interiores_core.modelo import (
     Comodo,
+    Escada,
     Janela,
     Laje,
     Movel,
@@ -45,7 +47,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import ALTURA_MIN_CAIXA, CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 18
+VERSAO_CENA = 19
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -68,6 +70,7 @@ CORES_PADRAO = {
     "piso_frio": "#D6D1C8",
     "inox": "#B9BCC0",
     "vidro_preto": "#1C1D20",
+    "escada": "#CFC8BC",
 }
 CORES_MOVEIS = {
     "pia": "#F2F0EC",
@@ -163,6 +166,20 @@ def _poligonos(geom: BaseGeometry) -> list[Polygon]:
     if isinstance(geom, Polygon):
         return [geom]
     return [g for g in getattr(geom, "geoms", []) if isinstance(g, Polygon) and g.area > 1]
+
+
+def _sem_furos(pol: Polygon) -> list[Polygon]:
+    """Pedaços sem buraco (o prisma só leva o contorno de fora): corta numa vertical pelo
+    meio de cada furo até não sobrar nenhum (laje com o vão da escada, por exemplo)."""
+    if not pol.interiors:
+        return [pol]
+    x = Polygon(pol.interiors[0]).centroid.x
+    x0, y0, x1, y1 = pol.bounds
+    pedacos = []
+    for a, b in ((x0 - 1, x), (x, x1 + 1)):
+        for p in _poligonos(pol.intersection(shapely_box(a, y0 - 1, b, y1 + 1))):
+            pedacos += _sem_furos(p)
+    return pedacos
 
 
 CORTE_SUPERIOR = 120.0
@@ -360,6 +377,23 @@ class _Cena:
                 self.prisma(f"pilar-{e.id}", g, 0, pe, mat)
             self.ocupado = self.ocupado.union(g)
 
+    def escadas_(self) -> None:
+        """Escada de alvenaria maciça: cada degrau (e o patamar) cheio do piso até o topo dele;
+        no caracol, o núcleo do piso à chegada."""
+        recorte = self._recorte()
+        pedra = self.material("escada", CORES_PADRAO["escada"], rugosidade=0.6)
+        for e in self.pav.estrutura:
+            if not isinstance(e, Escada):
+                continue
+            calc = escadas.calcular(self.pav, e)
+            if recorte is not None and not recorte.intersects(calc.contorno):
+                continue
+            with self.marcando(estrutura=e.id):
+                for d in calc.degraus:
+                    self.prisma(f"degrau-{e.id}-{d.numero}", d.poligono, 0, d.z, pedra)
+                if calc.nucleo is not None:
+                    self.prisma(f"nucleo-{e.id}", calc.nucleo, 0, calc.desnivel, pedra)
+
     def vigas_e_lajes(self) -> None:
         """Vigas (só o trecho fora das paredes: dentro delas não aparece) descendo da laje, e
         lajes do pé-direito para cima, no lugar do teto (somem nas vistas de cima)."""
@@ -371,7 +405,7 @@ class _Cena:
         teto = self.material("teto", self.cores["teto"])
         oculto = self._oculto_teto
         for e in self.pav.estrutura:
-            if isinstance(e, Pilar):
+            if isinstance(e, Pilar | Escada):
                 continue
             g: BaseGeometry | None = geometria.poligono_estrutura(self.pav, e)
             if g is None:
@@ -380,7 +414,8 @@ class _Cena:
                 g = g.intersection(recorte)
             with self.marcando(estrutura=e.id):
                 if isinstance(e, Laje):
-                    for i, pol in enumerate(_poligonos(g)):
+                    pedacos = [q for p in _poligonos(g) for q in _sem_furos(p)]
+                    for i, pol in enumerate(pedacos):
                         z1 = pe + e.espessura.valor
                         self.prisma(f"laje-{e.id}-{i}", pol, pe, z1, teto, oculto_em=oculto)
                 else:
@@ -895,14 +930,15 @@ class _Cena:
     # -- câmeras e luzes
 
     def _livre(self, folga: float) -> BaseGeometry:
-        """Área onde dá para ficar em pé: longe de paredes, pilares, móveis no piso e giro de
-        porta."""
+        """Área onde dá para ficar em pé: longe de paredes, pilares, escadas, móveis no piso e
+        giro de porta."""
         bloqueios = unary_union(
             [geometria.poligono_movel(m).buffer(folga) for m in self.moveis if m.ocupa_piso]
             + [
                 g.buffer(folga)
                 for e in self.pav.estrutura
-                if isinstance(e, Pilar) and (g := geometria.poligono_estrutura(self.pav, e))
+                if isinstance(e, Pilar | Escada)
+                and (g := geometria.poligono_estrutura(self.pav, e))
             ]
             + [
                 g.buffer(folga)
@@ -1756,6 +1792,7 @@ def montar_cena(
     cena.piso_teto()
     cena.pilares()
     cena.paredes()
+    cena.escadas_()
     cena.vigas_e_lajes()
     cena.rodape()
     cena.moveis_()
@@ -1888,6 +1925,7 @@ def montar_cena_pavimento(
     if soltas:  # paredes que nenhum cômodo usa (muro, mureta): saem também
         cenas[0].ocupado = ocupado
         cenas[0].paredes(soltas)
+    cenas[0].escadas_()
     cenas[0].vigas_e_lajes()
     luzes.append({"tipo": "sol", "direcao": [0.45, 0.35, -0.82], "energia": 2.5})
     disponiveis = _cameras_pavimento(
