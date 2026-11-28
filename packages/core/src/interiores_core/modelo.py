@@ -118,7 +118,33 @@ class Viga(_Modelo):
     altura: Medida = Field(description="Quanto a viga desce abaixo da laje.")
 
 
-ElementoEstrutural = Annotated[Pilar | Viga, Field(discriminator="tipo")]
+Contorno = Annotated[
+    list[Ponto], Field(min_length=3, description="Polígono em mm (sem repetir o 1º ponto).")
+]
+
+
+class Laje(_Modelo):
+    """Laje de cobertura do pavimento: o teto dele e o piso do andar de cima.
+
+    Fica em cima das paredes (do pé-direito para cima). Sem ``contorno``, cobre o pavimento
+    inteiro por fora das paredes. ``furos``: vãos na laje (escada, shaft, claraboia).
+    """
+
+    id: Id
+    tipo: Literal["laje"]
+    espessura: Medida
+    sistema: Literal["macica", "pre_moldada"] = Field(
+        "pre_moldada",
+        description="``macica`` (concreto moldado no local) ou ``pre_moldada`` (vigotas e "
+        "lajotas/EPS).",
+    )
+    contorno: Contorno | None = Field(
+        None, description="Sem contorno: o pavimento inteiro, por fora das paredes."
+    )
+    furos: list[Contorno] = Field(default_factory=list)
+
+
+ElementoEstrutural = Annotated[Pilar | Viga | Laje, Field(discriminator="tipo")]
 
 
 # ---------------------------------------------------------------- instalações

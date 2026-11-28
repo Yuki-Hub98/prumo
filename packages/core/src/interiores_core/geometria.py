@@ -13,6 +13,8 @@ from shapely.ops import polygonize, unary_union
 
 from interiores_core.modelo import (
     Comodo,
+    ElementoEstrutural,
+    Laje,
     Movel,
     Parede,
     Pavimento,
@@ -329,7 +331,7 @@ def recorte_do_comodo(pavimento: Pavimento, comodo_id: str) -> Pavimento:
     estrutura = [
         e
         for e in pavimento.estrutura
-        if toca(Point(e.centro) if isinstance(e, Pilar) else LineString([e.inicio, e.fim]))
+        if (g := poligono_estrutura(pavimento, e)) is not None and toca(g)
     ]
     return pavimento.model_copy(
         update={
@@ -340,3 +342,48 @@ def recorte_do_comodo(pavimento: Pavimento, comodo_id: str) -> Pavimento:
             "comodos": [comodo],
         }
     )
+
+
+# ---------------------------------------------------------------- estrutura
+
+
+def contorno_pavimento(pavimento: Pavimento) -> Polygon | None:
+    """Pavimento inteiro por fora das paredes (paredes + cômodos, sem buracos): o contorno
+    da laje que não informa o dela."""
+    partes: list[BaseGeometry] = [corpo(p) for p in pavimento.paredes if comprimento(p) > 0]
+    partes += [g for c in pavimento.comodos if (g := poligono_eixo(pavimento, c)) is not None]
+    if not partes:
+        return None
+    juntos = unary_union(partes)
+    poligonos = [juntos] if isinstance(juntos, Polygon) else list(getattr(juntos, "geoms", []))
+    poligonos = [p for p in poligonos if isinstance(p, Polygon)]
+    if not poligonos:
+        return None
+    return Polygon(max(poligonos, key=lambda p: p.area).exterior)
+
+
+def poligono_estrutura(pavimento: Pavimento, e: ElementoEstrutural) -> Polygon | None:
+    """Projeção na planta: o pilar (retângulo), a viga (faixa da largura ao longo do eixo) ou
+    a laje (contorno menos os furos). ``None`` se não der para saber (laje sem paredes)."""
+    if isinstance(e, Pilar):
+        (x, y), w, d = e.centro, e.largura.valor / 2, e.profundidade.valor / 2
+        return Polygon([(x - w, y - d), (x + w, y - d), (x + w, y + d), (x - w, y + d)])
+    if isinstance(e, Laje):
+        laje = Polygon(e.contorno) if e.contorno else contorno_pavimento(pavimento)
+        if laje is None:
+            return None
+        resto: BaseGeometry = laje
+        for furo in e.furos:
+            resto = resto.difference(Polygon(furo))
+        return _maior_poligono(resto)
+    if e.inicio == e.fim:
+        return None
+    faixa = LineString([e.inicio, e.fim]).buffer(e.largura.valor / 2, cap_style="flat")
+    return faixa if isinstance(faixa, Polygon) else None
+
+
+def _maior_poligono(g: BaseGeometry) -> Polygon | None:
+    if isinstance(g, Polygon):
+        return g if not g.is_empty else None
+    poligonos = [p for p in getattr(g, "geoms", []) if isinstance(p, Polygon)]
+    return max(poligonos, key=lambda p: p.area) if poligonos else None

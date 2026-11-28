@@ -30,6 +30,7 @@ from interiores_core.medidas import Origem
 from interiores_core.modelo import (
     EXTERNO,
     Comodo,
+    ElementoEstrutural,
     Janela,
     Parede,
     Pavimento,
@@ -420,6 +421,53 @@ def remover_abertura(projeto: Projeto, pavimento: str, id_: str) -> Edicao:
         pav = _pav(d, pavimento)
         _item(pav["aberturas"], id_, "abertura")
         pav["aberturas"] = [a for a in pav["aberturas"] if a["id"] != id_]
+
+    return _aplicar(projeto, mudar)
+
+
+# ---------------------------------------------------------------- estrutura
+
+CAMPOS_ESTRUTURA = {
+    "pilar": {"centro", "largura", "profundidade"},
+    "viga": {"inicio", "fim", "largura", "altura"},
+    "laje": {"espessura", "sistema", "contorno", "furos"},
+}
+
+
+def adicionar_estrutura(
+    projeto: Projeto, pavimento: str, elemento: ElementoEstrutural | Mapping[str, Any]
+) -> Edicao:
+    """Acrescenta um pilar, viga ou laje ao pavimento (id novo)."""
+
+    def mudar(d: Dados) -> None:
+        pav = _pav(d, pavimento)
+        dados = _dump(elemento)
+        lista = pav.setdefault("estrutura", [])
+        if any(e["id"] == dados["id"] for e in lista):
+            raise EdicaoInvalidaError(f"já existe estrutura '{dados['id']}'")
+        lista.append(dados)
+
+    return _aplicar(projeto, mudar)
+
+
+def alterar_estrutura(
+    projeto: Projeto, pavimento: str, id_: str, campos: Mapping[str, Any]
+) -> Edicao:
+    """Muda campos do pilar, viga ou laje (medidas, posição, contorno, furos).
+    ``None`` apaga o campo (na laje, sem ``contorno`` = o pavimento inteiro)."""
+
+    def mudar(d: Dados) -> None:
+        e = _item(_pav(d, pavimento).get("estrutura", []), id_, "estrutura")
+        _mesclar(e, campos, CAMPOS_ESTRUTURA[e["tipo"]])
+
+    return _aplicar(projeto, mudar)
+
+
+def remover_estrutura(projeto: Projeto, pavimento: str, id_: str) -> Edicao:
+    def mudar(d: Dados) -> None:
+        pav = _pav(d, pavimento)
+        _item(pav.get("estrutura", []), id_, "estrutura")
+        pav["estrutura"] = [e for e in pav["estrutura"] if e["id"] != id_]
 
     return _aplicar(projeto, mudar)
 
