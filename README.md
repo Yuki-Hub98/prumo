@@ -374,7 +374,9 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
 - [x] **Escadas** de alvenaria (2ª parte das Estruturas): reta, em L, em U e caracol/leque, com
       a conta dos degraus (espelho, piso pela fórmula de Blondel), checagens e o furo na laje
       criado sozinho; na planta (arrastar), no 3D e no DXF/PDF
-- [ ] Estruturas — o que falta: **andares empilhados** no 3D da casa
+- [x] **Andares empilhados** (3ª parte das Estruturas): no 3D, "Casa toda (andares)" com cada
+      andar na cota do piso, laje entre eles e o vão da escada no piso de cima; "Mostrar até"
+      esconde os de cima; o andar de cima mostra a escada chegando ("DESCE") na tela e no DXF
 - [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis
 - [ ] Referência por foto (pedido do usuário, 2026-11-19 e 2026-11-20): subir uma foto
       (Pinterest, um quarto parecido) pela tela e **guardar a foto no projeto** como referência
