@@ -468,7 +468,7 @@ export interface paths {
         put?: never;
         /**
          * Adicionar Estrutura
-         * @description Pilar, viga ou laje (campo ``tipo``).
+         * @description Pilar, viga, laje ou escada (campo ``tipo``).
          */
         post: operations["adicionar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura_post"];
         delete?: never;
@@ -1501,6 +1501,99 @@ export interface components {
             novo_id?: string | null;
         };
         /**
+         * Escada
+         * @description Escada de alvenaria do pavimento para o de cima.
+         *
+         *     ``inicio`` é o meio da borda do 1º degrau (onde se começa a subir) e ``direcao`` o
+         *     sentido da subida em graus (0 = +x, 90 = +y). No caracol/leque, ``inicio`` é o centro e
+         *     ``direcao`` o ângulo do 1º degrau. Degraus, espelho e piso saem da conta
+         *     (:mod:`interiores_core.escadas`); a laje do pavimento ganha o furo sozinha.
+         */
+        Escada: {
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            tipo: "escada";
+            /**
+             * Forma
+             * @default reta
+             * @enum {string}
+             */
+            forma?: "reta" | "L" | "U" | "caracol";
+            /** Inicio */
+            inicio: [
+                number,
+                number
+            ];
+            /**
+             * Direcao
+             * @description Sentido da subida (graus).
+             * @default 0
+             */
+            direcao?: number;
+            /** @description Largura do lance (no caracol, do degrau). */
+            largura: components["schemas"]["Medida"];
+            /**
+             * Gira
+             * @description L, U e caracol: para que lado a escada vira subindo.
+             * @default esquerda
+             * @enum {string}
+             */
+            gira?: "esquerda" | "direita";
+            /**
+             * Degraus Primeiro Lance
+             * @description L e U: pisos antes do patamar (sem valor: metade).
+             */
+            degraus_primeiro_lance?: number | null;
+            /** @description Altura a vencer; sem valor: pé-direito + espessura da laje. */
+            desnivel?: components["schemas"]["Medida"] | null;
+            /** @description Profundidade do degrau; sem valor: pela fórmula de Blondel. */
+            piso?: components["schemas"]["Medida"] | null;
+        };
+        /**
+         * EscadaTela
+         * @description A conta da escada e o desenho dos degraus.
+         */
+        EscadaTela: {
+            /** Inicio */
+            inicio: [
+                number,
+                number
+            ];
+            /** Degraus */
+            degraus: [
+                number,
+                number
+            ][][];
+            /**
+             * Patamares
+             * @default []
+             */
+            patamares?: number[];
+            /** Caminho */
+            caminho: [
+                number,
+                number
+            ][];
+            /** Desnivel */
+            desnivel: number;
+            /** Espelhos */
+            espelhos: number;
+            /** Espelho */
+            espelho: number;
+            /** Piso */
+            piso: number;
+            /** Blondel */
+            blondel: number;
+            /** Lances */
+            lances: number[];
+            /** Giro */
+            giro?: number | null;
+        };
+        /**
          * Espaco
          * @description Espaço dentro de um vão, de baixo para cima.
          *
@@ -1543,6 +1636,7 @@ export interface components {
              * @default false
              */
             estimada?: boolean;
+            escada?: components["schemas"]["EscadaTela"] | null;
         };
         /** FaceTela */
         FaceTela: {
@@ -2397,7 +2491,7 @@ export interface components {
             /** Aberturas */
             aberturas?: (components["schemas"]["Porta"] | components["schemas"]["Janela"])[];
             /** Estrutura */
-            estrutura?: (components["schemas"]["Pilar"] | components["schemas"]["Viga"] | components["schemas"]["Laje"])[];
+            estrutura?: (components["schemas"]["Pilar"] | components["schemas"]["Viga"] | components["schemas"]["Laje"] | components["schemas"]["Escada"])[];
             /** Instalacoes */
             instalacoes?: (components["schemas"]["PontoInstalacao"] | components["schemas"]["TrechoInstalacao"])[];
             /** Comodos */
@@ -4037,7 +4131,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Pilar"] | components["schemas"]["Viga"] | components["schemas"]["Laje"];
+                "application/json": components["schemas"]["Pilar"] | components["schemas"]["Viga"] | components["schemas"]["Laje"] | components["schemas"]["Escada"];
             };
         };
         responses: {

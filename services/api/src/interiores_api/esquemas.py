@@ -17,6 +17,7 @@ from interiores_core.modelo import (
     Construcao,
     CoresVariacao,
     DadosComodo,
+    Escada,
     Id,
     Janela,
     Laje,
@@ -419,7 +420,7 @@ class MoverMovel(_Esquema):
 
 
 NovaAbertura = Porta | Janela
-NovaEstrutura = Annotated[Pilar | Viga | Laje, Field(discriminator="tipo")]
+NovaEstrutura = Annotated[Pilar | Viga | Laje | Escada, Field(discriminator="tipo")]
 
 __all__ = [
     "AdicionarPavimento",
