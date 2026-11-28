@@ -172,14 +172,17 @@ export function usePedirRenderPavimento(codigo: string, pavimento: string) {
 }
 
 /** Cena 3D ao vivo do cômodo ou do pavimento (refaz a cada versão do projeto). */
-export function useCena(codigo: string, alvo: { comodo: string } | { pavimento: string }, ativo = true) {
-  const chave = "pavimento" in alvo ? ["pavimento", alvo.pavimento] : ["comodo", alvo.comodo];
+/** Cena 3D ao vivo do cômodo, do pavimento ou da casa toda (os andares empilhados). */
+export function useCena(codigo: string, alvo: { comodo: string } | { pavimento: string } | { casa: true }, ativo = true) {
+  const chave = "casa" in alvo ? ["casa", "toda"] : "pavimento" in alvo ? ["pavimento", alvo.pavimento] : ["comodo", alvo.comodo];
   return useQuery<Esquemas["Cena3D"], ErroApi>({
     queryKey: [...chaves.projeto(codigo), "cena", ...chave],
     // o openapi-fetch tipa pares/trincas como listas: a forma é a do esquema Cena3D
     queryFn: async () => {
       const r =
-        "pavimento" in alvo
+        "casa" in alvo
+          ? await ou(api.GET("/projetos/{codigo}/cena", { params: { path: { codigo } } }))
+          : "pavimento" in alvo
           ? await ou(api.GET("/projetos/{codigo}/pavimentos/{pavimento}/cena", { params: { path: { codigo, pavimento: alvo.pavimento } } }))
           : await ou(api.GET("/projetos/{codigo}/comodos/{comodo}/cena", { params: { path: { codigo, comodo: alvo.comodo } } }));
       return r as unknown as Esquemas["Cena3D"];

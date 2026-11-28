@@ -206,7 +206,8 @@ class EstruturaTela(_Tela):
 
     id: str
     tipo: str
-    """pilar, viga ou laje."""
+    """pilar, viga, laje, escada ou ``escada_abaixo`` (a escada do andar de baixo chegando:
+    ``contorno`` é o vão dela na laje)."""
     contorno: list[Pt]
     """Projeção na planta (a laje, por fora; os furos vêm à parte)."""
     furos: list[list[Pt]] = []
@@ -259,9 +260,14 @@ def _vao(pav: Pavimento, a: Porta | Janela) -> list[Pt] | None:
 
 
 def pavimento_para_tela(
-    pav: Pavimento, dados_comodos: Mapping[str, DadosComodo] | None = None
+    pav: Pavimento,
+    dados_comodos: Mapping[str, DadosComodo] | None = None,
+    abaixo: Pavimento | None = None,
 ) -> PavimentoTela:
-    """Tudo do pavimento (e o mobiliário dos cômodos dele) em polígonos prontos."""
+    """Tudo do pavimento (e o mobiliário dos cômodos dele) em polígonos prontos.
+
+    ``abaixo``: o andar de baixo; as escadas dele aparecem aqui chegando (o vão e "desce").
+    """
     dados_comodos = dados_comodos or {}
     paredes = [
         ParedeTela(
@@ -364,6 +370,18 @@ def pavimento_para_tela(
                 escada=_escada_tela(pav, e) if isinstance(e, Escada) else None,
             )
         )
+    if abaixo is not None:
+        for e in abaixo.estrutura:
+            if not isinstance(e, Escada) or (buraco := escadas.furo(abaixo, e)) is None:
+                continue
+            estrutura.append(
+                EstruturaTela(
+                    id=e.id,
+                    tipo="escada_abaixo",
+                    contorno=_pts(buraco.exterior.coords[:-1]),
+                    escada=_escada_tela(abaixo, e),
+                )
+            )
     xs = [x for p in paredes for x, _ in p.corpo] + [x for m in moveis for x, _ in m.cantos]
     ys = [y for p in paredes for _, y in p.corpo] + [y for m in moveis for _, y in m.cantos]
     limites = ((min(xs), min(ys)), (max(xs), max(ys))) if xs else None

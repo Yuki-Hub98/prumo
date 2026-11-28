@@ -47,7 +47,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.partes import ALTURA_MIN_CAIXA, CORPO, eh_cooktop, parte_da_peca
 
-VERSAO_CENA = 19
+VERSAO_CENA = 20
 AVISO_OBRA = "PRELIMINAR — NÃO USAR PARA OBRA"
 
 CORES_PADRAO = {
@@ -210,6 +210,7 @@ class _Cena:
         """``no_pavimento``: o cômodo é parte da cena do pavimento inteiro — nomes de
         piso, teto, rodapé e móveis levam o id do cômodo (não colidem com os vizinhos)."""
         self.pav = pav
+        self.projeto = carregado.projeto
         self.comodo = comodo
         self.no_pavimento = no_pavimento
         self.pe = (comodo.pe_direito or pav.pe_direito).valor
@@ -329,7 +330,14 @@ class _Cena:
         piso = self.material(
             self._n("piso"), self.cores["piso"], rugosidade=0.45, textura=self.textura_piso
         )
-        self.prisma(self._n("piso"), self.util, -20, 0, piso)
+        # o vão da escada que sobe do andar de baixo fura o piso deste
+        abaixo = geometria.pavimento_abaixo(self.projeto, self.pav)
+        chao: BaseGeometry = self.util
+        for vao in geometria.furos_de_escada(abaixo) if abaixo is not None else []:
+            chao = chao.difference(vao)
+        pedacos = [q for p in _poligonos(chao) for q in _sem_furos(p)]
+        for pol in pedacos:  # mesmo nome em todos: é por ele que a tela pinta o piso
+            self.prisma(self._n("piso"), pol, -20, 0, piso)
         if self._laje_cobre():
             return  # a laje faz o teto (ver :meth:`vigas_e_lajes`)
         teto = self.material("teto", self.cores["teto"])
@@ -1879,6 +1887,40 @@ def _cameras_pavimento(contorno: BaseGeometry, proporcao: float) -> dict[str, di
             "escala": round(escala, 1),
         },
     }
+
+
+def montar_cena_casa(carregado: ProjetoCarregado) -> dict[str, Any]:
+    """Os andares empilhados (só prismas, caixas e materiais, para o visor ao vivo): a cena
+    de cada pavimento com cômodos, subida até a cota do piso dele. Cada peça leva
+    ``extras.pavimento`` (o visor esconde os andares de cima) e a ordem dos andares, de
+    baixo para cima, vai em ``andares``."""
+    prismas: list[dict[str, Any]] = []
+    caixas: list[dict[str, Any]] = []
+    materiais: dict[str, dict[str, Any]] = {}
+    andares: list[str] = []
+    aviso: str | None = None
+    com_comodos = sorted(
+        (p for p in carregado.projeto.pavimentos if p.comodos), key=lambda p: p.cota_piso.valor
+    )
+    for k, pav in enumerate(com_comodos):
+        cena = montar_cena_pavimento(carregado, pav.id, vistas=())
+        z = float(pav.cota_piso.valor)
+        tem_cima = k + 1 < len(com_comodos)
+        for p in cena["prismas"]:
+            z1 = p["z1"] + z
+            if tem_cima and p["nome"].startswith("laje-"):
+                z1 -= 20  # os 2 cm de cima são o piso (acabamento) do andar de cima
+            prismas.append({**p, "z0": p["z0"] + z, "z1": z1,
+                            "extras": {**p.get("extras", {}), "pavimento": pav.id}})  # fmt: skip
+        for c in cena["caixas"]:
+            x, y, cz = c["centro"]
+            caixas.append({**c, "centro": [x, y, round(cz + z, 1)],
+                           "extras": {**c.get("extras", {}), "pavimento": pav.id}})  # fmt: skip
+        materiais.update(cena["materiais"])
+        andares.append(pav.id)
+        aviso = aviso or cena.get("aviso")
+    return {"versao": VERSAO_CENA, "prismas": prismas, "caixas": caixas,
+            "materiais": materiais, "andares": andares, "aviso": aviso}  # fmt: skip
 
 
 def montar_cena_pavimento(

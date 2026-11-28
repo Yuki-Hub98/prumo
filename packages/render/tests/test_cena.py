@@ -13,7 +13,13 @@ from interiores_core import catalogo, geometria
 from interiores_core.carregar import carregar
 from interiores_core.modelo import Movel
 from interiores_core.partes import parte_da_peca, partes_do_movel
-from interiores_render.cena import AVISO_OBRA, CORTE_SUPERIOR, montar_cena, montar_cena_pavimento
+from interiores_render.cena import (
+    AVISO_OBRA,
+    CORTE_SUPERIOR,
+    montar_cena,
+    montar_cena_casa,
+    montar_cena_pavimento,
+)
 
 DADOS = Path(__file__).resolve().parents[2] / "core" / "tests" / "dados" / "casa"
 
@@ -638,3 +644,55 @@ def test_escada_e_furo_na_laje(copia: Path) -> None:
     assert len(laje) > 1 and all(not p.interiors for p in laje)  # cortada em volta do furo
     ultimo = max(degraus, key=lambda p: p["z1"])
     assert unary_union(laje).intersection(Polygon(ultimo["contorno"])).area < 1
+
+
+def _dois_andares(copia: Path) -> Path:
+    """O térreo com laje e escada em U, e um andar de cima igual (ids com "-2") na cota
+    2720 (pé-direito 2600 + laje 120)."""
+    arq = copia / "projeto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    med = {"origem": "projeto"}
+    terreo = d["pavimentos"][0]
+    terreo["estrutura"] = [
+        {"id": "lj", "tipo": "laje", "espessura": {"valor": 120, **med}},
+        {"id": "esc", "tipo": "escada", "forma": "U", "inicio": [400, 600],
+         "largura": {"valor": 900, **med}},
+    ]  # fmt: skip
+    sup = json.loads(json.dumps(terreo))
+    sup.update(id="superior", cota_piso={"valor": 2720, **med}, estrutura=[])
+    novo = lambda x: x if x in (None, "externo") else f"{x}-2"  # noqa: E731
+    for c in sup["comodos"]:
+        c["id"] = novo(c["id"])
+    for w in sup["paredes"]:
+        w["lado_a"], w["lado_b"] = novo(w["lado_a"]), novo(w["lado_b"])
+    for a in sup["aberturas"]:
+        for k in ("de", "para", "abre_para"):
+            if k in a:
+                a[k] = novo(a[k])
+    for i in sup["instalacoes"]:
+        if "comodo" in i:
+            i["comodo"] = novo(i["comodo"])
+    d["pavimentos"].append(sup)
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    return copia
+
+
+def test_casa_com_andares_empilhados(copia: Path) -> None:
+    """Cada andar na cota do piso dele, marcado com o pavimento; o piso de cima tem o vão
+    da escada de baixo."""
+    cena = montar_cena_casa(carregar(_dois_andares(copia)))
+    assert cena["andares"] == ["terreo", "superior"]
+    de = lambda p: p["extras"]["pavimento"]  # noqa: E731
+    assert all("pavimento" in p["extras"] for p in cena["prismas"] + cena["caixas"])
+    pisos_sup = [p for p in cena["prismas"] if p["nome"].startswith("piso") and de(p) == "superior"]
+    assert pisos_sup and all(p["z0"] == 2700 and p["z1"] == 2720 for p in pisos_sup)
+    degraus = [Polygon(p["contorno"]) for p in cena["prismas"] if p["nome"].startswith("degrau-")]
+    chao = unary_union([Polygon(p["contorno"]) for p in pisos_sup])
+    assert chao.intersection(unary_union(degraus[-3:])).area < 1  # o vão está aberto
+    paredes_sup = [
+        p for p in cena["prismas"] if p["nome"].startswith("parede-") and de(p) == "superior"
+    ]
+    assert paredes_sup and min(p["z0"] for p in paredes_sup) == 2720
+    # a laje do térreo para embaixo do piso de cima (sem faces no mesmo plano)
+    laje = [p for p in cena["prismas"] if p["nome"].startswith("laje-")]
+    assert laje and all(p["z1"] == 2700 for p in laje)

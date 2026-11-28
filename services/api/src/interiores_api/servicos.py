@@ -58,6 +58,7 @@ from interiores_core.carregar import ProjetoCarregado
 from interiores_core.edicao import Alteracao, Edicao, diferencas, renomear_projeto
 from interiores_core.edicao_moveis import EdicaoMoveis
 from interiores_core.edicao_variacoes import validar_variacao
+from interiores_core.geometria import pavimento_abaixo
 from interiores_core.medidas import medidas_estimadas
 from interiores_core.modelo import DadosComodo, Movel, Projeto, Variacao
 from interiores_core.modelos_proprios import modelo_do_movel
@@ -75,6 +76,7 @@ from interiores_relatorios.tinta import montar_planilha as planilha_tinta
 from interiores_render.cena import (
     VISTAS_PAVIMENTO,
     montar_cena,
+    montar_cena_casa,
     montar_cena_pavimento,
     vistas_do_comodo,
 )
@@ -205,7 +207,7 @@ class Servico:
         pav = next((p for p in c.projeto.pavimentos if p.id == pavimento), None)
         if pav is None:
             raise KeyError(f"pavimento '{pavimento}' não existe")
-        return pavimento_para_tela(pav, c.comodos)
+        return pavimento_para_tela(pav, c.comodos, pavimento_abaixo(c.projeto, pav))
 
     def planejado(self, codigo: str, comodo: str, id_: str) -> PlanejadoTela:
         """Vista de frente do móvel planejado (versão atual, rascunho incluído)."""
@@ -520,6 +522,16 @@ class Servico:
             q: renders.estimar_s(self.sessao, *tamanho, imagens)
             for q, tamanho in QUALIDADES.items()
         }
+
+    def cena_casa(self, codigo: str) -> Cena3D:
+        """Os andares empilhados, cada um na cota do piso dele (versão atual)."""
+        c, versao = repositorio.ler(self.sessao, codigo)
+        carregado = ProjetoCarregado(
+            pasta=Path(), projeto=c.projeto, dados_comodos=c.comodos, variacoes=c.variacoes
+        )
+        cena = montar_cena_casa(carregado)
+        campos = ("prismas", "caixas", "materiais", "aviso", "andares")
+        return Cena3D.model_validate({"versao": versao, **{k: cena[k] for k in campos}})
 
     def cena(self, codigo: str, comodo: str | None = None, pavimento: str | None = None) -> Cena3D:
         """Cena 3D ao vivo do cômodo (ou do pavimento inteiro), na versão atual. Cores

@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 from apoio import pav
-from shapely import Point
+from shapely import Point, Polygon
 
 from interiores_core import edicao, escadas, geometria
 from interiores_core.modelo import Escada, Pavimento, Projeto
@@ -121,3 +121,25 @@ def test_checagens(casa_dict: dict[str, Any], montar: Callable[[], Projeto]) -> 
     ]
     codigos = _codigos(montar())
     assert {"escada_estreita", "escada_piso", "escada_fora", "escada_na_parede"} <= codigos
+
+
+def test_andar_de_cima_ve_a_escada_chegando(montar: Callable[[], Projeto]) -> None:
+    from interiores_core.tela import pavimento_para_tela
+
+    p = edicao.adicionar_estrutura(
+        montar(), "terreo",
+        {"id": "esc", "tipo": "escada", "forma": "U", "inicio": [400, 600], "largura": M(900)},
+    ).projeto  # fmt: skip
+    terreo = p.pavimentos[0]
+    cima = Pavimento.model_validate({"id": "cima", "cota_piso": M(2720), "pe_direito": M(2600)})
+    assert (
+        geometria.pavimento_abaixo(p.model_copy(update={"pavimentos": [terreo, cima]}), cima)
+        is terreo
+    )
+    tela = pavimento_para_tela(cima, abaixo=terreo)
+    chegando = [e for e in tela.estrutura if e.tipo == "escada_abaixo"]
+    assert len(chegando) == 1 and chegando[0].escada is not None
+    vao = escadas.furo(terreo, terreo.estrutura[0])  # type: ignore[arg-type]
+    assert vao is not None and Polygon(chegando[0].contorno).area == pytest.approx(
+        vao.area, rel=0.01
+    )

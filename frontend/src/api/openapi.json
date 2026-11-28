@@ -3764,6 +3764,49 @@
         }
       }
     },
+    "/projetos/{codigo}/cena": {
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Cena Casa",
+        "description": "Cena 3D ao vivo da casa toda: os andares empilhados, cada um na cota do piso dele.",
+        "operationId": "cena_casa_projetos__codigo__cena_get",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Codigo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cena3D"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projetos/{codigo}/pavimentos/{pavimento}/tinta": {
       "get": {
         "tags": [
@@ -4707,6 +4750,14 @@
               }
             ],
             "title": "Aviso"
+          },
+          "andares": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Andares",
+            "description": "Casa toda: os andares, de baixo para cima (cada peça traz o dela em ``extras.pavimento``)."
           }
         },
         "additionalProperties": false,

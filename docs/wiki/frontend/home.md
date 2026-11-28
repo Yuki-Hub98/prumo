@@ -207,8 +207,14 @@ Vistas prontas: **De cima** (sem teto, como maquete), **Perspectiva**, **Frente*
 cômodo por dentro. A caixa **teto** mostra o teto e a luminária. No 3D vão as cores lisas; as
 fotos realistas (texturas, luz) são do Blender, na aba **Imagens**.
 
-Na lista, **Pavimento inteiro** mostra a casa toda (todos os cômodos, sem teto), também ao vivo;
-as vistas de lado cortam a parede externa do lado da câmera.
+Na lista, **Pavimento inteiro** mostra o andar todo (todos os cômodos, sem teto), também ao
+vivo; as vistas de lado cortam a parede externa do lado da câmera.
+
+**Casa toda (andares)** mostra os andares **empilhados**, cada um na cota do piso dele, com a
+laje entre eles e a escada passando pelo vão (o piso de cima tem o furo). **Mostrar até**
+esconde os andares acima do escolhido (começa no andar aberto na tela); só o teto/laje desse
+último andar segue a caixa **Teto** — os de baixo ficam à vista, porque são o piso do de cima.
+Nessa vista as cores são as padrão e o móvel não se arrasta (clique ainda seleciona).
 
 ### Pintar no 3D
 
@@ -297,8 +303,9 @@ andar mais alto (piso + pé-direito + laje de 15 cm, como chute se não mudar) e
 copiado do andar aberto. O andar novo abre no **Editar planta**: as paredes do andar de baixo
 aparecem **apagadas ao fundo** e os cantos delas atraem o ponto ao desenhar, para o de cima
 sair alinhado. **Remover este andar** (no editor, com confirmação) leva junto paredes, cômodos e
-móveis; o único andar não sai. Tudo entra no rascunho. Os andares ainda não aparecem
-empilhados no 3D (escadas e lajes ficam para depois).
+móveis; o único andar não sai. Tudo entra no rascunho. No 3D, **Casa toda (andares)** mostra
+os andares empilhados (ver Visor 3D). A escada lançada num andar aparece no de cima como o
+**vão** no piso (tracejado com X, degraus apagados e "DESCE"), na tela e no DXF/PDF.
 
 ## Editar planta
 

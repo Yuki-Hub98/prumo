@@ -914,6 +914,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projetos/{codigo}/cena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cena Casa
+         * @description Cena 3D ao vivo da casa toda: os andares empilhados, cada um na cota do piso dele.
+         */
+        get: operations["cena_casa_projetos__codigo__cena_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projetos/{codigo}/pavimentos/{pavimento}/tinta": {
         parameters: {
             query?: never;
@@ -1327,6 +1347,11 @@ export interface components {
             };
             /** Aviso */
             aviso?: string | null;
+            /**
+             * Andares
+             * @description Casa toda: os andares, de baixo para cima (cada peça traz o dela em ``extras.pavimento``).
+             */
+            andares?: string[];
         };
         /**
          * Chapa
@@ -5132,6 +5157,37 @@ export interface operations {
             path: {
                 codigo: string;
                 pavimento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cena3D"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cena_casa_projetos__codigo__cena_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
             };
             cookie?: never;
         };

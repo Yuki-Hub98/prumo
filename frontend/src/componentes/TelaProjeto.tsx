@@ -259,6 +259,7 @@ export function TelaProjeto({
           {ver3d ? (
             <Tela3D
               codigo={codigo}
+              andares={pavimentos.map((p) => ({ id: p.id, nome: p.nome }))}
               pavimento={pavimento}
               comodo={comodo}
               comodos={pavimentos.find((p) => p.id === pavimento)?.comodos ?? []}

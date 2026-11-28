@@ -150,6 +150,11 @@ class Cena3D(_Esquema):
     caixas: list[Caixa3D]
     materiais: dict[str, Material3D]
     aviso: str | None = None
+    andares: list[str] = Field(
+        default_factory=list,
+        description="Casa toda: os andares, de baixo para cima (cada peça traz o dela em "
+        "``extras.pavimento``).",
+    )
 
 
 class SuperficieTinta(_Esquema):
