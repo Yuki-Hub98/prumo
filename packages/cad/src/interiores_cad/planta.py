@@ -21,6 +21,7 @@ from shapely.ops import polylabel, unary_union
 
 from interiores_cad import __version__
 from interiores_cad.estilo import (
+    COR_PILAR,
     COR_PREENCHIMENTO_PAREDE,
     ESTILO_COTA,
     ESTILO_TEXTO,
@@ -43,9 +44,11 @@ from interiores_core.modelo import (
     EXTERNO,
     Comodo,
     Janela,
+    Laje,
     Movel,
     Parede,
     Pavimento,
+    Pilar,
     PontoInstalacao,
     Porta,
     TipoInstalacao,
@@ -267,6 +270,34 @@ class _Planta:
                 self.msp.add_lwpolyline(
                     list(anel.coords)[:-1], close=True, dxfattribs={"layer": "PAREDE"}
                 )
+
+    # -- estrutura
+
+    def estrutura(self) -> None:
+        """Pilar hachurado escuro; viga tracejada (acima do plano de corte); furo da laje
+        tracejado com um X (vazio). Tudo na camada PAREDE."""
+        cam = {"layer": "PAREDE"}
+        tracejado = {**cam, "linetype": TRACEJADO}
+        for e in self.recorte.estrutura:
+            g = geometria.poligono_estrutura(self.pavimento, e)
+            if g is None:
+                continue
+            if isinstance(e, Pilar):
+                pts = list(orient(g).exterior.coords)[:-1]
+                hachura = self.msp.add_hatch(color=7, dxfattribs=cam)
+                hachura.rgb = COR_PILAR
+                hachura.paths.add_polyline_path(pts, is_closed=True)
+                self.msp.add_lwpolyline(pts, close=True, dxfattribs=cam)
+            elif isinstance(e, Laje):
+                for furo in g.interiors:
+                    pts = list(furo.coords)[:-1]
+                    self.msp.add_lwpolyline(pts, close=True, dxfattribs=tracejado)
+                    x0, y0, x1, y1 = Polygon(pts).bounds
+                    self.msp.add_line((x0, y0), (x1, y1), dxfattribs=tracejado)
+                    self.msp.add_line((x0, y1), (x1, y0), dxfattribs=tracejado)
+            else:
+                pts = list(g.exterior.coords)[:-1]
+                self.msp.add_lwpolyline(pts, close=True, dxfattribs=tracejado)
 
     # -- aberturas
 
@@ -825,6 +856,7 @@ class _Planta:
 
     def desenhar(self, titulo: str, escopo: str, data: str) -> Desenho:
         self.paredes()
+        self.estrutura()
         self.aberturas()
         self.moveis_()
         self.instalacoes()
