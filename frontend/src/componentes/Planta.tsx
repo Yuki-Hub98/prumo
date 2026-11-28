@@ -155,6 +155,28 @@ export function Planta({
 
   /** Pilar, viga, laje ou escada na planta (com a aba Estruturas: clique, arrasto, laje). */
   const desenharEstrutura = (e: EstruturaTela) => {
+    if (e.tipo === "escada_abaixo") {
+      // a escada do andar de baixo chegando: o vão no piso (tracejado com X), os degraus
+      // apagados e "DESCE"
+      const xs = e.contorno.map((q) => q[0]);
+      const ys = e.contorno.map((q) => q[1]);
+      const [a, b, c, d] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+      return (
+        <g key={`abaixo-${e.id}`} pointerEvents="none">
+          {e.escada?.degraus.map((g, i) => (
+            <polygon key={i} points={pontos(g)} fill="none" stroke="var(--tinta-suave)" strokeOpacity={0.45} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          ))}
+          <g stroke="var(--tinta-suave)" strokeWidth={1.2} strokeDasharray="8 5" fill="none">
+            <polygon points={pontos(e.contorno)} vectorEffect="non-scaling-stroke" />
+            <line x1={a} y1={-c} x2={b} y2={-d} vectorEffect="non-scaling-stroke" />
+            <line x1={a} y1={-d} x2={b} y2={-c} vectorEffect="non-scaling-stroke" />
+          </g>
+          <text x={(a + b) / 2} y={-(c + d) / 2} fontSize={150} textAnchor="middle" dominantBaseline="middle" fill="var(--tinta-suave)">
+            DESCE
+          </text>
+        </g>
+      );
+    }
     const marcada = estrutura?.sel === e.id;
     const cor = marcada ? SEL : e.estimada ? "var(--chute)" : HALO[e.id] ?? "var(--tinta-suave)";
     const clicar = (ev: React.PointerEvent) => {

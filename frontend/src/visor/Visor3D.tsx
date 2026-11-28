@@ -106,8 +106,12 @@ function Modelo({
   aoMovel,
   aoArrastar,
   moveis,
+  andares,
+  ate,
 }: {
   moveis: string[];
+  andares: string[];
+  ate: string | null;
   cena: Cena3D;
   chave: string;
   vista: Vista3D;
@@ -144,12 +148,19 @@ function Modelo({
     pintar(scene, pintura);
   }, [scene, pintura]);
 
-  // teto e luminárias: escondidos por padrão, para ver o cômodo por dentro de cima
+  // teto e luminárias: escondidos por padrão, para ver o cômodo por dentro de cima. Na casa
+  // toda, os andares acima do "mostrar até" somem e só o teto (laje) do último mostrado segue
+  // o botão: os de baixo ficam (são o piso do de cima)
   useEffect(() => {
+    const topo = ate ? andares.indexOf(ate) : -1;
     scene.traverse((o) => {
-      if (ehTeto(o.name, o.userData)) o.visible = teto;
+      const pav = o.userData.pavimento as string | undefined;
+      const i = pav ? andares.indexOf(pav) : -1;
+      if (topo >= 0 && i > topo) o.visible = false;
+      else if (ehTeto(o.name, o.userData)) o.visible = teto || (topo >= 0 && i < topo);
+      else if (o.userData.pavimento) o.visible = true;
     });
-  }, [scene, teto]);
+  }, [scene, teto, ate, andares]);
 
   // a câmera só volta para a vista pronta quando ela muda (ou outro cômodo): editar o projeto
   // não pode tirar a câmera de onde a pessoa girou
@@ -245,7 +256,12 @@ export default function Visor3D({
   aoArrastar,
   aoGirar,
   moveis = [],
+  andares = [],
+  ate = null,
 }: {
+  /** Casa toda: os andares, de baixo para cima, e até qual mostrar. */
+  andares?: string[];
+  ate?: string | null;
   /** Arrastar o móvel selecionado pelo piso (deslocamento em mm na planta). */
   aoArrastar?: (id: string, d: [number, number]) => void;
   /** Girar o móvel selecionado 90°. */
@@ -300,6 +316,8 @@ export default function Visor3D({
           aoMovel={aoMovel}
           aoArrastar={aoArrastar}
           moveis={moveis}
+          andares={andares}
+          ate={ate}
         />
         <OrbitControls makeDefault enableDamping={false} />
       </Canvas>
