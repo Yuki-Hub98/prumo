@@ -527,3 +527,29 @@ def test_escada_na_planta(copia: Path) -> None:
         e for e in doc.modelspace().query('*[layer=="PAREDE"]') if e.dxf.linetype == "TRACEJADO"
     ]
     assert len(tracejadas) == 3  # o furo da escada na laje, com o X
+
+
+def test_andar_de_cima_mostra_o_vao_da_escada(copia: Path) -> None:
+    arq = copia / "projeto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    med = {"origem": "projeto"}
+    terreo = d["pavimentos"][0]
+    terreo["estrutura"] = [
+        {"id": "esc", "tipo": "escada", "forma": "U", "inicio": [400, 600],
+         "largura": {"valor": 900, **med}},
+    ]  # fmt: skip
+    sala = {"id": "sala-2", "nome": "Sala", "tipo": "sala",
+            "paredes": ["p1", "p2", "p3", "p4", "p5", "p6"]}  # fmt: skip
+    cima = {
+        "id": "cima",
+        "cota_piso": {"valor": 2720, **med},
+        "pe_direito": {"valor": 2600, **med},
+        "paredes": json.loads(json.dumps(terreo["paredes"])),  # cópia: o térreo fica igual
+        "comodos": [sala],
+    }
+    for w in cima["paredes"]:
+        w["lado_a"] = w["lado_b"] = "externo"
+    d["pavimentos"].append(cima)
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    doc = desenhar_planta(carregar(copia), "cima", None, DATA).doc
+    assert "DESCE" in _textos(doc, "TEXTO")

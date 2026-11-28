@@ -56,7 +56,7 @@ from interiores_core.modelo import (
 )
 from interiores_core.regras import VERSAO_REGRAS, checar
 
-VERSAO_GERADOR = f"interiores-cad {__version__} · planta v8 · {VERSAO_REGRAS}"
+VERSAO_GERADOR = f"interiores-cad {__version__} · planta v9 · {VERSAO_REGRAS}"
 """Entra na chave de cache das saídas: mudou o desenho, suba o ``planta vN``.
 
 Inclui a versão das regras porque as checagens são desenhadas na planta.
@@ -301,6 +301,29 @@ class _Planta:
             else:
                 pts = list(g.exterior.coords)[:-1]
                 self.msp.add_lwpolyline(pts, close=True, dxfattribs=tracejado)
+        self.escadas_de_baixo()
+
+    def escadas_de_baixo(self) -> None:
+        """No andar de cima, o vão da escada que sobe de baixo: tracejado com X e "DESCE"."""
+        abaixo = geometria.pavimento_abaixo(self.carregado.projeto, self.pavimento)
+        if abaixo is None:
+            return
+        area = unary_union(
+            [g for c in self.comodos if (g := geometria.poligono_eixo(self.pavimento, c))]
+        )
+        tracejado = {"layer": "PAREDE", "linetype": TRACEJADO}
+        for e in abaixo.estrutura:
+            if not isinstance(e, Escada) or (vao := escadas.furo(abaixo, e)) is None:
+                continue
+            if not area.intersects(vao):
+                continue
+            pts = list(vao.exterior.coords)[:-1]
+            self.msp.add_lwpolyline(pts, close=True, dxfattribs=tracejado)
+            x0, y0, x1, y1 = vao.bounds
+            self.msp.add_line((x0, y0), (x1, y1), dxfattribs=tracejado)
+            self.msp.add_line((x0, y1), (x1, y0), dxfattribs=tracejado)
+            c = vao.representative_point()
+            self.texto("DESCE", (c.x, c.y), Texto.INSTALACAO, "TEXTO")
 
     def escada(self, e: Escada) -> None:
         """Cada degrau e o patamar em PAREDE; linha de subida com seta e "SOBE n × e" em
