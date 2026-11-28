@@ -9,12 +9,19 @@ import type { Esquemas } from "./api/cliente";
 export type Pilar = Esquemas["Pilar"];
 export type Viga = Esquemas["Viga"];
 export type Laje = Esquemas["Laje"];
-export type Elemento = Pilar | Viga | Laje;
+export type Escada = Esquemas["Escada"];
+export type Elemento = Pilar | Viga | Laje | Escada;
 type Pt = [number, number];
 
 const chute = (valor: number, obs: string) => ({ valor, origem: "estimada" as const, obs: `estimada: ${obs}` });
 
-export const NOMES: Record<Elemento["tipo"], string> = { laje: "Laje", viga: "Viga", pilar: "Pilar" };
+export const NOMES: Record<Elemento["tipo"], string> = { laje: "Laje", escada: "Escada", viga: "Viga", pilar: "Pilar" };
+export const FORMAS: Record<NonNullable<Escada["forma"]>, string> = {
+  reta: "Reta",
+  L: "Em L (com patamar)",
+  U: "Em U (com patamar)",
+  caracol: "Caracol / leque",
+};
 export const SISTEMAS: Record<NonNullable<Laje["sistema"]>, string> = {
   pre_moldada: "Pré-moldada (vigotas e lajotas/EPS)",
   macica: "Maciça (concreto no local)",
@@ -47,6 +54,43 @@ export function novaLaje(id: string): Laje {
   return { id, tipo: "laje", espessura: chute(120, "laje pré-moldada H8 + capa de 4 cm"), sistema: "pre_moldada" };
 }
 
+/** Escada nova com o pé em ``inicio`` (no caracol, o centro), subindo para +x. */
+export function novaEscada(id: string, inicio: Pt, forma: NonNullable<Escada["forma"]>): Escada {
+  return {
+    id,
+    tipo: "escada",
+    forma,
+    inicio: [Math.round(inicio[0] / 10) * 10, Math.round(inicio[1] / 10) * 10],
+    direcao: 0,
+    largura: chute(900, "largura comum de escada de casa"),
+  };
+}
+
+/** Gira a subida 90° no sentido anti-horário. */
+export const girar90 = (direcao: number | undefined) => ((direcao ?? 0) + 90) % 360;
+
+/** O que o painel mostra da conta da escada (vem da API, em ``EstruturaTela.escada``). */
+export type ContaEscada = {
+  espelhos: number;
+  espelho: number;
+  piso: number;
+  blondel: number;
+  desnivel: number;
+  lances: number[];
+  giro?: number | null;
+};
+
+/** Resumo da conta da escada para o painel ("16 espelhos de 17,6 cm..."). */
+export function resumoEscada(c: ContaEscada, cm: (mm: number) => string): string[] {
+  const linhas = [
+    `${c.espelhos} espelhos de ${cm(c.espelho)} para vencer ${cm(c.desnivel)}`,
+    `piso de ${cm(c.piso)} · 2 × espelho + piso = ${cm(c.blondel)}`,
+  ];
+  if (c.lances.length === 2) linhas.push(`${c.lances[0]} degraus + patamar + ${c.lances[1]} degraus`);
+  if (c.giro != null) linhas.push(`gira ${c.giro}° subindo`);
+  return linhas;
+}
+
 /** Retângulo (canto de baixo à esquerda, largura em x, comprimento em y) ↔ contorno do furo. */
 export type Retangulo = { x: number; y: number; largura: number; comprimento: number };
 
@@ -74,8 +118,8 @@ export function furoNoCentro(centro: Pt, largura = 1000, comprimento = 2500): Pt
   return retanguloParaFuro({ x: r(centro[0] - largura / 2), y: r(centro[1] - comprimento / 2), largura, comprimento });
 }
 
-/** Lista na ordem da aba: lajes, vigas e pilares. */
+/** Lista na ordem da aba: lajes, escadas, vigas e pilares. */
 export function ordenar<T extends { tipo: string; id: string }>(itens: T[]): T[] {
-  const ordem = { laje: 0, viga: 1, pilar: 2 } as Record<string, number>;
+  const ordem = { laje: 0, escada: 1, viga: 2, pilar: 3 } as Record<string, number>;
   return [...itens].sort((a, b) => (ordem[a.tipo] ?? 9) - (ordem[b.tipo] ?? 9) || a.id.localeCompare(b.id));
 }

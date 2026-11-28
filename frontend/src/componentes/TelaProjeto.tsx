@@ -295,12 +295,12 @@ export function TelaProjeto({
                   ? {
                       sel: estruturaSel,
                       aoSelecionar: setEstruturaSel,
-                      aoMoverPilar: (id, centro) =>
+                      aoMover: (id, campo, ponto) =>
                         editar.mutate((versao) =>
                           ou(
                             api.PATCH("/projetos/{codigo}/pavimentos/{pavimento}/estrutura/{id_}", {
                               params: { path: { ...base, id_: id }, query: { versao } },
-                              body: { centro },
+                              body: { [campo]: ponto },
                             }),
                           ),
                         ),

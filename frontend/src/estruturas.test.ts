@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { furoNoCentro, furoParaRetangulo, novaLaje, novaViga, novoPilar, ordenar, retanguloParaFuro } from "./estruturas";
+import { furoNoCentro, furoParaRetangulo, girar90, novaEscada, novaLaje, novaViga, novoPilar, ordenar, resumoEscada, retanguloParaFuro } from "./estruturas";
 
 describe("estruturas", () => {
   it("novos elementos com chute e obs dizendo de onde veio", () => {
@@ -23,5 +23,23 @@ describe("estruturas", () => {
   it("ordem da aba: lajes, vigas, pilares", () => {
     const itens = [{ tipo: "pilar", id: "b" }, { tipo: "laje", id: "z" }, { tipo: "viga", id: "a" }, { tipo: "pilar", id: "a" }];
     expect(ordenar(itens).map((i) => `${i.tipo}:${i.id}`)).toEqual(["laje:z", "viga:a", "pilar:a", "pilar:b"]);
+  });
+});
+
+describe("escadas", () => {
+  it("nova escada na grade, subindo para +x, com largura chutada", () => {
+    const e = novaEscada("escada-1", [1234, 567], "U");
+    expect(e).toMatchObject({ forma: "U", inicio: [1230, 570], direcao: 0, largura: { valor: 900, origem: "estimada" } });
+    expect([girar90(0), girar90(270), girar90(undefined)]).toEqual([90, 0, 90]);
+  });
+
+  it("resumo da conta", () => {
+    const c = { espelhos: 16, espelho: 176.2, piso: 280, blondel: 632.4, desnivel: 2820, lances: [7, 7], degraus: [], caminho: [], giro: null };
+    const cm = (mm: number) => `${(mm / 10).toFixed(1)} cm`;
+    expect(resumoEscada(c, cm)).toEqual([
+      "16 espelhos de 17.6 cm para vencer 282.0 cm",
+      "piso de 28.0 cm · 2 × espelho + piso = 63.2 cm",
+      "7 degraus + patamar + 7 degraus",
+    ]);
   });
 });
