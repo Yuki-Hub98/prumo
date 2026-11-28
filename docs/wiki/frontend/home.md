@@ -222,7 +222,7 @@ do cômodo da lista; as paredes não, porque cada parede é uma peça só entre 
 
 ## Estruturas
 
-A aba **Estruturas** lista a estrutura do andar (lajes, vigas e pilares) e acrescenta:
+A aba **Estruturas** lista a estrutura do andar (lajes, escadas, vigas e pilares) e acrescenta:
 
 - **+ Laje do andar**: cobre o andar inteiro, por fora das paredes (o teto dele e o piso do de
   cima). No painel: espessura, tipo (pré-moldada ou maciça) e **furos** (escada, shaft,
@@ -232,9 +232,17 @@ A aba **Estruturas** lista a estrutura do andar (lajes, vigas e pilares) e acres
 - **+ Viga** sobre uma parede (escolha a parede): o eixo e a largura dela; a altura é quanto
   desce da laje. Início e fim editáveis.
 
+- **+ Escada** (reta, em L, em U ou caracol/leque): nasce no centro do cômodo, subindo para a
+  direita; **arraste na planta** para pôr no lugar. No painel: forma, largura, pé (no caracol,
+  o centro), **Girar 90°**, **Virar para a direita/esquerda** (L, U e caracol), degraus antes
+  do patamar (L e U), piso e desnível (vazios = automáticos). A conta aparece embaixo:
+  espelhos, piso pela fórmula de Blondel, 2 × espelho + piso, lances e quanto o caracol gira.
+  A **laje ganha o furo sozinha** onde a cabeça bateria (menos de 2,10 m do degrau à laje).
+
 Tamanho novo entra como **chute** (pilar 20 × 20, viga da largura da parede × 30 cm, laje de
-12 cm) e o desenho sai PRELIMINAR até medir. Na planta: pilar preenchido escuro, viga
-tracejada (fica acima do corte), furo da laje tracejado com um X; com a aba aberta, a laje
+12 cm, escada de 90 cm) e o desenho sai PRELIMINAR até medir. Na planta: pilar preenchido escuro, viga
+tracejada (fica acima do corte), escada com os degraus, a seta de subida e "SOBE", furo da
+laje tracejado com um X; com a aba aberta, a laje
 aparece tracejada e clicar num pilar ou viga escolhe. No 3D a laje faz o teto (some na vista
 de cima e com "Teto" desmarcado), o pilar vai do piso à laje e a viga desce dela. O sistema
 aponta restrições, não substitui o engenheiro.

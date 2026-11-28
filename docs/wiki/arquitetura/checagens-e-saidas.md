@@ -39,6 +39,13 @@ são padrões configuráveis em `regras.toml`, não norma técnica.
 | Área de serviço sem máquina ou sem tanque | — | info |
 | Planejado: construção que não cabe | — | erro |
 | Planejado: prateleira sem apoio · cabideiro baixo · móvel raso · gaveta estreita | 900 · 1000 · 550 · 300 mm | aviso |
+| Estrutura: laje que se cruza · viga sem comprimento | — | erro |
+| Estrutura: furo fora da laje · lajes sobrepostas | — | aviso |
+| Escada atravessando parede | — | erro |
+| Escada: espelho (`escada_espelho_min/max`) · piso (`escada_piso_min`) · 2 × espelho + piso (`escada_blondel_min/max`) · largura (`escada_largura_min`) | 160–190 · 250 · 600–650 · 800 mm | aviso |
+| Escada: fora do pavimento · desnível diferente da altura até o andar de cima · lance que não cabe · caracol com menos de `escada_altura_livre` entre uma volta e a de cima | 2100 mm | aviso |
+
+Os limites de escada ficam na seção `[geral]` do `regras.toml`.
 
 ## Saídas
 
