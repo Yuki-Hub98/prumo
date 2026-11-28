@@ -72,6 +72,22 @@ export function TelaProjeto({
   );
   const [historico, setHistorico] = useState(false);
   const [ver3d, setVer3d] = useState(false);
+  // cotas na planta: liga/desliga, lembrado neste navegador
+  const [cotas, setCotas] = useState(() => {
+    try {
+      return localStorage.getItem("planta-cotas") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const trocarCotas = (sim: boolean) => {
+    setCotas(sim);
+    try {
+      localStorage.setItem("planta-cotas", sim ? "1" : "0");
+    } catch {
+      /* sem armazenamento: vale só agora */
+    }
+  };
   const [rascunho, setRascunho] = useState<Cores | null>(null);
   const aoRascunho = useCallback((c: Cores | null) => setRascunho(c), []);
   const variacoesComodo = useVariacoes(codigo, comodo).data;
@@ -255,7 +271,13 @@ export function TelaProjeto({
         }}
       />
       <div className="flex min-h-0 flex-1">
-        <main className="min-w-0 flex-1">
+        <main className="relative min-w-0 flex-1">
+          {!ver3d && geometria.data && (
+            <label className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-md border border-linha-forte bg-superficie px-2 py-0.5 text-sm shadow-sm">
+              <input type="checkbox" checked={cotas} onChange={(e) => trocarCotas(e.target.checked)} />
+              Cotas <span className="text-xs text-tinta-suave">({unidade})</span>
+            </label>
+          )}
           {ver3d ? (
             <Tela3D
               codigo={codigo}
@@ -291,6 +313,7 @@ export function TelaProjeto({
               cores={coresVistas}
               fundo={abaixo ? (fundo ?? null) : null}
               destaque={destaque}
+              mostrarCotas={cotas}
               estrutura={
                 modo === "moveis" && aba === "estruturas"
                   ? {

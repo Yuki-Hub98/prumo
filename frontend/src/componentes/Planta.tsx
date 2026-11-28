@@ -6,6 +6,7 @@ type EstruturaTela = NonNullable<PavimentoTela["estrutura"]>[number];
 import { PADRAO } from "./PainelCores";
 import { formatar, type Unidade } from "../unidades";
 import { encaixar, vertices, type Pt } from "../editor/geometria";
+import { corDaOrigem, desenho, visiveis } from "../cotas";
 
 /** Aba Estruturas aberta: pilar e viga clicáveis, laje contornada, pilar arrastável. */
 export type ModoEstrutura = {
@@ -89,7 +90,11 @@ export function Planta({
   fundo = null,
   destaque = null,
   estrutura,
+  mostrarCotas = false,
 }: {
+  /** Cotas por cima da planta (gerais por fora, cada cômodo por dentro; a cadeia com as
+   * aberturas só no cômodo escolhido). */
+  mostrarCotas?: boolean;
   /** Aba Estruturas aberta (sem ela, pilar e viga só aparecem, sem clique). */
   estrutura?: ModoEstrutura;
   /** Problema escolhido em "Ver na planta": pisca 2× na cor da gravidade (``vez`` reinicia). */
@@ -137,7 +142,7 @@ export function Planta({
     [0, 0],
     [4000, 3000],
   ];
-  const margem = 600;
+  const margem = mostrarCotas ? 1300 : 600; // as cotas gerais ficam por fora
   const [x0, y0] = lim[0];
   const [x1, y1] = lim[1];
   const viewBox = `${x0 - margem} ${-y1 - margem} ${x1 - x0 + 2 * margem} ${y1 - y0 + 2 * margem}`;
@@ -773,8 +778,43 @@ export function Planta({
         </g>
       )}
 
+      {mostrarCotas && (
+        <g pointerEvents="none" className="num">
+          {visiveis(geometria.cotas ?? [], editor ? (editor.item?.tipo === "comodo" ? editor.item.id : null) : comodoSelecionado).map((c, i) => {
+            const d = desenho(c);
+            const cor = corDaOrigem(c.origem);
+            const tracejado = c.origem === "estimada" ? "6 4" : undefined;
+            const linha = (p: number[], q: number[], k: string, largura = 1) => (
+              <line key={k} x1={p[0]} y1={-p[1]} x2={q[0]} y2={-q[1]} stroke={cor} strokeWidth={largura} vectorEffect="non-scaling-stroke" />
+            );
+            return (
+              <g key={i}>
+                <line x1={d.a[0]} y1={-d.a[1]} x2={d.b[0]} y2={-d.b[1]} stroke={cor} strokeWidth={1} strokeDasharray={tracejado} vectorEffect="non-scaling-stroke" />
+                {d.riscos.map(([p, q], k) => linha(p, q, `r${k}`, 1.6))}
+                {(c.tipo === "eixo" || c.tipo === "geral") && d.chamadas.map(([p, q], k) => linha(p, q, `c${k}`, 0.6))}
+                <text
+                  x={d.meio[0]}
+                  y={-d.meio[1]}
+                  transform={`rotate(${d.ang} ${d.meio[0]} ${-d.meio[1]})`}
+                  fontSize={95}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={cor}
+                  stroke="var(--papel)"
+                  strokeWidth={14}
+                  paintOrder="stroke"
+                >
+                  {formatar(c.valor, unidade, false)}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      )}
+
       {/* escala: 1 m */}
-      <g transform={`translate(${x0},${-y0 + margem / 2})`}>
+      {/* com cotas, a régua desce para baixo das cotas gerais */}
+      <g transform={`translate(${x0},${-y0 + (mostrarCotas ? 1180 : margem / 2)})`}>
         <line x1={0} y1={0} x2={1000} y2={0} stroke="var(--tinta-suave)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
         <text x={500} y={-30} fontSize={80} textAnchor="middle" fill="var(--tinta-suave)" className="num">
           {formatar(1000, unidade)}
