@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { caixaPuxada, cenaDoMovel, medidaPuxada, pontoDaAlca, tNoEixo } from "./detalhe";
+import {
+  aberturaPuxada,
+  caixaAbertura,
+  caixaPuxada,
+  cenaDaParede,
+  cenaDoMovel,
+  eixoAlcaAbertura,
+  medidaPuxada,
+  pontoAlcaAbertura,
+  pontoDaAlca,
+  tNoEixo,
+} from "./detalhe";
 import type { Cena3D } from "./montarCena";
 
 const m = { largura: 1380, profundidade: 1880, altura: 550, base: 0 };
@@ -39,5 +50,37 @@ describe("editar em detalhe", () => {
     expect(c.max[0]).toBeCloseTo(0.81);
     expect(c.max[2]).toBeCloseTo(0.94); // costas paradas
     expect(c.min[2]).toBeCloseTo(-1.06);
+  });
+});
+
+describe("editar em detalhe: porta e janela", () => {
+  const j = { inicio: 800, largura: 1200, altura: 1000, peitoril: 1100 };
+
+  it("isola o trecho da parede com as aberturas dela", () => {
+    const p = (nome: string, extras: Record<string, string> | null) => ({ nome, extras }) as never;
+    const cena = { versao: 1, prismas: [p("parede-p1-0", { parede: "p1" }), p("parede-p2-0", { parede: "p2" }), p("piso", null)], caixas: [p("caixilho-j1-b", { parede: "p1", abertura: "j1" })], materiais: {}, aviso: null } as unknown as Cena3D;
+    const so = cenaDaParede(cena, "p1");
+    expect([...so.prismas, ...so.caixas].map((x) => x.nome)).toEqual(["parede-p1-0", "caixilho-j1-b"]);
+  });
+
+  it("caixa do vão centrada no vão original, lado a em −z", () => {
+    const c = caixaAbertura(j, j, 150);
+    expect(c.min.map((v) => +v.toFixed(3))).toEqual([-0.6, 1.1, -0.075]);
+    expect(c.max.map((v) => +v.toFixed(3))).toEqual([0.6, 2.1, 0.075]);
+    expect(pontoAlcaAbertura("inicio", c, -1).map((v) => +v.toFixed(3))).toEqual([-0.6, 1.6, -0.075]);
+    expect(pontoAlcaAbertura("peitoril", c, 1)[1]).toBeCloseTo(1.1);
+    // depois de puxar o início 10 cm para fora, a caixa cresce para −x
+    expect(caixaAbertura(j, { ...j, inicio: 700, largura: 1300 }, 150).min[0]).toBeCloseTo(-0.7);
+  });
+
+  it("puxar mantém a borda oposta parada, com limites", () => {
+    expect(aberturaPuxada("fim", j, 0.203)).toEqual({ ...j, largura: 1400 });
+    expect(aberturaPuxada("inicio", j, 0.1)).toEqual({ ...j, inicio: 700, largura: 1300 });
+    expect(aberturaPuxada("inicio", j, 5)).toEqual({ ...j, inicio: 0, largura: 2000 }); // não passa do início da parede
+    expect(aberturaPuxada("inicio", j, -5)).toEqual({ ...j, inicio: 1900, largura: 100 });
+    expect(aberturaPuxada("altura", j, -5).altura).toBe(100);
+    expect(aberturaPuxada("peitoril", j, 0.2)).toEqual({ ...j, peitoril: 900, altura: 1200 });
+    expect(aberturaPuxada("peitoril", j, 5)).toEqual({ ...j, peitoril: 0, altura: 2100 }); // não passa do piso
+    expect(eixoAlcaAbertura("inicio")).toEqual([-1, 0, 0]);
   });
 });

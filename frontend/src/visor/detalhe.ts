@@ -76,3 +76,63 @@ export function caixaPuxada(original: Medidas, m: Medidas): { min: V3; max: V3 }
     max: [x0 + m.largura * M, (m.base + m.altura) * M, z1],
   };
 }
+
+// ------------------------------------------------------------------ porta e janela
+
+/** Alças do vão: ``fim``/``inicio`` = os lados ao longo da parede, ``altura`` = em cima,
+ * ``peitoril`` = embaixo (só janela). */
+export type AlcaAbertura = "fim" | "inicio" | "altura" | "peitoril";
+
+/** Vão em mm: ``inicio`` = distância do início da parede; ``peitoril`` = 0 na porta. */
+export type MedidasAbertura = { inicio: number; largura: number; altura: number; peitoril: number };
+
+/** Só o trecho de parede ``parede`` e as peças de abertura nela (marcados pelo render). */
+export function cenaDaParede(cena: Cena3D, parede: string): Cena3D {
+  const daParede = (p: { extras?: Record<string, string> | null }) => p.extras?.parede === parede;
+  return { ...cena, prismas: cena.prismas.filter(daParede), caixas: cena.caixas.filter(daParede) };
+}
+
+/**
+ * Referencial do vão (m): centro do vão **original** no eixo da parede, x ao longo da parede
+ * (do início para o fim), y para cima e z = −normal: o lado ``a`` da parede fica em −z.
+ * Caixa do vão com as medidas ``m`` (a parede inteira na espessura).
+ */
+export function caixaAbertura(original: MedidasAbertura, m: MedidasAbertura, espessura: number): { min: V3; max: V3 } {
+  const x0 = (m.inicio - original.inicio - original.largura / 2) * M;
+  return {
+    min: [x0, m.peitoril * M, -(espessura / 2) * M],
+    max: [x0 + m.largura * M, (m.peitoril + m.altura) * M, (espessura / 2) * M],
+  };
+}
+
+/** Alça no meio da borda do vão, na face da parede do lado da câmera (``lado`` = sinal de z). */
+export function pontoAlcaAbertura(alca: AlcaAbertura, c: { min: V3; max: V3 }, lado: 1 | -1): V3 {
+  const z = lado > 0 ? c.max[2] : c.min[2];
+  const mx = (c.min[0] + c.max[0]) / 2;
+  const my = (c.min[1] + c.max[1]) / 2;
+  if (alca === "fim") return [c.max[0], my, z];
+  if (alca === "inicio") return [c.min[0], my, z];
+  if (alca === "altura") return [mx, c.max[1], z];
+  return [mx, c.min[1], z];
+}
+
+export function eixoAlcaAbertura(alca: AlcaAbertura): V3 {
+  return alca === "fim" ? [1, 0, 0] : alca === "inicio" ? [-1, 0, 0] : alca === "altura" ? [0, 1, 0] : [0, -1, 0];
+}
+
+/**
+ * Vão depois de a alça andar ``t`` metros para fora (passos de 1 cm), com a borda oposta
+ * parada: puxar o ``inicio`` muda a distância e a largura; puxar o ``peitoril``, o peitoril e
+ * a altura. Largura e altura nunca abaixo do mínimo; distância e peitoril nunca negativos.
+ */
+export function aberturaPuxada(alca: AlcaAbertura, a: MedidasAbertura, t: number): MedidasAbertura {
+  const d = Math.round(t / M / PASSO_MM) * PASSO_MM;
+  if (alca === "fim") return { ...a, largura: Math.max(MINIMO_MM, a.largura + d) };
+  if (alca === "altura") return { ...a, altura: Math.max(MINIMO_MM, a.altura + d) };
+  if (alca === "inicio") {
+    const dd = Math.min(Math.max(d, MINIMO_MM - a.largura), a.inicio);
+    return { ...a, inicio: a.inicio - dd, largura: a.largura + dd };
+  }
+  const dd = Math.min(Math.max(d, MINIMO_MM - a.altura), a.peitoril);
+  return { ...a, peitoril: a.peitoril - dd, altura: a.altura + dd };
+}
