@@ -18,7 +18,9 @@ Elementos:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from shapely import LineString, Point, Polygon
@@ -223,6 +225,19 @@ class _Cena:
         self.paredes_feitas: set[str] = set()
         self.pecas_parede: dict[str, _PecasParede] = {}
         """Paredes já construídas: no pavimento, a parede entre dois cômodos sai uma vez."""
+        self._marca: dict[str, str] = {}
+        """``extras`` que toda peça criada agora leva (ver :meth:`marcando`)."""
+
+    @contextmanager
+    def marcando(self, **marca: str) -> Iterator[None]:
+        """As peças criadas dentro do bloco levam ``marca`` nos ``extras`` (ex.: ``parede`` e
+        ``abertura``: o visor isola uma porta/janela com o trecho de parede dela)."""
+        antes = self._marca
+        self._marca = {**antes, **marca}
+        try:
+            yield
+        finally:
+            self._marca = antes
 
     def _n(self, nome: str) -> str:
         return f"{nome}-{self.comodo.id}" if self.no_pavimento else nome
@@ -247,6 +262,8 @@ class _Cena:
     ) -> None:
         if pol.area < 1 or z1 - z0 < 0.5:
             return
+        if self._marca:
+            extra["extras"] = {**self._marca, **extra.get("extras", {})}
         self.prismas.append(
             {
                 "nome": nome,
@@ -272,6 +289,8 @@ class _Cena:
         """``extras``: vão para o .glb (ex.: ``movel`` e ``parte``, para o visor pintar)."""
         if min(tamanho) <= 0:
             return
+        if self._marca:
+            extras = {**self._marca, **(extras or {})}
         self.caixas.append(
             {
                 "nome": nome,
@@ -308,7 +327,8 @@ class _Cena:
             if pid in self.paredes_feitas:  # já saiu pelo cômodo vizinho: só a folha da porta
                 for ab in self.pav.aberturas:
                     if ab.parede == pid and isinstance(ab, Porta):
-                        self.porta(ab, parede)
+                        with self.marcando(parede=pid, abertura=ab.id):
+                            self.porta(ab, parede)
                 continue
             self.paredes_feitas.add(pid)
             ini_p, ini_c = len(self.prismas), len(self.caixas)
@@ -345,27 +365,37 @@ class _Cena:
                 if isinstance(envelope, Polygon):
                     vaos.append((envelope, ab))
             cheio = corpo.difference(unary_union([v for v, _ in vaos])) if vaos else corpo
-            for i, pol in enumerate(_poligonos(cheio)):
-                self.prisma(f"parede-{pid}-{i}", pol, 0, altura, mat)
+            with self.marcando(parede=pid):
+                for i, pol in enumerate(_poligonos(cheio)):
+                    self.prisma(f"parede-{pid}-{i}", pol, 0, altura, mat)
             for vao, ab in vaos:
-                vao_aqui = vao.intersection(corpo)
-                if isinstance(ab, Janela):
-                    pe, topo = float(ab.peitoril.valor), float(ab.peitoril.valor + ab.altura.valor)
-                    for pol in _poligonos(vao_aqui):
-                        self.prisma(f"peitoril-{ab.id}", pol, 0, pe, mat)
-                    vidro = vao.intersection(geometria.eixo(parede).buffer(8, cap_style="flat"))
-                    for pol in _poligonos(vidro):
-                        self.prisma(f"vidro-{ab.id}", pol, pe, topo, mat_vidro)
-                    self.caixilho(ab, parede, pe, topo)
-                else:
-                    topo = float(ab.altura.valor)
-                    self.porta(ab, parede)
-                    self.batente(ab, parede)
-                for pol in _poligonos(vao_aqui):
-                    self.prisma(f"verga-{ab.id}", pol, topo, altura, mat)
+                with self.marcando(parede=pid, abertura=ab.id):
+                    self._vao(parede, vao, ab, corpo, altura, mat, mat_vidro)
             self.pecas_parede[pid] = _PecasParede(
                 ini_p, len(self.prismas), ini_c, len(self.caixas), _poligonos(cheio), mat
             )
+
+    def _vao(
+        self, parede: Any, vao: Polygon, ab: Porta | Janela, corpo: BaseGeometry,
+        altura: float, mat: str, mat_vidro: str,
+    ) -> None:  # fmt: skip
+        """Peças de um vão: peitoril, vidro e caixilho (janela) ou folha e batente (porta),
+        e a verga em cima."""
+        vao_aqui = vao.intersection(corpo)
+        if isinstance(ab, Janela):
+            pe, topo = float(ab.peitoril.valor), float(ab.peitoril.valor + ab.altura.valor)
+            for pol in _poligonos(vao_aqui):
+                self.prisma(f"peitoril-{ab.id}", pol, 0, pe, mat)
+            vidro = vao.intersection(geometria.eixo(parede).buffer(8, cap_style="flat"))
+            for pol in _poligonos(vidro):
+                self.prisma(f"vidro-{ab.id}", pol, pe, topo, mat_vidro)
+            self.caixilho(ab, parede, pe, topo)
+        else:
+            topo = float(ab.altura.valor)
+            self.porta(ab, parede)
+            self.batente(ab, parede)
+        for pol in _poligonos(vao_aqui):
+            self.prisma(f"verga-{ab.id}", pol, topo, altura, mat)
 
     def cortar_paredes_da_frente(self, camera: dict[str, Any], outras: list[str]) -> None:
         """Vista de cima (oblíqua, de um canto): as paredes do lado da câmera escondem o que
@@ -675,7 +705,7 @@ class _Cena:
                     float(m.rotacao),
                     self.material_da_parte(m, parte, peca.material),
                     peca.chanfro,
-                    extras={"movel": m.id, "parte": parte},
+                    extras={"movel": m.id, "parte": parte, **peca.extras},
                 )
 
     def material_movel(self, m: Movel) -> str:
@@ -1002,6 +1032,8 @@ class Peca:
     """x0, y0, z0, x1, y1, z1 no referencial do móvel."""
     material: str
     chanfro: float = 0.0
+    extras: dict[str, str] = field(default_factory=dict)
+    """Vão para os ``extras`` da peça na cena (ex.: ``da_porta`` no puxador da porta)."""
 
 
 class _Feitio:
@@ -1020,9 +1052,10 @@ class _Feitio:
 
     def p(
         self, nome: str, x0: float, y0: float, z0: float, x1: float, y1: float, z1: float,
-        material: str | None = None, chanfro: float = 0.0,
+        material: str | None = None, chanfro: float = 0.0, extras: dict[str, str] | None = None,
     ) -> None:  # fmt: skip
-        self.pecas.append(Peca(nome, (x0, y0, z0, x1, y1, z1), material or self.mat, chanfro))
+        caixa = (x0, y0, z0, x1, y1, z1)
+        self.pecas.append(Peca(nome, caixa, material or self.mat, chanfro, dict(extras or {})))
 
     def _mat(self, nome: str, **extra: Any) -> str:
         return self.cena.material(nome, CORES_PADRAO[nome], **extra)
@@ -1570,7 +1603,7 @@ class _Feitio:
 
         portas = [r for r in calc.layout if r.tipo == "porta"]
 
-        def coberto(r: Any) -> bool:  # atrás de uma porta: não aparece
+        def coberto(r: Any) -> bool:  # atrás de uma porta (fica dentro da folha)
             cx, cy = r.x + r.largura / 2, r.y + r.altura / 2
             return any(p.x <= cx <= p.x + p.largura and p.y <= cy <= p.y + p.altura for p in portas)
 
@@ -1588,22 +1621,32 @@ class _Feitio:
             # pares abrem do meio: puxador do lado de dentro do par (de quem olha)
             u = r.x + r.largura - 50 if i % 2 == 0 else r.x + 50
             puxador(u, (z0 + z1) / 2, min(240.0, (z1 - z0) * 0.4), deitado=False)
-        visiveis = [r for r in calc.layout if not coberto(r)]
-        for i, r in enumerate(x for x in visiveis if x.tipo == "gaveta"):
+            # o visor esconde junto com as folhas (editar em detalhe, "esconder as portas")
+            self.pecas[-1] = replace(self.pecas[-1], extras={"da_porta": "1"})
+        # o que fica atrás de uma porta também sai, por dentro do volume da folha: com a
+        # porta à vista não aparece; o editar em detalhe esconde as portas para ver
+        atras = {"atras_da_porta": "1"}
+        for i, r in enumerate(x for x in calc.layout if x.tipo == "gaveta"):
             x0, x1 = faixa(r.x + 2, r.largura - 4)
             z0, z1 = base + r.y + 2, base + r.y + r.altura - 2
+            if coberto(r):  # gaveta interna: frente mais fina, sem puxador
+                self.p(f"gaveta{i}", x0, d - 20, z0, x1, d - 4, z1, chanfro=3, extras=atras)
+                continue
             self.p(f"gaveta{i}", x0, d - 20, z0, x1, d, z1, chanfro=3)
             puxador(r.x + r.largura / 2, z1 - min(60.0, (z1 - z0) / 3),
                     min(160.0, (x1 - x0) * 0.4), deitado=True)  # fmt: skip
-        for i, r in enumerate(x for x in visiveis if x.tipo in ("nicho", "cabideiro")):
+        for i, r in enumerate(x for x in calc.layout if x.tipo in ("nicho", "cabideiro")):
             # fundo escuro 1 mm à frente da caixa: o nicho aberto "fundo" na imagem
             x0, x1 = faixa(r.x, r.largura)
             z0 = base + r.y
-            self.p(f"nicho{i}", x0, d - 20, z0, x1, d - 19, z0 + r.altura, self.sombra)
-        for i, r in enumerate(x for x in visiveis if x.tipo == "prateleira"):
+            extras = atras if coberto(r) else {}
+            self.p(f"nicho{i}", x0, d - 20, z0, x1, d - 19, z0 + r.altura, self.sombra,
+                   extras=extras)  # fmt: skip
+        for i, r in enumerate(x for x in calc.layout if x.tipo == "prateleira"):
             x0, x1 = faixa(r.x, r.largura)
             z0 = base + r.y
-            self.p(f"prateleira{i}", x0, d - 19, z0, x1, d - 4, z0 + r.altura)
+            extras = atras if coberto(r) else {}
+            self.p(f"prateleira{i}", x0, d - 19, z0, x1, d - 4, z0 + r.altura, extras=extras)
 
 
 def montar_cena(
