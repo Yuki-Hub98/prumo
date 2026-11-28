@@ -61,6 +61,8 @@ class Retangulo:
     altura: float
     rotulo: str = ""
     vao: int | None = None
+    espaco: int | None = None
+    """Índice do espaço no vão (de baixo para cima); na prateleira, o espaço logo abaixo."""
 
 
 @dataclass(frozen=True)
@@ -227,14 +229,14 @@ def calcular(movel: Movel) -> Planejado:
         y = float(y0)
         for j, (esp, h) in enumerate(zip(vao.espacos, alturas, strict=True)):
             rotulo = {"gaveta": "gaveta", "nicho": "nicho", "cabideiro": "cabideiro"}[esp.tipo]
-            r.layout.append(Retangulo(esp.tipo, x, y, w, h, rotulo, i))
+            r.layout.append(Retangulo(esp.tipo, x, y, w, h, rotulo, i, j))
             if esp.tipo == "gaveta":
                 gavetas.append((w, h))
             elif esp.tipo == "cabideiro":
                 cabideiros.append(w)
             y += h
             if j + 1 < len(tipos) and not (tipos[j] == tipos[j + 1] == "gaveta"):
-                r.layout.append(Retangulo("prateleira", x, y, w, e, vao=i))
+                r.layout.append(Retangulo("prateleira", x, y, w, e, vao=i, espaco=j))
                 prateleiras[round(w, 1)] += 1
                 y += e
         x += w + e

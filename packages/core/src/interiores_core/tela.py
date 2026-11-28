@@ -123,6 +123,8 @@ class RetanguloTela(_Tela):
     altura: float
     rotulo: str = ""
     vao: int | None = None
+    espaco: int | None = None
+    """Índice do espaço no vão (de baixo para cima); na prateleira, o espaço logo abaixo."""
 
 
 class ChapaTela(_Tela):
@@ -360,6 +362,7 @@ def _retangulos(layout: list[planejado.Retangulo]) -> list[RetanguloTela]:
             altura=round(x.altura, 1),
             rotulo=x.rotulo,
             vao=x.vao,
+            espaco=x.espaco,
         )
         for x in layout
     ]
