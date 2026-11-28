@@ -457,6 +457,44 @@ export interface paths {
         patch: operations["alterar_abertura_projetos__codigo__pavimentos__pavimento__aberturas__id___patch"];
         trace?: never;
     };
+    "/projetos/{codigo}/pavimentos/{pavimento}/estrutura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adicionar Estrutura
+         * @description Pilar, viga ou laje (campo ``tipo``).
+         */
+        post: operations["adicionar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projetos/{codigo}/pavimentos/{pavimento}/estrutura/{id_}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remover Estrutura */
+        delete: operations["remover_estrutura_projetos__codigo__pavimentos__pavimento__estrutura__id___delete"];
+        options?: never;
+        head?: never;
+        /** Alterar Estrutura */
+        patch: operations["alterar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura__id___patch"];
+        trace?: never;
+    };
     "/projetos/{codigo}/pavimentos/{pavimento}/comodos": {
         parameters: {
             query?: never;
@@ -1478,6 +1516,34 @@ export interface components {
             tipo: "gaveta" | "nicho" | "cabideiro";
             altura?: components["schemas"]["Medida"] | null;
         };
+        /**
+         * EstruturaTela
+         * @description Pilar, viga ou laje projetados na planta.
+         */
+        EstruturaTela: {
+            /** Id */
+            id: string;
+            /** Tipo */
+            tipo: string;
+            /** Contorno */
+            contorno: [
+                number,
+                number
+            ][];
+            /**
+             * Furos
+             * @default []
+             */
+            furos?: [
+                number,
+                number
+            ][][];
+            /**
+             * Estimada
+             * @default false
+             */
+            estimada?: boolean;
+        };
         /** FaceTela */
         FaceTela: {
             /** Parede */
@@ -1689,6 +1755,43 @@ export interface components {
              * @description Modelo do catálogo de janelas de onde vieram as medidas.
              */
             modelo?: string | null;
+        };
+        /**
+         * Laje
+         * @description Laje de cobertura do pavimento: o teto dele e o piso do andar de cima.
+         *
+         *     Fica em cima das paredes (do pé-direito para cima). Sem ``contorno``, cobre o pavimento
+         *     inteiro por fora das paredes. ``furos``: vãos na laje (escada, shaft, claraboia).
+         */
+        Laje: {
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            tipo: "laje";
+            espessura: components["schemas"]["Medida"];
+            /**
+             * Sistema
+             * @description ``macica`` (concreto moldado no local) ou ``pre_moldada`` (vigotas e lajotas/EPS).
+             * @default pre_moldada
+             * @enum {string}
+             */
+            sistema?: "macica" | "pre_moldada";
+            /**
+             * Contorno
+             * @description Sem contorno: o pavimento inteiro, por fora das paredes.
+             */
+            contorno?: [
+                number,
+                number
+            ][] | null;
+            /** Furos */
+            furos?: [
+                number,
+                number
+            ][][];
         };
         /** Lata */
         Lata: {
@@ -2294,7 +2397,7 @@ export interface components {
             /** Aberturas */
             aberturas?: (components["schemas"]["Porta"] | components["schemas"]["Janela"])[];
             /** Estrutura */
-            estrutura?: (components["schemas"]["Pilar"] | components["schemas"]["Viga"])[];
+            estrutura?: (components["schemas"]["Pilar"] | components["schemas"]["Viga"] | components["schemas"]["Laje"])[];
             /** Instalacoes */
             instalacoes?: (components["schemas"]["PontoInstalacao"] | components["schemas"]["TrechoInstalacao"])[];
             /** Comodos */
@@ -2314,6 +2417,11 @@ export interface components {
             moveis: components["schemas"]["MovelTela"][];
             /** Instalacoes */
             instalacoes: components["schemas"]["InstalacaoTela"][];
+            /**
+             * Estrutura
+             * @default []
+             */
+            estrutura?: components["schemas"]["EstruturaTela"][];
             /** Limites */
             limites: [
                 [
@@ -3873,6 +3981,123 @@ export interface operations {
         };
     };
     alterar_abertura_projetos__codigo__pavimentos__pavimento__aberturas__id___patch: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                pavimento: string;
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    adicionar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura_post: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                pavimento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Pilar"] | components["schemas"]["Viga"] | components["schemas"]["Laje"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remover_estrutura_projetos__codigo__pavimentos__pavimento__estrutura__id___delete: {
+        parameters: {
+            query: {
+                /** @description Versão do projeto que a tela estava vendo. */
+                versao: number;
+            };
+            header?: never;
+            path: {
+                codigo: string;
+                pavimento: string;
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultadoEdicao"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    alterar_estrutura_projetos__codigo__pavimentos__pavimento__estrutura__id___patch: {
         parameters: {
             query: {
                 /** @description Versão do projeto que a tela estava vendo. */

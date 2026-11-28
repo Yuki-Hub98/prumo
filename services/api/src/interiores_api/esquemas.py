@@ -6,7 +6,7 @@ Medidas são sempre em **mm inteiros** e sempre com ``origem`` (a tela pergunta
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,10 +19,13 @@ from interiores_core.modelo import (
     DadosComodo,
     Id,
     Janela,
+    Laje,
     Parede,
+    Pilar,
     Porta,
     Projeto,
     Variacao,
+    Viga,
 )
 from interiores_core.validacao import Problema
 
@@ -416,6 +419,7 @@ class MoverMovel(_Esquema):
 
 
 NovaAbertura = Porta | Janela
+NovaEstrutura = Annotated[Pilar | Viga | Laje, Field(discriminator="tipo")]
 
 __all__ = [
     "AdicionarPavimento",
@@ -434,6 +438,7 @@ __all__ = [
     "MoverVertice",
     "Mudanca",
     "NovaAbertura",
+    "NovaEstrutura",
     "NovaInstalacao",
     "NovaVariacao",
     "NovoComodo",

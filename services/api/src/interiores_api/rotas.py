@@ -30,6 +30,7 @@ from interiores_api.esquemas import (
     MoverMovel,
     MoverVertice,
     NovaAbertura,
+    NovaEstrutura,
     NovaInstalacao,
     NovaVariacao,
     NovoComodo,
@@ -340,6 +341,37 @@ def remover_abertura(
     return svc.editar(
         codigo, versao, "remover_abertura",
         lambda p: edicao.remover_abertura(p, pavimento, id_),
+    )  # fmt: skip
+
+
+@planta.post("/estrutura")
+def adicionar_estrutura(
+    svc: Svc, codigo: str, pavimento: str, versao: Versao, elemento: NovaEstrutura
+) -> ResultadoEdicao:
+    """Pilar, viga ou laje (campo ``tipo``)."""
+    return svc.editar(
+        codigo, versao, "adicionar_estrutura",
+        lambda p: edicao.adicionar_estrutura(p, pavimento, elemento),
+    )  # fmt: skip
+
+
+@planta.patch("/estrutura/{id_}")
+def alterar_estrutura(
+    svc: Svc, codigo: str, pavimento: str, id_: str, versao: Versao, campos: Campos
+) -> ResultadoEdicao:
+    return svc.editar(
+        codigo, versao, "alterar_estrutura",
+        lambda p: edicao.alterar_estrutura(p, pavimento, id_, campos),
+    )  # fmt: skip
+
+
+@planta.delete("/estrutura/{id_}")
+def remover_estrutura(
+    svc: Svc, codigo: str, pavimento: str, id_: str, versao: Versao
+) -> ResultadoEdicao:
+    return svc.editar(
+        codigo, versao, "remover_estrutura",
+        lambda p: edicao.remover_estrutura(p, pavimento, id_),
     )  # fmt: skip
 
 
