@@ -13,13 +13,13 @@ from shapely.geometry.base import BaseGeometry
 
 from interiores_core import geometria
 from interiores_core.modelo import DadosComodo, Projeto, TipoComodo
-from interiores_core.regras import gerais
+from interiores_core.regras import escadas, gerais
 from interiores_core.regras.contexto import Contexto
 from interiores_core.tipos import modulo_do_tipo
 from interiores_core.validacao import ORDEM_SEVERIDADE, Problema, Severidade
 
 SECAO_GERAL = "geral"
-VERSAO_REGRAS = "regras v1"
+VERSAO_REGRAS = "regras v2"
 """Suba quando o resultado de alguma checagem mudar: invalida o cache das saídas."""
 
 
@@ -129,4 +129,7 @@ def checar(
             for regra in [*gerais.REGRAS, *(modulo.REGRAS if modulo else [])]:
                 regra(ctx)
             problemas += ctx.problemas
+        if comodo is None:  # escadas: do pavimento, não de um cômodo
+            limites, _ = limites_do_tipo("geral", regras)
+            problemas += escadas.checar(projeto, pav, limites)
     return sorted(problemas, key=lambda p: ORDEM_SEVERIDADE[p.severidade])

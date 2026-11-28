@@ -73,6 +73,116 @@
       "title": "Comodo",
       "type": "object"
     },
+    "Escada": {
+      "additionalProperties": false,
+      "description": "Escada de alvenaria do pavimento para o de cima.\n\n``inicio`` é o meio da borda do 1º degrau (onde se começa a subir) e ``direcao`` o\nsentido da subida em graus (0 = +x, 90 = +y). No caracol/leque, ``inicio`` é o centro e\n``direcao`` o ângulo do 1º degrau. Degraus, espelho e piso saem da conta\n(:mod:`interiores_core.escadas`); a laje do pavimento ganha o furo sozinha.",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "tipo": {
+          "const": "escada",
+          "title": "Tipo",
+          "type": "string"
+        },
+        "forma": {
+          "default": "reta",
+          "enum": [
+            "reta",
+            "L",
+            "U",
+            "caracol"
+          ],
+          "title": "Forma",
+          "type": "string"
+        },
+        "inicio": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Inicio",
+          "type": "array"
+        },
+        "direcao": {
+          "default": 0,
+          "description": "Sentido da subida (graus).",
+          "exclusiveMaximum": 360,
+          "minimum": 0,
+          "title": "Direcao",
+          "type": "integer"
+        },
+        "largura": {
+          "$ref": "#/$defs/Medida",
+          "description": "Largura do lance (no caracol, do degrau)."
+        },
+        "gira": {
+          "default": "esquerda",
+          "description": "L, U e caracol: para que lado a escada vira subindo.",
+          "enum": [
+            "esquerda",
+            "direita"
+          ],
+          "title": "Gira",
+          "type": "string"
+        },
+        "degraus_primeiro_lance": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "L e U: pisos antes do patamar (sem valor: metade).",
+          "title": "Degraus Primeiro Lance"
+        },
+        "desnivel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Altura a vencer; sem valor: pé-direito + espessura da laje."
+        },
+        "piso": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Medida"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Profundidade do degrau; sem valor: pela fórmula de Blondel."
+        }
+      },
+      "required": [
+        "id",
+        "tipo",
+        "inicio",
+        "largura"
+      ],
+      "title": "Escada",
+      "type": "object"
+    },
     "Imovel": {
       "additionalProperties": false,
       "properties": {
@@ -483,6 +593,7 @@
           "items": {
             "discriminator": {
               "mapping": {
+                "escada": "#/$defs/Escada",
                 "laje": "#/$defs/Laje",
                 "pilar": "#/$defs/Pilar",
                 "viga": "#/$defs/Viga"
@@ -498,6 +609,9 @@
               },
               {
                 "$ref": "#/$defs/Laje"
+              },
+              {
+                "$ref": "#/$defs/Escada"
               }
             ]
           },
