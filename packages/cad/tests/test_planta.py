@@ -508,3 +508,22 @@ def test_estrutura_na_planta(copia: Path) -> None:
     assert len(hachuras) == 1  # o pilar
     tracejadas = [e for e in msp.query('*[layer=="PAREDE"]') if e.dxf.linetype == "TRACEJADO"]
     assert len(tracejadas) == 4  # viga + furo + as duas diagonais do X
+
+
+def test_escada_na_planta(copia: Path) -> None:
+    """Degraus em PAREDE, seta de subida e "SOBE" em TEXTO; o furo da laje sai sozinho."""
+    arq = copia / "projeto.json"
+    d = json.loads(arq.read_text(encoding="utf-8"))
+    med = {"origem": "projeto"}
+    d["pavimentos"][0]["estrutura"] = [
+        {"id": "lj", "tipo": "laje", "espessura": {"valor": 120, **med}},
+        {"id": "esc", "tipo": "escada", "forma": "U", "inicio": [400, 600],
+         "largura": {"valor": 900, **med}},
+    ]  # fmt: skip
+    arq.write_text(json.dumps(d), encoding="utf-8")
+    doc = desenhar_planta(carregar(copia), "terreo", "quarto", DATA).doc
+    assert any(t.startswith("SOBE 16×") for t in _textos(doc, "TEXTO"))
+    tracejadas = [
+        e for e in doc.modelspace().query('*[layer=="PAREDE"]') if e.dxf.linetype == "TRACEJADO"
+    ]
+    assert len(tracejadas) == 3  # o furo da escada na laje, com o X
