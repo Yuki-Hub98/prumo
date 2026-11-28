@@ -7,6 +7,8 @@ import {
   type Construcao,
   larguraVao,
   moverEspaco,
+  puxarAlturaEspaco,
+  puxarLarguraVao,
   removerEspaco,
   removerVao,
   tipoEspaco,
@@ -44,5 +46,34 @@ describe("editar a construção", () => {
     expect(c.vaos[0].espacos.map((e) => e.tipo)).toEqual(["gaveta", "gaveta"]);
     const um = removerEspaco(removerEspaco(c, 0, 0), 0, 0);
     expect(um.vaos[0].espacos).toHaveLength(1);
+  });
+});
+
+describe("puxar no editar em detalhe", () => {
+  const mm = (valor: number) => ({ valor, origem: "projeto" as const });
+  const c: Construcao = {
+    ...base,
+    vaos: [
+      { espacos: [{ tipo: "gaveta", altura: mm(200) }, { tipo: "cabideiro" }, { tipo: "nicho", altura: mm(400) }], largura: mm(900) },
+      { espacos: [{ tipo: "nicho" }] },
+      { espacos: [{ tipo: "nicho" }], largura: mm(600) },
+    ],
+  };
+
+  it("a altura puxada sai do vizinho fixo (como mover a prateleira)", () => {
+    const n = puxarAlturaEspaco(c, 0, 1, 2, 1568, 1367.6); // +200 a partir de 1368
+    expect(n.vaos[0].espacos[1].altura?.valor).toBe(1568);
+    expect(n.vaos[0].espacos[2].altura?.valor).toBe(200);
+    expect(c.vaos[0].espacos[2].altura?.valor).toBe(400); // original intacto
+  });
+
+  it("vizinho automático cede sozinho", () => {
+    const n = puxarAlturaEspaco(c, 0, 2, 1, 300, 400);
+    expect(n.vaos[0].espacos.map((e) => e.altura?.valor)).toEqual([200, undefined, 300]);
+  });
+
+  it("largura do vão: o vizinho fixo cede, o automático fica automático", () => {
+    expect(puxarLarguraVao(c, 1, 2, 700, 650).vaos.map((v) => v.largura?.valor)).toEqual([900, 700, 550]);
+    expect(puxarLarguraVao(c, 0, 1, 1000, 900).vaos.map((v) => v.largura?.valor)).toEqual([1000, undefined, 600]);
   });
 });

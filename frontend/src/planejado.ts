@@ -83,3 +83,24 @@ export function moverEspaco(c: Construcao, i: number, j: number, passo: 1 | -1):
     return { ...v, espacos };
   });
 }
+
+/**
+ * Puxar a borda entre o espaço ``j`` e o ``vizinho`` (``j ± 1``), como mover a prateleira: o
+ * espaço fica com ``mm`` e o vizinho, se tem altura fixa, cede a diferença (automático já
+ * cede sozinho). ``atual``: altura do espaço antes de puxar (a calculada, se automática).
+ */
+export function puxarAlturaEspaco(c: Construcao, i: number, j: number, vizinho: number, mm: number, atual: number): Construcao {
+  let n = alturaEspaco(c, i, j, mm);
+  const viz = c.vaos[i].espacos[vizinho]?.altura;
+  if (viz) n = alturaEspaco(n, i, vizinho, viz.valor - (mm - Math.round(atual)));
+  return n;
+}
+
+/** Puxar a divisória entre o vão ``i`` e o ``vizinho`` (``i ± 1``): o vizinho com largura
+ * fixa cede a diferença. */
+export function puxarLarguraVao(c: Construcao, i: number, vizinho: number, mm: number, atual: number): Construcao {
+  let n = larguraVao(c, i, mm);
+  const viz = c.vaos[vizinho]?.largura;
+  if (viz) n = larguraVao(n, vizinho, viz.valor - (mm - Math.round(atual)));
+  return n;
+}

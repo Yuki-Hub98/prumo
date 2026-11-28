@@ -128,6 +128,8 @@ export function PainelMovel({
             altura: movel.altura.valor,
             base: movel.elevacao?.valor ?? 0,
           }}
+          construcao={movel.construcao}
+          portas={movel.portas}
           unidade={unidade}
           aoFechar={() => setDetalhe(false)}
         />
