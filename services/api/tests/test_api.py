@@ -183,3 +183,12 @@ def test_escada(api: TestClient) -> None:
     assert r.status_code == 200, r.text
     e = api.get(f"{PAV}/geometria").json()["estrutura"][0]["escada"]
     assert e["espelhos"] == 16 and e["lances"] == [7, 7] and len(e["degraus"]) == 15
+
+
+def test_cena_da_casa(api: TestClient) -> None:
+    """Casa toda: os andares (só o térreo aqui), cada peça marcada com o pavimento."""
+    r = api.get("/projetos/casa/cena")
+    assert r.status_code == 200, r.text
+    cena = r.json()
+    assert cena["andares"] == ["terreo"]
+    assert all(p["extras"]["pavimento"] == "terreo" for p in cena["prismas"])

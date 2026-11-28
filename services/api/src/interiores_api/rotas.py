@@ -644,6 +644,12 @@ def cena_pavimento(svc: Svc, codigo: str, pavimento: str) -> Cena3D:
     return svc.cena(codigo, pavimento=pavimento)
 
 
+@render.get("/projetos/{codigo}/cena")
+def cena_casa(svc: Svc, codigo: str) -> Cena3D:
+    """Cena 3D ao vivo da casa toda: os andares empilhados, cada um na cota do piso dele."""
+    return svc.cena_casa(codigo)
+
+
 def _variacoes(variacao: list[str]) -> dict[str, str]:
     """``["quarto:escura"]`` → ``{"quarto": "escura"}``."""
     saida = {}
