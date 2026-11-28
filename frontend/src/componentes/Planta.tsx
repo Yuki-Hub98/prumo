@@ -5,6 +5,14 @@ import { PADRAO } from "./PainelCores";
 import { formatar, type Unidade } from "../unidades";
 import { encaixar, vertices, type Pt } from "../editor/geometria";
 
+/** Aba Estruturas aberta: pilar e viga clicáveis, laje contornada, pilar arrastável. */
+export type ModoEstrutura = {
+  sel: string | null;
+  aoSelecionar: (id: string | null) => void;
+  /** Soltou o pilar arrastado: centro novo (grudado num canto de parede ou na grade). */
+  aoMoverPilar: (id: string, centro: Pt) => void;
+};
+
 /** Quanto o ponteiro anda (px na tela) antes de um clique num móvel virar arrasto. */
 export const FOLGA_PX = 4;
 
@@ -77,7 +85,10 @@ export function Planta({
   editor,
   fundo = null,
   destaque = null,
+  estrutura,
 }: {
+  /** Aba Estruturas aberta (sem ela, pilar e viga só aparecem, sem clique). */
+  estrutura?: ModoEstrutura;
   /** Problema escolhido em "Ver na planta": pisca 2× na cor da gravidade (``vez`` reinicia). */
   destaque?: { p: Problema; vez: number } | null;
   editor?: ModoEditor;
@@ -103,6 +114,7 @@ export function Planta({
   const [canto, setCanto] = useState<{ de: Pt; para: Pt } | null>(null);
   const [trilha, setTrilha] = useState<Pt | null>(null);
   const [cursor, setCursor] = useState<Pt | null>(null);
+  const [arrastoPilar, setArrastoPilar] = useState<{ id: string; ini: Pt; d: Pt; tela: Pt; solto: boolean } | null>(null);
   // cantos deste andar (alças de arrastar) e, para o ímã ao desenhar, também os do andar de baixo
   const cantos = vertices(geometria.paredes.map((p) => p.eixo));
   const ima = fundo ? vertices([...geometria.paredes, ...fundo.paredes].map((p) => p.eixo)) : cantos;
@@ -154,6 +166,7 @@ export function Planta({
         if (e.target === svg.current) {
           aoSelecionar(null);
           editor?.aoItem(null);
+          estrutura?.aoSelecionar(null);
         }
       }}
       onContextMenu={(e) => {
@@ -298,6 +311,87 @@ export function Planta({
           )}
         </g>
       ))}
+
+      {/* estrutura: laje (só com a aba aberta), furo da laje com X, viga tracejada (acima do
+          corte), pilar preenchido */}
+      {(geometria.estrutura ?? []).map((e) => {
+        const marcada = estrutura?.sel === e.id;
+        const cor = marcada ? SEL : e.estimada ? "var(--chute)" : HALO[e.id] ?? "var(--tinta-suave)";
+        const clicar = (ev: React.PointerEvent) => {
+          if (!estrutura) return;
+          ev.stopPropagation();
+          estrutura.aoSelecionar(e.id);
+          if (e.tipo === "pilar") {
+            (ev.target as Element).setPointerCapture?.(ev.pointerId);
+            setArrastoPilar({ id: e.id, ini: emMm(ev), d: [0, 0], solto: false, tela: [ev.clientX, ev.clientY] });
+          }
+        };
+        const furos = (e.furos ?? []).map((f, i) => {
+          const xs = f.map((q) => q[0]);
+          const ys = f.map((q) => q[1]);
+          const [a, b] = [Math.min(...xs), Math.max(...xs)];
+          const [c, d] = [Math.min(...ys), Math.max(...ys)];
+          return (
+            <g key={i} pointerEvents="none" stroke={marcada ? SEL : "var(--tinta-suave)"} strokeWidth={1.2} strokeDasharray="8 5" vectorEffect="non-scaling-stroke">
+              <polygon points={pontos(f)} fill="none" vectorEffect="non-scaling-stroke" />
+              <line x1={a} y1={-c} x2={b} y2={-d} vectorEffect="non-scaling-stroke" />
+              <line x1={a} y1={-d} x2={b} y2={-c} vectorEffect="non-scaling-stroke" />
+            </g>
+          );
+        });
+        if (e.tipo === "laje")
+          return (
+            <g key={e.id}>
+              {estrutura && (
+                <polygon
+                  points={pontos(e.contorno)}
+                  fill={marcada ? SEL : "none"}
+                  fillOpacity={0.08}
+                  stroke={cor}
+                  strokeWidth={marcada ? 3 : 1.2}
+                  strokeDasharray="14 6"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+              )}
+              {furos}
+            </g>
+          );
+        const d = arrastoPilar?.id === e.id ? arrastoPilar.d : [0, 0];
+        return (
+          <polygon
+            key={e.id}
+            points={pontos(e.contorno.map(([x, y]) => [x + d[0], y + d[1]]))}
+            fill={e.tipo === "pilar" ? "var(--tinta)" : "transparent"}
+            stroke={e.tipo === "pilar" && !marcada && !e.estimada && !HALO[e.id] ? "none" : cor}
+            strokeWidth={marcada ? 3 : 1.5}
+            strokeDasharray={e.tipo === "viga" || (!marcada && e.estimada) ? "8 5" : undefined}
+            vectorEffect="non-scaling-stroke"
+            pointerEvents={estrutura ? (e.tipo === "viga" ? "stroke" : "auto") : "none"}
+            className={estrutura ? (e.tipo === "pilar" ? "cursor-move" : "cursor-pointer") : undefined}
+            onPointerDown={clicar}
+            onPointerMove={(ev) => {
+              const a = arrastoPilar;
+              if (!a || a.id !== e.id) return;
+              const solto = a.solto || Math.hypot(ev.clientX - a.tela[0], ev.clientY - a.tela[1]) > FOLGA_PX;
+              const m = emMm(ev);
+              setArrastoPilar({ ...a, solto, d: solto ? [m[0] - a.ini[0], m[1] - a.ini[1]] : [0, 0] });
+            }}
+            onPointerUp={() => {
+              const a = arrastoPilar;
+              setArrastoPilar(null);
+              if (!a?.solto || !estrutura) return;
+              const pts = e.contorno;
+              const cx = (Math.min(...pts.map((q) => q[0])) + Math.max(...pts.map((q) => q[0]))) / 2;
+              const cy = (Math.min(...pts.map((q) => q[1])) + Math.max(...pts.map((q) => q[1]))) / 2;
+              const novo = encaixar([cx + a.d[0], cy + a.d[1]], cantos);
+              estrutura.aoMoverPilar(e.id, [Math.round(novo[0]), Math.round(novo[1])]);
+            }}
+          >
+            <title>{`${e.tipo === "pilar" ? "Pilar" : "Viga"} ${e.id}`}</title>
+          </polygon>
+        );
+      })}
 
       {/* cor de cada parede: faixa na face voltada para o cômodo pintado */}
       {cores &&
