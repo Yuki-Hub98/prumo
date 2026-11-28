@@ -60,8 +60,8 @@ Mudou alguma rota ou esquema da API? `make frontend-tipos` regera `openapi.json`
 No topo da coluna da direita fica o título (**Painel de edição**, ou **Editar planta** no
 editor) e o botão **☰**, que fecha a coluna (sobra uma faixa com o ☰ para reabrir; fica
 lembrado no navegador). Em "Móveis e cores" a coluna tem **abas**: **Móvel** (o móvel selecionado e
-adicionar do catálogo; clicar num móvel na planta abre esta aba), **Cores**, **Imagens** e
-**Problemas** (com a contagem, e o que falta medir). A **largura é ajustável**: arraste a faixa
+adicionar do catálogo; clicar num móvel na planta abre esta aba), **Cores**, **Imagens**,
+**Problemas** (com a contagem, e o que falta medir) e **Estruturas** (ver abaixo). A **largura é ajustável**: arraste a faixa
 cinza da borda esquerda (ou use ← → com ela em foco; clique duplo volta ao padrão); fica
 lembrada neste navegador. Em "Editar planta" a coluna mostra o editor, sem abas.
 
@@ -219,6 +219,25 @@ no modelo, sem render, e entra no rascunho; as imagens do Blender com as cores n
 próximo render (rascunho ou final). O móvel selecionado ganha um contorno quase transparente
 em volta (a cor dele continua a escolhida). No **Pavimento inteiro** pintam piso, teto, rodapé e móveis
 do cômodo da lista; as paredes não, porque cada parede é uma peça só entre dois cômodos.
+
+## Estruturas
+
+A aba **Estruturas** lista a estrutura do andar (lajes, vigas e pilares) e acrescenta:
+
+- **+ Laje do andar**: cobre o andar inteiro, por fora das paredes (o teto dele e o piso do de
+  cima). No painel: espessura, tipo (pré-moldada ou maciça) e **furos** (escada, shaft,
+  claraboia), cada um com canto, largura e comprimento.
+- **+ Pilar**: nasce no centro do cômodo escolhido; **arraste na planta** — ele gruda nos
+  cantos das paredes. Largura, profundidade e centro no painel.
+- **+ Viga** sobre uma parede (escolha a parede): o eixo e a largura dela; a altura é quanto
+  desce da laje. Início e fim editáveis.
+
+Tamanho novo entra como **chute** (pilar 20 × 20, viga da largura da parede × 30 cm, laje de
+12 cm) e o desenho sai PRELIMINAR até medir. Na planta: pilar preenchido escuro, viga
+tracejada (fica acima do corte), furo da laje tracejado com um X; com a aba aberta, a laje
+aparece tracejada e clicar num pilar ou viga escolhe. No 3D a laje faz o teto (some na vista
+de cima e com "Teto" desmarcado), o pilar vai do piso à laje e a viga desce dela. O sistema
+aponta restrições, não substitui o engenheiro.
 
 ## Tema claro e escuro
 

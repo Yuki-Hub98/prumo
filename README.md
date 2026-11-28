@@ -367,6 +367,12 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       planejado, clicar numa gaveta, nicho, cabideiro ou prateleira edita aquele espaço e o vão
       (tipo, altura, largura, porta), com alças que movem a prateleira/divisória e "esconder as
       portas" para ver o de dentro
+- [x] **Estruturas** (1ª parte; pedido do usuário, 2026-11-28): aba "Estruturas" com pilares
+      (arrastar na planta, grudam nos cantos), vigas (sobre uma parede, início e fim editáveis) e
+      lajes (o andar inteiro, maciça ou pré-moldada, com furos), na planta, no 3D (a laje faz o
+      teto) e no DXF/PDF
+- [ ] Estruturas — o que falta: **escadas** de alvenaria (reta, em L, em U, caracol/leque) com
+      a conta dos degraus e o furo na laje; **andares empilhados** no 3D da casa
 - [ ] Render: fotos realistas do pavimento inteiro pela tela; variação de layout de móveis
 - [ ] Referência por foto (pedido do usuário, 2026-11-19 e 2026-11-20): subir uma foto
       (Pinterest, um quarto parecido) pela tela e **guardar a foto no projeto** como referência

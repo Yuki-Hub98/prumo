@@ -24,7 +24,8 @@ Projeto (schema_version, projeto, imovel)
     ├── paredes[]: id, inicio [x,y], fim [x,y], espessura, lado_a, lado_b, altura?
     ├── aberturas[]: porta (de, para, folha giro|correr, abre_para, dobradica)
     │                ou janela (peitoril); parede, distancia_inicio, largura, altura
-    ├── estrutura[]: pilar | viga
+    ├── estrutura[]: pilar (centro, largura, profundidade) | viga (inicio, fim, largura,
+    │                altura) | laje (espessura, sistema, contorno?, furos[])
     ├── instalacoes[]: ponto (tomada, interruptor, ponto_luz, agua_fria, agua_quente,
     │                  esgoto, ralo, gas; posicao, altura, parede?, comodo?) ou trecho
     └── comodos[]: id, nome, tipo, paredes[], pe_direito?
@@ -35,6 +36,9 @@ Projeto (schema_version, projeto, imovel)
   `inicio` para `fim`.
 - O polígono do cômodo é derivado das paredes (não é digitado).
 - `comodo` no ponto de instalação diz de que lado de uma parede interna ele fica.
+- **Laje** é a de cobertura do pavimento (teto dele, piso do de cima), do pé-direito para
+  cima. Sem `contorno`, cobre o pavimento inteiro por fora das paredes; `furos` são contornos
+  em mm.
 
 ## `comodos/<cômodo>.json` (móveis)
 
