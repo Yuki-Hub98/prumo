@@ -307,6 +307,20 @@ móveis; o único andar não sai. Tudo entra no rascunho. No 3D, **Casa toda (an
 os andares empilhados (ver Visor 3D). A escada lançada num andar aparece no de cima como o
 **vão** no piso (tracejado com X, degraus apagados e "DESCE"), na tela e no DXF/PDF.
 
+## Cotas na planta
+
+A caixa **Cotas** (no canto da planta, lembrada neste navegador) desenha as cotas por cima da
+planta, nos dois modos (Móveis e cores e Editar planta), na unidade escolhida:
+
+- **gerais**, por fora: os eixos das paredes em cadeia e o total externo, embaixo e à esquerda;
+- **cada cômodo**, por dentro: a medida interna de cada face;
+- **o cômodo escolhido**: também a cadeia com as portas e janelas (do canto à abertura, a
+  abertura, dela ao outro canto).
+
+São as mesmas cotas do DXF/PDF (calculadas no core). A cor é a da origem das medidas que a cota
+usa (paredes e aberturas): **Medi** verde, **Quero assim** azul e **Chute** laranja tracejado
+— qualquer chute envolvido faz dela um chute.
+
 ## Editar planta
 
 No topo, **"Editar planta"** troca a tela para o editor (os móveis ficam apagados):

@@ -343,10 +343,10 @@ O que não for medido entra como `estimada`, e os desenhos saem como preliminare
       portas/folhas/gavetas, puxador, sentido de abertura etc., podendo **salvar a versão
       editada como modelo próprio**:
       - portas: correr embutida, pivotante, guarnição; janelas com veneziana
-- [ ] Cotas na planta da tela (pedido do usuário, 2026-11-20, para depois): hoje só o DXF/PDF
-      tem cotas. Desenhar as cotas das paredes e dos vãos na planta do frontend, em Mono, na cor
-      da origem da medida (Medi verde, Quero assim azul, Chute laranja tracejado), como pede a
-      identidade visual
+- [x] **Cotas na planta da tela** (pedido do usuário, 2026-11-20): botão "Cotas" na planta —
+      gerais por fora (eixos e total), cada cômodo por dentro e, no cômodo escolhido, a cadeia
+      com portas e janelas; as mesmas do DXF, em Mono, na cor da origem (Medi verde, Quero assim
+      azul, Chute laranja tracejado)
 - [x] **Redimensionar pelas bordas**: alças no meio de cada lado do móvel selecionado; o lado
       oposto fica parado e a medida vira "Quero assim"
 - [x] **Mover e girar no 3D**: arrastar o móvel selecionado pelo piso no 3D ao vivo e botão

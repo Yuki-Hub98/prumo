@@ -5116,6 +5116,91 @@
         "title": "CoresVariacao",
         "description": "Paleta de uma variação. Tudo opcional: o que faltar usa a cor padrão."
       },
+      "CotaTela": {
+        "properties": {
+          "de": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "De"
+          },
+          "ate": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Ate"
+          },
+          "lado": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Lado"
+          },
+          "fileira": {
+            "type": "integer",
+            "title": "Fileira"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "valor": {
+            "type": "integer",
+            "title": "Valor"
+          },
+          "comodo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comodo"
+          },
+          "origem": {
+            "type": "string",
+            "title": "Origem",
+            "default": "projeto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "de",
+          "ate",
+          "lado",
+          "fileira",
+          "tipo",
+          "valor"
+        ],
+        "title": "CotaTela",
+        "description": "Cota pronta para desenhar (ver :mod:`interiores_core.cotas`)."
+      },
       "DadosComodo": {
         "properties": {
           "schema_version": {
@@ -7849,6 +7934,14 @@
             },
             "type": "array",
             "title": "Estrutura",
+            "default": []
+          },
+          "cotas": {
+            "items": {
+              "$ref": "#/components/schemas/CotaTela"
+            },
+            "type": "array",
+            "title": "Cotas",
             "default": []
           },
           "limites": {
